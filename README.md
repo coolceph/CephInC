@@ -2,6 +2,13 @@
 CCeph - a pure c version of ceph
 ============================================
 
+Architecture
+------------
+
+1.Pure C, No STL, No Boost. 
+
+2.No cycle dependency between components
+
 
 RADOS
 -----------
