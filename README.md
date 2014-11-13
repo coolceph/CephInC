@@ -31,7 +31,7 @@ FS
 
 3.Sample Tree-Partition MDS
 
-4.Windows Client
+4.Native Windows Client
 
 
 RBD
