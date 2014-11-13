@@ -1,9 +1,10 @@
-cceph
-=====
+============================================
+CCeph - a pure c version of ceph
+============================================
 
-A pure c version of ceph
 
 RADOS
+-----------
 
 1.EC Code from the begining
 
@@ -15,6 +16,7 @@ RADOS
 
 
 FS
+-----------
 
 1.Ext4 Based FS
 
@@ -26,6 +28,7 @@ FS
 
 
 RBD
+-----------
 
 1.Common Protocol Supoort: iSCSI, FC, SRP
 
