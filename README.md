@@ -7,19 +7,18 @@ Architecture
 
 1.Pure C, No STL, No Boost. 
 
-2.No cycle dependency between components
+2.No complex dependency between components
+
+3.High Performance is the most important issue (for SATA/PCIe SSD)
 
 
 RADOS
 -----------
 
-1.EC Code from the begining
+1.EC
 
 2.NWR Supported (PG Log is best for NWR) -> Degerde WRITE
 
-3.Full TestSuite For Producation Quality and Commuity Cooperation
-
-4.High Performance with Full SATA/PCIe SSD
 
 
 FS
@@ -27,7 +26,7 @@ FS
 
 1.Ext4 Based FS
 
-2.MultiThread Based MDS
+2.MultiThread MDS
 
 3.Sample Tree-Partition MDS
 
@@ -39,3 +38,16 @@ RBD
 
 1.Common Protocol Supoort: iSCSI, FC, SRP
 
+
+QA
+----------
+
+1.Full UnitedTest
+
+2.Producation Enviroment Test
+
+3.Different TestSuit For Different Proposal and Community Cooperation
+
+
+Operations
+----------
