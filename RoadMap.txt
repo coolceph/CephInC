@@ -1,0 +1,27 @@
+Phare 1
+	Write/Read/Delete
+
+Phare 2
+	Recovery/BackFill
+	Multi-Moniter(Paxos)
+
+Phare 3
+	EC
+	NWR
+
+Phare 4
+	OMap
+	Aio
+	Stat
+
+Phare 5 
+	Snap
+	Clone
+
+Phare 6
+	Watch/Notify
+	ObjectClientCache
+
+Future 
+	Batch Operation
+	Location Hint
