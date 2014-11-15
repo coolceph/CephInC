@@ -51,3 +51,5 @@ QA
 
 Operations
 ----------
+
+1.Intergreted with IT/Cloud System
