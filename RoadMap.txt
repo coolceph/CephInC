@@ -1,5 +1,6 @@
 Phare 1
 	Write/Read/Delete
+	Pool
 
 Phare 2
 	Recovery/BackFill
@@ -10,7 +11,7 @@ Phare 3
 	NWR
 
 Phare 4
-	OMap
+	Attr/OMap
 	Aio
 	Stat
 
@@ -23,5 +24,7 @@ Phare 6
 	ObjectClientCache
 
 Future 
+	Auth
+	MultiVerison in Single Cluster
 	Batch Operation
 	Location Hint
