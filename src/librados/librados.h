@@ -1,5 +1,26 @@
 #ifndef CCEPH_LIBRADOS_H
 #define CCEPH_LIBRADOS_H
+/**
+ * @typedef rados_t
+ *
+ * A handle for interacting with a RADOS cluster. It encapsulates all
+ * RADOS client configuration, including username, key for
+ * authentication, logging, and debugging. Talking different clusters
+ * -- or to the same cluster with different users -- requires
+ * different cluster handles.
+ */
+typedef void *rados_t;
+
+/**
+ * @struct rados_pool_stat_t
+ * Usage information for a pool.
+ */
+struct rados_pool_stat_t {
+  /// space used in bytes
+  uint64_t num_bytes;
+  /// number of objects in the pool
+  uint64_t num_objects;
+};
 
 /**
  * Create a handle for communicating with a RADOS cluster.
@@ -9,6 +30,23 @@
  */
 int rados_create(rados_t *cluster);
 
+/**
+ * @typedef rados_ioctx_t
+ *
+ * An io context encapsulates a few settings for all I/O operations
+ * done on it:
+ * - pool - set when the io context is created (see rados_ioctx_create())
+ * - snapshot context for writes (see
+ *   rados_ioctx_selfmanaged_snap_set_write_ctx())
+ * - snapshot id to read from (see rados_ioctx_snap_set_read())
+ * - object locator for all single-object operations (see
+ *   rados_ioctx_locator_set_key())
+ *
+ * @warning changing any of these settings is not thread-safe -
+ * librados users must synchronize any of these changes on their own,
+ * or use separate io contexts for each thread
+ */
+typedef void *rados_ioctx_t;
 
 /**
  * Connect to the cluster.
