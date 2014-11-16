@@ -27,3 +27,9 @@
 *.i*86
 *.x86_64
 *.hex
+
+#Mac DS_Store
+*.DS_Store
+
+#VIM swp
+*.swp
