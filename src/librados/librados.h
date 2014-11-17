@@ -12,6 +12,24 @@
 typedef void *rados_t;
 
 /**
+ * @typedef rados_ioctx_t
+ *
+ * An io context encapsulates a few settings for all I/O operations
+ * done on it:
+ * - pool - set when the io context is created (see rados_ioctx_create())
+ * - snapshot context for writes (see
+ *   rados_ioctx_selfmanaged_snap_set_write_ctx())
+ * - snapshot id to read from (see rados_ioctx_snap_set_read())
+ * - object locator for all single-object operations (see
+ *   rados_ioctx_locator_set_key())
+ *
+ * @warning changing any of these settings is not thread-safe -
+ * librados users must synchronize any of these changes on their own,
+ * or use separate io contexts for each thread
+ */
+typedef void *rados_ioctx_t;
+
+/**
  * @struct rados_pool_stat_t
  * Usage information for a pool.
  */
@@ -31,22 +49,15 @@ struct rados_pool_stat_t {
 int rados_create(rados_t *cluster);
 
 /**
- * @typedef rados_ioctx_t
+ * Free the cluster struct.
  *
- * An io context encapsulates a few settings for all I/O operations
- * done on it:
- * - pool - set when the io context is created (see rados_ioctx_create())
- * - snapshot context for writes (see
- *   rados_ioctx_selfmanaged_snap_set_write_ctx())
- * - snapshot id to read from (see rados_ioctx_snap_set_read())
- * - object locator for all single-object operations (see
- *   rados_ioctx_locator_set_key())
+ * For clean up, this is only necessary when cluster is not connected
  *
- * @warning changing any of these settings is not thread-safe -
- * librados users must synchronize any of these changes on their own,
- * or use separate io contexts for each thread
+ * @post the cluster handle cannot be used again
+ *
+ * @param cluster the cluster to destory
  */
-typedef void *rados_ioctx_t;
+void rados_destory(rados_t cluster);
 
 /**
  * Connect to the cluster.
@@ -75,8 +86,6 @@ int rados_connect(rados_t cluster);
  * completed. To do that, you must call rados_aio_flush() on all open
  * io contexts.
  *
- * @post the cluster handle cannot be used again
- *
  * @param cluster the cluster to shutdown
  */
 void rados_shutdown(rados_t cluster);
@@ -97,6 +106,29 @@ void rados_shutdown(rados_t cluster);
  * @returns length of the buffer we would need to list all pools
  */
 int rados_pool_list(rados_t cluster, char *buf, size_t len);
+
+/**
+ * Create a pool with default settings
+ *
+ * The default crush rule is rule 0.
+ *
+ * @param cluster the cluster in which the pool will be created
+ * @param pool_name the name of the new pool
+ * @returns 0 on success, negative error code on failure
+ */
+int rados_pool_create(rados_t cluster, const char *pool_name);
+
+/**
+ * Remove a pool and all data inside it
+ *
+ * The pool is removed from the cluster immediately,
+ * but the actual data is deleted in the background.
+ *
+ * @param cluster the cluster the pool is in
+ * @param pool_name which pool to delete
+ * @returns 0 on success, negative error code on failure
+ */
+int rados_pool_remove(rados_t cluster, const char *pool_name);
 
 /**
  * Create an io context
@@ -130,41 +162,6 @@ void rados_ioctx_destroy(rados_ioctx_t io);
  * @returns 0 on success, negative error code on failure
  */
 int rados_ioctx_pool_stat(rados_ioctx_t io, struct rados_pool_stat_t *stats);
-
-/**
- * Get the id of a pool
- *
- * @param cluster which cluster the pool is in
- * @param pool_name which pool to look up
- * @returns id of the pool
- * @returns -ENOENT if the pool is not found
- */
-int64_t rados_pool_lookup(rados_t cluster, const char *pool_name);
-
-/**
- * Create a pool with default settings
- *
- * The default crush rule is rule 0.
- *
- * @param cluster the cluster in which the pool will be created
- * @param pool_name the name of the new pool
- * @returns 0 on success, negative error code on failure
- */
-int rados_pool_create(rados_t cluster, const char *pool_name);
-
-
-/**
- * Remove a pool and all data inside it
- *
- * The pool is removed from the cluster immediately,
- * but the actual data is deleted in the background.
- *
- * @param cluster the cluster the pool is in
- * @param pool_name which pool to delete
- * @returns 0 on success, negative error code on failure
- */
-int rados_pool_remove(rados_t cluster, const char *pool_name);
-
 
 /**
  * Write *len* bytes from *buf* into the *oid* object, starting at
