@@ -27,4 +27,5 @@ Future
 	Auth
 	MultiVerison in Single Cluster
 	Batch Operation
+        CRC for Read (Optional)
 	Location Hint
