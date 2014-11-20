@@ -15,7 +15,7 @@ Phare 4
 	Aio
 	Stat
 
-Phare 5 
+Phare 5
 	Snap
 	Clone
 
@@ -23,7 +23,7 @@ Phare 6
 	Watch/Notify
 	ObjectClientCache
 
-Future 
+Future
 	Auth
 	MultiVerison in Single Cluster
 	Batch Operation
