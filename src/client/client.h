@@ -46,8 +46,6 @@ struct cceph_client {
   	const char*, const char*, size_t);
   int (* remove)(cceph_client_ioctx_t *ioctx, 
   	const char *oid);
-  int (* remove)(cceph_client_ioctx_t *ioctx, 
-  	const char *oid);
   int (* truncate)(cceph_client_ioctx_t *ioctx, 
   	const char *oid, uint64_t size);
 };
