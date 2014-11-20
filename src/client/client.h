@@ -1,24 +1,7 @@
 #ifndef CCEPH_CLIENT_H
 #define CCEPH_CLIENT_H
 
-#include <netinet/in.h>
-
-enum cceph_client_entity_type {
-	CCEPH_CLIENT_ENTITY_TYPE_MON,
-	CCEPH_CLIENT_ENTITY_TYPE_OSD,
-	CCEPH_CLIENT_ENTITY_TYPE_CLIENT
-};
-
-struct cceph_client_entity {
-	enum cceph_client_entity_type type;
-	int id;
-	struct sockaddr_in addr; 
-};
-
-struct cceph_client_cluster_map {
-	struct cceph_client_entity mon;
-	
-};
+#include "include/types.h"
 
 struct cceph_client_ioctx_t {
 	
