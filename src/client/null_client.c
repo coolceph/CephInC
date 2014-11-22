@@ -81,7 +81,7 @@ int cceph_null_client_truncate(cceph_client_ioctx_t *ioctx,
 
 
 struct client null_client = {
-  .name 			= "null_client",
+  .name       = "null_client",
 
   .rados_create     = cceph_null_client_rados_create,
   .raods_destory    = cceph_null_client_rados_destory,
@@ -105,5 +105,12 @@ struct client null_client = {
   .remove           = cceph_null_client_remove,
   .truncate         = cceph_null_client_truncate,
 };
+
+void cceph_null_client_register() {
+  cceph_client_register(CCEPH_CLIENT_TYPE_NULL, &null_client);
+}
+void cceph_null_client_unregister() {
+  cceph_client_unregister(CCEPH_CLIENT_TYPE_NULL);
+}
 
 #endif

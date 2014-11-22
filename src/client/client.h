@@ -3,6 +3,13 @@
 
 #include "include/types.h"
 
+enum CCEPH_CLIENT_TYPE {
+  CCEPH_CLIENT_TYPE_NULL = 0,
+  CCEPH_CLIENT_TYPE_MEM = 1,
+  CCEPH_CLIENT_TYPE_NORMAL = 2,
+  CCEPH_CLIENT_TYPE_MAX = 3,
+};
+
 struct cceph_client_ioctx_t {
 
 };
@@ -49,5 +56,8 @@ struct cceph_client {
   int (* truncate)(cceph_client_ioctx_t *ioctx,
     const char *oid, uint64_t size);
 };
+
+void cceph_client_register(CCEPH_CLIENT_TYPE type, struct *cceph_client client);
+void cceph_client_unregister(CCEPH_CLIENT_TYPE type);
 
 #endif
