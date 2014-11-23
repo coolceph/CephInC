@@ -4,8 +4,8 @@
 AC_PREREQ([2.63])
 AC_INIT(cceph, 0.1, [coolceph@gmail.com])
 
-AM_INIT_AUTOMAKE([foreign -Wall -Werror])
-AC_PROG_LIBTOOL
+AM_INIT_AUTOMAKE(cceph, 0.1)
+AM_PROG_LIBTOOL
 
 # Checks for programs.
 AC_PROG_CC

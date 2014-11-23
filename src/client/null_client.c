@@ -2,6 +2,7 @@
 #define CCEPH_NULL_CLIENT_H
 
 #include <stddef.h>
+#include <string.h>
 
 #include "client/client.h"
 
@@ -25,7 +26,7 @@ int cceph_null_client_pool_list(struct cceph_cluster_map *cluster_map,
     char *buf, size_t len) {
   char *pool_name = "data";
   int size = len > sizeof(pool_name) ? sizeof(pool_name) : len;
-  memcpy(buf, pool_name, size);
+  memcpy((void*)buf, (void*)pool_name, size);
   return 0;
 }
 int cceph_null_client_pool_create(struct cceph_cluster_map *cluster_map,

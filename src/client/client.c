@@ -1,4 +1,6 @@
 #include <stddef.h>
+#include <string.h>
+
 #include "client/client.h"
 
 static struct cceph_client **clients = NULL;
