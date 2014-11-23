@@ -10,7 +10,7 @@ enum cceph_entity_type {
 };
 
 struct cceph_entity {
-  enum cceph_client_entity_type type;
+  enum cceph_entity_type type;
   int id;
   struct sockaddr_in addr;
 };
@@ -21,7 +21,7 @@ struct cceph_osd_map {
 };
 
 struct cceph_cluster_map {
-  struct cceph_client_entity mon;
+  struct cceph_entity mon;
   struct cceph_osd_map osd_map;
 };
 
