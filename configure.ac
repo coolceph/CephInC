@@ -3,6 +3,7 @@
 
 AC_PREREQ([2.63])
 AC_INIT(cceph, 0.1, [coolceph@gmail.com])
+AC_CONFIG_AUX_DIR([build-aux])
 
 AM_INIT_AUTOMAKE(cceph, 0.1)
 AM_PROG_LIBTOOL
@@ -22,5 +23,7 @@ AC_TYPE_UINT64_T
 # Checks for library functions.
 AC_FUNC_MALLOC
 
-AC_OUTPUT([Makefile
+AC_CONFIG_FILES([Makefile
   src/Makefile])
+
+AC_OUTPUT
