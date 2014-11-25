@@ -56,3 +56,5 @@ ltmain.sh
 missing
 .deps
 .dirstamp
+build-aux
+.Tpo
