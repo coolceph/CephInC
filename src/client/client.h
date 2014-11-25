@@ -3,6 +3,11 @@
 
 #include "include/types.h"
 
+#include <stddef.h>
+#include <string.h>
+
+#define MAX_CLIENT_TYPES 16
+
 enum CCEPH_CLIENT_TYPE {
   CCEPH_CLIENT_TYPE_NULL = 0,
   CCEPH_CLIENT_TYPE_MEM = 1,
@@ -18,7 +23,6 @@ struct cceph_client_pool_stat {
   uint64_t num_bytes;
   uint64_t num_objects;
 };
-
 
 struct cceph_client {
   char* name;
