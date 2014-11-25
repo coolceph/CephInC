@@ -2,9 +2,7 @@
 #define CCEPH_CLIENT_H
 
 #include "include/types.h"
-
-#include <stddef.h>
-#include <string.h>
+#include "include/int_types.h"
 
 #define MAX_CLIENT_TYPES 16
 
@@ -20,8 +18,8 @@ struct cceph_client_ioctx_t {
 };
 
 struct cceph_client_pool_stat {
-  uint64_t num_bytes;
-  uint64_t num_objects;
+  cc_u64 num_bytes;
+  cc_u64 num_objects;
 };
 
 struct cceph_client {
@@ -34,7 +32,7 @@ struct cceph_client {
   int (* raods_shutdown)(struct cceph_cluster_map *cluster_map);
 
   int (* pool_list)(struct cceph_cluster_map *cluster_map,
-    char *buf, size_t len);
+    char *buf, cc_size_t len);
   int (* pool_create)(struct cceph_cluster_map *cluster_map,
     const char *pool_name);
   int (* pool_remove)(struct cceph_cluster_map *cluster_map,
@@ -48,17 +46,17 @@ struct cceph_client {
     struct cceph_client_pool_stat *stats);
 
   int (* read)(struct cceph_client_ioctx_t *ioctx,
-    const char *oid, char *buf, size_t len, uint64_t off);
+    const char *oid, char *buf, cc_size_t len, cc_u64 off);
   int (* write)(struct cceph_client_ioctx_t *ioctx,
-    const char*, const char*, size_t, uint64_t off);
+    const char*, const char*, cc_size_t len, cc_u64 off);
   int (* write_full)(struct cceph_client_ioctx_t *ioctx,
-    const char*, const char*, size_t);
+    const char*, const char*, cc_size_t len);
   int (* append)(struct cceph_client_ioctx_t *ioctx,
-    const char*, const char*, size_t);
+    const char*, const char*, cc_size_t len);
   int (* remove)(struct cceph_client_ioctx_t *ioctx,
     const char *oid);
   int (* truncate)(struct cceph_client_ioctx_t *ioctx,
-    const char *oid, uint64_t size);
+    const char *oid, cc_u64 size);
 };
 
 void cceph_client_register(enum CCEPH_CLIENT_TYPE type, struct cceph_client *client);

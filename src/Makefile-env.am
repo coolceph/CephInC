@@ -14,6 +14,7 @@ sbin_PROGRAMS =
 sbin_SCRIPTS =
 dist_bin_SCRIPTS =
 lib_LTLIBRARIES = 
+lib_LIBRARIES = 
 noinst_LTLIBRARIES = 
 noinst_LIBRARIES =
 
@@ -26,9 +27,8 @@ check_PROGRAMS =
 # tests scripts will be appended to this
 check_SCRIPTS =
 
-
+LIBRADOS_DEPS = 
 
 #####################
 ## library definitions and dependencies
-
 LIBCLIENT = libclient.la

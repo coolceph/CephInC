@@ -1,5 +1,8 @@
 #ifndef CCEPH_LIBRADOS_H
 #define CCEPH_LIBRADOS_H
+
+#include <include/int_types.h>
+
 /**
  * @typedef rados_t
  *
@@ -35,9 +38,9 @@ typedef void *rados_ioctx_t;
  */
 struct rados_pool_stat_t {
   /// space used in bytes
-  uint64_t num_bytes;
+    cc_u64 num_bytes;
   /// number of objects in the pool
-  uint64_t num_objects;
+    cc_u64 num_objects;
 };
 
 /**
@@ -105,7 +108,7 @@ void rados_shutdown(rados_t cluster);
  * @param len output buffer length
  * @returns length of the buffer we would need to list all pools
  */
-int rados_pool_list(rados_t cluster, char *buf, size_t len);
+int rados_pool_list(rados_t cluster, char *buf, cc_size_t len);
 
 /**
  * Create a pool with default settings
@@ -175,7 +178,7 @@ int rados_ioctx_pool_stat(rados_ioctx_t io, struct rados_pool_stat_t *stats);
  * @param off byte offset in the object to begin writing at
  * @returns 0 on success, negative error code on failure
  */
-int rados_write(rados_ioctx_t io, const char *oid, const char *buf, size_t len, uint64_t off);
+int rados_write(rados_ioctx_t io, const char *oid, const char *buf, cc_size_t len,   cc_u64 off);
 
 /**
  * Write *len* bytes from *buf* into the *oid* object. The value of
@@ -190,7 +193,7 @@ int rados_write(rados_ioctx_t io, const char *oid, const char *buf, size_t len, 
  * @param len length of the data, in bytes
  * @returns 0 on success, negative error code on failure
  */
-int rados_write_full(rados_ioctx_t io, const char *oid, const char *buf, size_t len);
+int rados_write_full(rados_ioctx_t io, const char *oid, const char *buf, cc_size_t len);
 
 /**
  * Append *len* bytes from *buf* into the *oid* object. The value of
@@ -202,7 +205,7 @@ int rados_write_full(rados_ioctx_t io, const char *oid, const char *buf, size_t 
  * @param len length of buf (in bytes)
  * @returns 0 on success, negative error code on failure
  */
-int rados_append(rados_ioctx_t io, const char *oid, const char *buf, size_t len);
+int rados_append(rados_ioctx_t io, const char *oid, const char *buf, cc_size_t len);
 
 /**
  * Read data from an object
@@ -218,7 +221,7 @@ int rados_append(rados_ioctx_t io, const char *oid, const char *buf, size_t len)
  * @returns number of bytes read on success, negative error code on
  * failure
  */
-int rados_read(rados_ioctx_t io, const char *oid, char *buf, size_t len, uint64_t off);
+int rados_read(rados_ioctx_t io, const char *oid, char *buf, cc_size_t len,   cc_u64 off);
 
 /**
  * Delete an object
@@ -242,6 +245,6 @@ int rados_remove(rados_ioctx_t io, const char *oid);
  * @param size the new size of the object in bytes
  * @returns 0 on success, negative error code on failure
  */
-int rados_truncate(rados_ioctx_t io, const char *oid, uint64_t size);
+int rados_truncate(rados_ioctx_t io, const char *oid,   cc_u64 size);
 
 #endif
