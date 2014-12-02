@@ -1,10 +1,8 @@
-#ifndef CCEPH_NULL_CLIENT_H
-#define CCEPH_NULL_CLIENT_H
-
 #include <stddef.h>
 #include <string.h>
 
 #include "client/client.h"
+#include "client/null_client.h"
 
 int cceph_null_client_rados_create(struct cceph_cluster_map **cluster_map) {
     *cluster_map = 0;
@@ -111,4 +109,3 @@ void cceph_null_client_unregister() {
   cceph_client_unregister(CCEPH_CLIENT_TYPE_NULL);
 }
 
-#endif
