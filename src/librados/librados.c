@@ -1,8 +1,28 @@
-#include "client/client.h"
 #include "librados/librados.h"
 
+#include "common/config.h"
+#include "common/global.h"
+
+#include "client/client.h"
+#include "client/null_client.h"
+
+struct cceph_client *client = NULL;
+
+void init_clients() {
+  cceph_null_client_register();
+  client = cceph_get_client(g_conf->client_type);
+}
+
 int rados_create(rados_t *cluster) {
-  return 0;
+
+  cceph_init_global();
+  
+  init_client();
+
+  struct cceph_cluster_map *cluster_map = cceph_cluster_map_read_from_desc();
+  *cluster = cluster_map;
+
+  return client->rados_create(cluster_map);
 }
 
 void rados_destory(rados_t cluster) {
