@@ -6,8 +6,8 @@
 
 #include "client/client.h"
 
-int cceph_null_client_rados_create(struct cceph_cluster_map **cluster_map);
-int cceph_null_client_rados_destory(struct cceph_cluster_map **cluster_map);
+int cceph_null_client_rados_create(struct cceph_cluster_map *cluster_map);
+int cceph_null_client_rados_destory(struct cceph_cluster_map *cluster_map);
 
 int cceph_null_client_rados_connect(struct cceph_cluster_map *cluster_map);
 int cceph_null_client_rados_shutdown(struct cceph_cluster_map *cluster_map);

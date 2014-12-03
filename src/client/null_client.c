@@ -4,12 +4,10 @@
 #include "client/client.h"
 #include "client/null_client.h"
 
-int cceph_null_client_rados_create(struct cceph_cluster_map **cluster_map) {
-    *cluster_map = 0;
+int cceph_null_client_rados_create(struct cceph_cluster_map *cluster_map) {
   return 0;
 }
-int cceph_null_client_rados_destory(struct cceph_cluster_map **cluster_map) {
-    *cluster_map = 0;
+int cceph_null_client_rados_destory(struct cceph_cluster_map *cluster_map) {
   return 0;
 }
 

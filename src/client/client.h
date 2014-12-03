@@ -25,8 +25,8 @@ struct cceph_client_pool_stat {
 struct cceph_client {
   char* name;
 
-  int (*rados_create)(struct cceph_cluster_map **cluster_map);
-  int (* raods_destory)(struct cceph_cluster_map **cluster_map);
+  int (*rados_create)(struct cceph_cluster_map *cluster_map);
+  int (* raods_destory)(struct cceph_cluster_map *cluster_map);
 
   int (* rados_connect)(struct cceph_cluster_map *cluster_map);
   int (* raods_shutdown)(struct cceph_cluster_map *cluster_map);
@@ -61,5 +61,7 @@ struct cceph_client {
 
 void cceph_client_register(enum CCEPH_CLIENT_TYPE type, struct cceph_client *client);
 void cceph_client_unregister(enum CCEPH_CLIENT_TYPE type);
+
+void cceph_get_client(enum CCEPH_CLIENT_TYPE);
 
 #endif
