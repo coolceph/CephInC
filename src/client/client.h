@@ -62,6 +62,6 @@ struct cceph_client {
 void cceph_client_register(enum CCEPH_CLIENT_TYPE type, struct cceph_client *client);
 void cceph_client_unregister(enum CCEPH_CLIENT_TYPE type);
 
-void cceph_get_client(enum CCEPH_CLIENT_TYPE);
+struct cceph_client* cceph_get_client(enum CCEPH_CLIENT_TYPE);
 
 #endif
