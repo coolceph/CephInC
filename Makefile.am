@@ -14,5 +14,5 @@ check-local:
 clean-local:
 	@if test -e src/gtest/Makefile; then \
 		echo "Making clean in src/gtest"; \
-		cd src/gtest &&AUTOMAKE_OPTIONS $(MAKE) $(AM_MAKEFLAGS) clean; \
+		cd src/gtest && $(MAKE) $(AM_MAKEFLAGS) clean; \
 	fi
