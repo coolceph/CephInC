@@ -43,8 +43,6 @@ tags
 #configure & make
 Makefile
 Makefile.in
-aclocal.m4
-aclocal.m4
 autom4te.cache/
 config.guess
 config.h.in
@@ -61,6 +59,7 @@ missing
 .dirstamp
 build-aux
 .Tpo
+*.m4
 compile
 
 
