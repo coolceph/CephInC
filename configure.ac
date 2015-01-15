@@ -13,6 +13,12 @@ AM_PROG_LIBTOOL
 # Checks for programs.
 AM_PROG_CC_C_O
 
+# Checks for programs.
+AC_PROG_CXX
+if test "$CXX" = no || test "$CXX:$GXX" = "g++:"; then
+  AC_MSG_ERROR([no C++ compiler found])
+fi
+
 # Checks for libraries.
 
 # Checks for header files.

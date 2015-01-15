@@ -2,6 +2,6 @@
 
 #include <stddef.h>
 
-struct cceph_cluster_map *cceph_cluster_map_read_from_desc() {
-  return NULL;
+int cceph_cluster_map_read_from_describe_file(struct cceph_cluster_map *map) {
+  return 0;
 }

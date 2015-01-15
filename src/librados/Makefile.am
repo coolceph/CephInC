@@ -1,6 +1,6 @@
 librados_a_SOURCES = \
 	librados/librados.c
 
-LIBRADOS_DEPS += libclient.la
+librados_a_DEPS = $(LIBCLIENT) 
 
 lib_LIBRARIES += librados.a

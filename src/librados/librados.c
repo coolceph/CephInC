@@ -8,7 +8,7 @@
 
 struct cceph_client *client = NULL;
 
-void init_clients() {
+void rados_init_clients() {
   cceph_null_client_register();
   client = cceph_get_client(g_conf->client_type);
 }
@@ -17,7 +17,7 @@ int rados_create(rados_t *cluster) {
 
   cceph_init_global();
   
-  init_client();
+  rados_init_clients();
 
   struct cceph_cluster_map *cluster_map = cceph_cluster_map_read_from_desc();
   *cluster = cluster_map;

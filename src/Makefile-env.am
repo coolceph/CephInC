@@ -27,8 +27,8 @@ check_PROGRAMS =
 # tests scripts will be appended to this
 check_SCRIPTS =
 
-LIBRADOS_DEPS = 
-
 #####################
 ## library definitions and dependencies
+LIBCOMMON = libcommon.la
 LIBCLIENT = libclient.la
+LIBRADOS = librados.a

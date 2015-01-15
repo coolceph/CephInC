@@ -2,17 +2,18 @@ AUTOMAKE_OPTIONS = gnu
 SUBDIRS = . src
 
 
-# Build gtest before we build our own tests. Doing this instead of
-# # SUBDIRS gtest's own tests being run and slowing us down.
-check-local:
-	@echo "Making lib/libgtest.a lib/libgtest_main.a in src/gtest"
-	@cd src/gtest && $(MAKE) $(AM_MAKEFLAGS) lib/libgtest.la lib/libgtest_main.la
+check-local: all
+#       We build gtest this way, instead of using SUBDIRS, because with that,
+#       gtest's own tests would be run and that would slow us down.
+	@cd src/gtest && $(MAKE) $(AM_MAKEFLAGS) lib/libgtest.a lib/libgtest_main.a
+#       exercise cli tools
+#        $(srcdir)/src/test/run-cli-tests '$(top_builddir)/src/test'
 
 # "make distclean" both runs this and recurses into src/gtest, if
 # gtest is in DIST_SUBDIRS. Take extra care to not fail when
 # effectively cleaned twice.
 clean-local:
 	@if test -e src/gtest/Makefile; then \
-		echo "Making clean in src/gtest"; \
-		cd src/gtest && $(MAKE) $(AM_MAKEFLAGS) clean; \
+	  echo "Making clean in src/gtest"; \
+	  cd src/gtest && $(MAKE) $(AM_MAKEFLAGS) clean; \
 	fi

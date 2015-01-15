@@ -5,7 +5,7 @@
 struct cceph_context *g_context = NULL;
 struct cceph_config  *g_conf    = NULL;
 
-void init_global() {
+void cceph_init_global() {
   //we will init g_context
-  //and read config from /etc/cceph/
+  //and read config from /etc/cceph/cceph.conf
 }

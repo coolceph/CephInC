@@ -1,4 +1,6 @@
+extern "C" {
 #include "librados/librados.h"
+}
 
 #include "gtest/gtest.h"
 
@@ -7,6 +9,6 @@
 
 TEST(librados, Create) {
   rados_t cluster;
-  int ret = rados_create(&cluster, "fff");
+  int ret = rados_create(&cluster);
   EXPECT_EQ(ret, 0);
 }
