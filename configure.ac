@@ -7,7 +7,7 @@ AC_CONFIG_SUBDIRS([src/gtest])
 #AC_CONFIG_AUX_DIR([build-aux])
 AC_PROG_CC
 
-AM_INIT_AUTOMAKE([foreign -Wall -Werror])
+AM_INIT_AUTOMAKE([-Wall -Werror])
 AM_PROG_LIBTOOL
 
 # Checks for programs.
