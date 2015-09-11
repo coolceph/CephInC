@@ -19,7 +19,7 @@ int rados_create(rados_t *cluster) {
   
   rados_init_clients();
 
-  struct cceph_cluster_map *cluster_map = cceph_cluster_map_read_from_desc();
+  struct cceph_cluster_map *cluster_map = cceph_cluster_map_read_from_describe_file();
   *cluster = cluster_map;
 
   return client->rados_create(cluster_map);
