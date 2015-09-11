@@ -11,6 +11,8 @@ Architecture
 
 3.High Performance is the most important issue (for SATA/PCIe SSD)
 
+4.Better Balanced ALG Impl
+
 
 RADOS
 -----------
