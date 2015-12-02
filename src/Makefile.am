@@ -1,6 +1,7 @@
 include Makefile-env.am
 
 DIST_SUBDIRS += gtest
+bin_PROGRAMS += cceph_osd
 
 #subdirs
 
