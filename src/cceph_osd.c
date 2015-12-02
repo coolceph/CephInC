@@ -12,19 +12,18 @@
 
 #define MAXEVENTS 64
 
-static int make_socket_non_blocking (int sfd) {
-    int flags, s;
+static int make_socket_non_blocking(int socket_fd) {
+    int flags;
 
-    flags = fcntl(sfd, F_GETFL, 0);
+    flags = fcntl(socket_fd, F_GETFL, 0);
     if (flags == -1) {
-       perror ("fcntl");
+       perror("fcntl");
        return -1;
     }
 
     flags |= O_NONBLOCK;
-    s = fcntl(sfd, F_SETFL, flags);
-    if (s == -1) {
-        perror ("fcntl");
+    if (fcntl(socket_fd, F_SETFL, flags) == -1) {
+        perror("fcntl");
         return -1;
     }
     return 0;
@@ -66,41 +65,109 @@ static int create_and_bind(char *port) {
     return sfd;
 }
 
-int main (int argc, char *argv[]) {
-    int sfd, s;
-    int efd;
+static int new_connection(int base_fd, int new_fd) {
+    struct sockaddr in_addr;
+    socklen_t in_len;
+    int infd;
+    char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
+    int ret;
+    
+    in_len = sizeof in_addr;
+    infd = accept(new_fd, &in_addr, &in_len);
+    if (infd == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
+        perror ("accept");
+    }
+    
+    ret = getnameinfo(&in_addr, in_len, 
+                      hbuf, sizeof(hbuf), sbuf, sizeof(sbuf),
+                      NI_NUMERICHOST | NI_NUMERICSERV);
+    if (ret == 0) {
+        printf("Accepted connection on descriptor %d "
+               "(host=%s, port=%s)\n", infd, hbuf, sbuf);
+    }
+
+    ret = make_socket_non_blocking(infd);
+    if (ret == -1) abort();
+    
+    struct epoll_event event;
+    event.data.fd = infd;
+    event.events = EPOLLIN | EPOLLET;
+    ret = epoll_ctl(base_fd, EPOLL_CTL_ADD, infd, &event);
+    if (ret == -1) {
+        perror("epoll_ctl");
+        abort();
+    }
+}
+
+static int new_reqeust(int data_fd) {
+    int closed = 0;
+    int ret = 0;
+    
+    while(1) {
+        ssize_t count;
+        char buf[512];
+    
+        count = read(data_fd, buf, sizeof(buf));
+        if (count == -1 && errno != EAGAIN) {
+            /* If errno == EAGAIN, that means we have read all
+               data. So go back to the main loop. */
+            perror ("read");
+            closed = 1;
+            break;
+        }
+
+        if (count == -1) {
+            break;
+        }
+
+        if (count == 0) {
+            closed = 1;
+            break;
+        }
+    
+        ret = write(1, buf, count);
+        if (ret == -1) {
+            perror("write");
+            abort();
+        }
+    }
+    
+    if (closed) {
+        printf("Closed connection on descriptor %d\n", data_fd);
+        close(data_fd);
+    }
+}
+
+static int start_server(char* port) {
+    int socket_fd, epoll_fd;
+    int ret;
     struct epoll_event event;
     struct epoll_event *events;
 
-    if (argc != 2) {
-        fprintf (stderr, "Usage: %s [port]\n", argv[0]);
-        exit (EXIT_FAILURE);
-    }
+    socket_fd = create_and_bind(port);
+    if (socket_fd == -1) abort();
 
-    sfd = create_and_bind (argv[1]);
-    if (sfd == -1) abort();
+    ret = make_socket_non_blocking(socket_fd);
+    if (ret == -1) abort();
 
-    s = make_socket_non_blocking(sfd);
-    if (s == -1) abort();
-
-    s = listen(sfd, SOMAXCONN);
-    if (s == -1) {
-        perror ("listen");
+    ret = listen(socket_fd, SOMAXCONN);
+    if (ret == -1) {
+        perror("listen");
         abort();
     }
 
-    efd = epoll_create1(0);
-    if (efd == -1) {
+    epoll_fd = epoll_create1(0);
+    if (epoll_fd == -1) {
         perror ("epoll_create");
         abort ();
     }
 
-    event.data.fd = sfd;
+    event.data.fd = socket_fd;
     event.events = EPOLLIN | EPOLLET;
-    s = epoll_ctl(efd, EPOLL_CTL_ADD, sfd, &event);
-    if (s == -1) {
-        perror ("epoll_ctl");
-        abort ();
+    ret = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket_fd, &event);
+    if (ret == -1) {
+        perror("epoll_ctl");
+        abort();
     }
 
     /* Buffer where events are returned */
@@ -108,123 +175,37 @@ int main (int argc, char *argv[]) {
 
     /* The event loop */
     while (1) {
-        int n, i;
-
-        n = epoll_wait(efd, events, MAXEVENTS, -1);
-        for (i = 0; i < n; i++) {
+        int fd_count = epoll_wait(epoll_fd, events, MAXEVENTS, -1);
+        int i = 0;
+        for (i = 0; i < fd_count; i++) {
             if ((events[i].events & EPOLLERR) ||
                 (events[i].events & EPOLLHUP) ||
                 (!(events[i].events & EPOLLIN))) {
               /* An error has occured on this fd, or the socket is not
  *                  ready for reading (why were we notified then?) */
-            fprintf (stderr, "epoll error\n");
-            close(events[i].data.fd);
-            continue;
-        }
-
-        else if (sfd == events[i].data.fd) {
-              /* We have a notification on the listening socket, which
-                 means one or more incoming connections. */
-            while (1)  {
-                struct sockaddr in_addr;
-                socklen_t in_len;
-                int infd;
-                char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
-
-                in_len = sizeof in_addr;
-                infd = accept(sfd, &in_addr, &in_len);
-                if (infd == -1)
-                {
-                    if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-                          break;
-                    }
-                    else {
-                        perror ("accept");
-                        break;
-                    }
-                }
-
-                s = getnameinfo(&in_addr, in_len,
-                                hbuf, sizeof hbuf,
-                                sbuf, sizeof sbuf,
-                                NI_NUMERICHOST | NI_NUMERICSERV);
-                if (s == 0) {
-                    printf("Accepted connection on descriptor %d "
-                           "(host=%s, port=%s)\n", infd, hbuf, sbuf);
-                }
-
-                /* Make the incoming socket non-blocking and add it to the
-                   list of fds to monitor. */
-                s = make_socket_non_blocking(infd);
-                if (s == -1) abort ();
-
-                event.data.fd = infd;
-                event.events = EPOLLIN | EPOLLET;
-                s = epoll_ctl(efd, EPOLL_CTL_ADD, infd, &event);
-                if (s == -1) {
-                    perror ("epoll_ctl");
-                    abort ();
-                }
-            }
-            continue;
-        }
-        else {
-            /* We have data on the fd waiting to be read. Read and
-               display it. We must read whatever data is available
-               completely, as we are running in edge-triggered mode
-               and won't get a notification again for the same
-               data. */
-            int done = 0;
-
-            while(1) {
-                ssize_t count;
-                char buf[512];
-
-                count = read (events[i].data.fd, buf, sizeof buf);
-                if (count == -1)
-                {
-                      /* If errno == EAGAIN, that means we have read all
- *                          data. So go back to the main loop. */
-                    if (errno != EAGAIN)
-                    {
-                        perror ("read");
-                        done = 1;
-                    }
-                    break;
-                }
-                else if (count == 0)
-                {
-                    /* End of file. The remote has closed the
- *                     connection. */
-                    done = 1;
-                    break;
-                }
-
-                /* Write the buffer to standard output */
-                s = write (1, buf, count);
-                if (s == -1)
-                {
-                    perror ("write");
-                    abort ();
-                }
-            }
-
-            if (done) {
-                printf ("Closed connection on descriptor %d\n",
-                        events[i].data.fd);
-
-                /* Closing the descriptor will make epoll remove it
- *                 from the set of descriptors which are monitored. */
-                close (events[i].data.fd);
+                perror("epoll error\n");
+                close(events[i].data.fd);
+            } else if (socket_fd == events[i].data.fd) {
+                new_connection(epoll_fd, socket_fd);
+            } else {
+                new_reqeust(events[i].data.fd);
             }
         }
     }
+
+    free(events);
+    close(socket_fd);
+}
+
+int main(int argc, char *argv[]) {
+
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s [port]\n", argv[0]);
+        exit(EXIT_FAILURE);
     }
 
-    free (events);
+    start_server(argv[1]);
 
-    close (sfd);
-
-    return EXIT_SUCCESS;
+    return 0;
 }
 

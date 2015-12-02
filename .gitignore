@@ -83,3 +83,6 @@ src/gtest/samples/.deps/sample4.Plo
 src/unittest_*
 src/test-suite.log
 test-driver
+
+#bin
+src/cceph_osd
