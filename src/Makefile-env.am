@@ -32,3 +32,4 @@ check_SCRIPTS =
 LIBCOMMON = libcommon.la
 LIBCLIENT = libclient.la
 LIBRADOS = librados.a
+
