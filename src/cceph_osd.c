@@ -67,7 +67,7 @@ static int create_and_bind(char *port) {
     return socket_fd;
 }
 
-static int new_connection(int base_fd, int new_fd) {
+static void new_connection(int base_fd, int new_fd) {
     struct sockaddr in_addr;
     socklen_t in_len;
     int infd;
@@ -101,7 +101,7 @@ static int new_connection(int base_fd, int new_fd) {
     }
 }
 
-static int new_reqeust(int data_fd) {
+static void new_reqeust(int data_fd) {
     int closed = 0;
     int ret = 0;
     
@@ -138,6 +138,12 @@ static int new_reqeust(int data_fd) {
         LOG(LL_INFO, "Closed connection on descriptor %d\n", data_fd);
         close(data_fd);
     }
+}
+
+static int is_conn_err(struct epoll_event event) {
+    return (event.events & EPOLLERR) 
+           || (event.events & EPOLLHUP) 
+           || !(event.events & EPOLLIN);
 }
 
 static int start_server(char* port) {
@@ -180,12 +186,7 @@ static int start_server(char* port) {
         int fd_count = epoll_wait(epoll_fd, events, MAXEVENTS, -1);
         int i = 0;
         for (i = 0; i < fd_count; i++) {
-            if ((events[i].events & EPOLLERR) ||
-                (events[i].events & EPOLLHUP) ||
-                (!(events[i].events & EPOLLIN))) {
-              /* An error has occured on this fd, or the socket is not
- *                  ready for reading (why were we notified then?) */
-                perror("epoll error\n");
+            if (is_conn_err(events[i])) {
                 close(events[i].data.fd);
             } else if (socket_fd == events[i].data.fd) {
                 new_connection(epoll_fd, socket_fd);
