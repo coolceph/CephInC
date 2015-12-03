@@ -14,7 +14,7 @@ extern void __cceph_assert_warn(const char *assertion, const char *file, int lin
 #endif
 
 
-#define ceph_assert(expr)							\
+#define cceph_assert(expr)							\
   ((expr)								\
    ? __CCEPH_ASSERT_VOID_CAST (0)					\
    : __cceph_assert_fail (__STRING(expr), __FILE__, __LINE__, __CCEPH_ASSERT_FUNCTION))
@@ -24,7 +24,7 @@ extern void __cceph_assert_warn(const char *assertion, const char *file, int lin
    ? __CCEPH_ASSERT_VOID_CAST (0)					\
    : __cceph_assert_warn (__STRING(expr), __FILE__, __LINE__, __CCEPH_ASSERT_FUNCTION))
 
-#define ceph_abort() assert(0)
+#define cceph_abort() assert(0)
 
 // wipe any prior assert definition
 #ifdef assert
