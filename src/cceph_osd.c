@@ -11,6 +11,7 @@
 #include <errno.h>
 
 #include "common/log.h"
+#include "common/assert.h"
 
 #define MAXEVENTS 64
 
@@ -206,7 +207,6 @@ int main(int argc, char *argv[]) {
     }
 
     start_server(argv[1]);
-
     return 0;
 }
 

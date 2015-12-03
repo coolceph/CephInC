@@ -6,6 +6,7 @@ AC_INIT(cceph, 0.1, [coolceph@gmail.com])
 AC_CONFIG_SUBDIRS([src/gtest])
 #AC_CONFIG_AUX_DIR([build-aux])
 AC_PROG_CC
+CFLAGS="-g -O3 -Wall -Wextra"
 
 AM_INIT_AUTOMAKE([-Wall -Werror])
 AM_PROG_LIBTOOL
@@ -34,5 +35,6 @@ AC_FUNC_MALLOC
 
 AC_CONFIG_FILES([Makefile
   src/Makefile])
+
 
 AC_OUTPUT
