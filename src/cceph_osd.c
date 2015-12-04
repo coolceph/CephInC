@@ -199,7 +199,7 @@ static struct msg_header* read_message(int data_fd) {
 static void process_message(struct msg_header* message) {
     assert(message->op == CCEPH_MSG_OP_WRITE);
     struct msg_req_write *req_write = (struct msg_req_write*)message;
-    LOG(LL_INFO, "req_write, oid: %s, offset: " PRIu64 ", length: " PRIu64 "\n", 
+    LOG(LL_INFO, "req_write, oid: %s, offset: %lu, length: %lu \n", 
            req_write->oid, req_write->offset, req_write->length);
 
     //TODO:
