@@ -198,15 +198,33 @@ static struct msg_header* read_message(int data_fd) {
     return NULL;
 }
 
+static void do_req_write(struct msg_req_write* req_write) {
+    char data_dir[] = "./data";
+    int max_path_length = 4096;
+
+    char path[max_path_length];
+    memset(path, '\0', max_path_length);
+
+    strcat(path, data_dir);
+    strcat(path, "/");
+    strcat(path, req_write->oid);
+
+    int oid_fd = open(path, O_RDWR | O_CREAT);
+    pwrite(oid_fd, req_write->data, req_write->length, req_write->offset);
+    close(oid_fd);
+
+    free(req_write->oid);
+    free(req_write->data);
+    free(req_write);
+}
+
 static void process_message(struct msg_header* message) {
     assert(message->op == CCEPH_MSG_OP_WRITE);
     struct msg_req_write *req_write = (struct msg_req_write*)message;
-    LOG(LL_INFO, "req_write, oid: %s, offset: %lu, length: %lu \n", 
+    LOG(LL_INFO, "req_write, oid: %s, offset: %lu, length: %lu \n",
            req_write->oid, req_write->offset, req_write->length);
 
-    //TODO:
-    //  1) write data to disk
-    //  2) free req
+    do_req_write(req_write);
 }
 
 static void new_reqeust(int data_fd) {
