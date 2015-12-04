@@ -47,7 +47,7 @@ static int create_and_bind(char *port) {
 
     ret = getaddrinfo(NULL, port, &hints, &result);
     if (ret != 0) {
-        LOG(LL_ERROR, "getaddrinfo: %s\n", gai_strerror(ret));
+        LOG(LL_ERROR, "getaddrinfo: %s", gai_strerror(ret));
         return -1;
     }
 
@@ -62,7 +62,7 @@ static int create_and_bind(char *port) {
     }
 
     if (rp == NULL) {
-        LOG(LL_ERROR, "Could not bind\n");
+        LOG(LL_ERROR, "Could not bind");
         return -1;
     }
 
@@ -70,7 +70,7 @@ static int create_and_bind(char *port) {
     return socket_fd;
 }
 
-static void new_connection(int base_fd, int new_fd) {
+static int new_connection(int epoll_fd, int socket_fd) {
     struct sockaddr in_addr;
     socklen_t in_len;
     int infd;
@@ -78,7 +78,7 @@ static void new_connection(int base_fd, int new_fd) {
     int ret;
     
     in_len = sizeof(in_addr);
-    infd = accept(new_fd, &in_addr, &in_len);
+    infd = accept(socket_fd, &in_addr, &in_len);
     if (infd == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
         LOG(LL_ERROR, "accept");
     }
@@ -88,7 +88,7 @@ static void new_connection(int base_fd, int new_fd) {
                       NI_NUMERICHOST | NI_NUMERICSERV);
     if (ret == 0) {
         LOG(LL_INFO, "Accepted connection on descriptor %d "
-               "(host=%s, port=%s)\n", infd, hbuf, sbuf);
+               "(host=%s, port=%s)", infd, hbuf, sbuf);
     }
 
     ret = make_socket_non_blocking(infd);
@@ -97,11 +97,14 @@ static void new_connection(int base_fd, int new_fd) {
     struct epoll_event event;
     event.data.fd = infd;
     event.events = EPOLLIN | EPOLLET;
-    ret = epoll_ctl(base_fd, EPOLL_CTL_ADD, infd, &event);
+    ret = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, infd, &event);
     if (ret == -1) {
         LOG(LL_ERROR, "epoll_ctl");
         abort();
     }
+
+    if (ret == -1) return -1;
+    else return infd;
 }
 
 
@@ -109,20 +112,24 @@ static int read_conn(int data_fd, void* buf, size_t size) {
     int total = 0;
     int closed = 0;
     while(size > 0) {
-        int count = read(data_fd, buf, size);
+        int count = recv(data_fd, buf, size, 0);
         if (count == -1 && errno != EAGAIN) {
             /* If errno == EAGAIN, that means we have read all
                data. So go back to the main loop. */
-            LOG(LL_ERROR, "read");
+            LOG(LL_ERROR, "read close");
             closed = 1;
             break;
         }
 
-        if (count == -1) {
-            break;
+        if (count == -1 && errno == EAGAIN && size > 0) {
+            LOG(LL_ERROR, "incomplete read, wait and retry to read");
+            sleep(1);
+            continue;
         }
 
         if (count == 0) {
+            if (size > 0) LOG(LL_ERROR, "incomplete read");
+            LOG(LL_ERROR, "read close by ret 0");
             closed = 1;
             break;
         }
@@ -132,7 +139,7 @@ static int read_conn(int data_fd, void* buf, size_t size) {
         total += count;
     }
     if (closed) {
-        LOG(LL_INFO, "Closed connection on descriptor %d\n", data_fd);
+        LOG(LL_INFO, "Closed connection on descriptor %d", data_fd);
         close(data_fd);
     }
     return total;
@@ -219,9 +226,13 @@ static void process_message(struct msg_header* message) {
     do_req_write(req_write);
 }
 
-static void new_reqeust(int data_fd) {
+static void new_request(int data_fd) {
     struct msg_header* message = read_message(data_fd);
-    if (message != NULL) process_message(message);
+    while (message != NULL) {
+        LOG(LL_INFO, "new request at fd: %d\n", data_fd);
+        process_message(message);
+        message = read_message(data_fd);
+    }
 }
 
 static int is_conn_err(struct epoll_event event) {
@@ -270,12 +281,12 @@ static int start_server(char* port) {
         int fd_count = epoll_wait(epoll_fd, events, MAXEVENTS, -1);
         int i = 0;
         for (i = 0; i < fd_count; i++) {
-            if (is_conn_err(events[i])) {
+            if(is_conn_err(events[i])) {
                 close(events[i].data.fd);
             } else if (socket_fd == events[i].data.fd) {
                 new_connection(epoll_fd, socket_fd);
             } else {
-                new_reqeust(events[i].data.fd);
+                new_request(events[i].data.fd);
             }
         }
     }
