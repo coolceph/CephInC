@@ -141,10 +141,12 @@ static int read_uint8(int data_fd, uint8_t* value) {
     int size = sizeof(uint8_t);
     return read_conn(data_fd, value, size) == size ? 0 : -1;
 }
+
 static int read_uint64(int data_fd, uint64_t* value) {
     int size = sizeof(uint64_t);
     return read_conn(data_fd, value, size) == size ? 0 : -1;
 }
+
 static int read_string(int data_fd, uint16_t *size, char **string) {
     int size_size = sizeof(uint16_t);
     if(read_conn(data_fd, size, size_size) != size_size) {
@@ -160,6 +162,7 @@ static int read_string(int data_fd, uint16_t *size, char **string) {
     }
     return 0;
 }
+
 static int read_data(int data_fd, uint64_t *size, char **data) {
     int size_size = sizeof(uint64_t);
     if(read_conn(data_fd, size, size_size) != size_size) {
@@ -196,6 +199,7 @@ static struct msg_header* read_message(int data_fd) {
         return NULL;
     }
 }
+
 static void process_message(struct msg_header* message) {
     assert(message->op == CCEPH_MSG_OP_WRITE);
     struct msg_req_write *req_write = (struct msg_req_write*)message;
@@ -206,10 +210,12 @@ static void process_message(struct msg_header* message) {
     //  1) write data to disk
     //  2) free req
 }
+
 static void new_reqeust(int data_fd) {
     struct msg_header* message = read_message(data_fd);
     if (message != NULL) process_message(message);
 }
+
 static int is_conn_err(struct epoll_event event) {
     return (event.events & EPOLLERR) 
            || (event.events & EPOLLHUP) 
