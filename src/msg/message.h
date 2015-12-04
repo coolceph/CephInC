@@ -4,18 +4,18 @@
 #define CCEPH_MSG_OP_WRITE 1
 
 struct msg_header {
-    uint8_t op;
+    int8_t op;
 };
 
 //layout:op, oid, offset, length, data
 struct msg_req_write {
     struct msg_header header;
 
-    uint16_t oid_size;
+    int16_t oid_size;
     char* oid;
 
-    uint64_t offset;
-    uint64_t length;
+    int64_t offset;
+    int64_t length;
     char* data;
 };
 

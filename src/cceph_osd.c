@@ -40,7 +40,7 @@ static int create_and_bind(char *port) {
     struct addrinfo *result, *rp;
     int ret, socket_fd;
 
-    memset(&hints, 0, sizeof (struct addrinfo));
+    memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;     /* Return IPv4 and IPv6 choices */
     hints.ai_socktype = SOCK_STREAM; /* We want a TCP socket */
     hints.ai_flags = AI_PASSIVE;     /* All interfaces */
@@ -77,7 +77,7 @@ static void new_connection(int base_fd, int new_fd) {
     char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
     int ret;
     
-    in_len = sizeof in_addr;
+    in_len = sizeof(in_addr);
     infd = accept(new_fd, &in_addr, &in_len);
     if (infd == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
         LOG(LL_ERROR, "accept");
@@ -137,16 +137,16 @@ static int read_conn(int data_fd, void* buf, size_t size) {
     return count;
 }
 
-static int read_uint8(int data_fd, uint8_t* value) {
-    return read_conn(data_fd, value, sizeof(uint8_t)) == size ? 0 : -1;
+static int read_uint8(int data_fd, int8_t* value) {
+    return read_conn(data_fd, value, sizeof(*value)) == sizeof(*value) ? 0 : -1;
 }
 
-static int read_uint64(int data_fd, uint64_t* value) {
-    return read_conn(data_fd, value, sizeof(uint64_t)) == sizeof(uint64_t)? 0 : -1;
+static int read_uint64(int data_fd, int64_t* value) {
+    return read_conn(data_fd, value, sizeof(*value)) == sizeof(*value)? 0 : -1;
 }
 
 static int read_string(int data_fd, int16_t *size, char **string) {
-    if(read_conn(data_fd, size, sizeof(uint16_t)) != sizeof(uint16_t)) {
+    if(read_conn(data_fd, size, sizeof(*size)) != sizeof(*size)) {
         return -1;
     }
     
@@ -161,7 +161,7 @@ static int read_string(int data_fd, int16_t *size, char **string) {
 }
 
 static int read_data(int data_fd, int64_t *size, char **data) {
-    if(read_conn(data_fd, size, sizeof(uint64_t)) != sizeof(uint64_t)) {
+    if(read_conn(data_fd, size, sizeof(*size)) != sizeof(*size)) {
         return -1;
     }
     
@@ -175,7 +175,7 @@ static int read_data(int data_fd, int64_t *size, char **data) {
 }
 
 static struct msg_header* read_message(int data_fd) {
-    uint8_t op;
+    int8_t op;
     if(!read_uint8(data_fd, &op))
         return NULL;
 
@@ -194,6 +194,8 @@ static struct msg_header* read_message(int data_fd) {
     if(!read_data(data_fd, &(msg->length), &(msg->data))) {
         return NULL;
     }
+    
+    return NULL;
 }
 
 static void process_message(struct msg_header* message) {
@@ -251,7 +253,7 @@ static int start_server(char* port) {
     }
 
     /* Buffer where events are returned */
-    events = calloc(MAXEVENTS, sizeof event);
+    events = calloc(MAXEVENTS, sizeof(event));
 
     /* The event loop */
     while (1) {
