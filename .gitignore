@@ -86,3 +86,4 @@ test-driver
 
 #bin
 src/cceph_osd
+src/tmp_client

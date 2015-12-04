@@ -2,6 +2,7 @@ include Makefile-env.am
 
 DIST_SUBDIRS += gtest
 bin_PROGRAMS += cceph_osd
+bin_PROGRAMS += tmp_client
 
 
 cceph_osd_LDADD = \

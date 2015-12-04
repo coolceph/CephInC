@@ -29,7 +29,8 @@ void __cceph_assert_fail(const char *assertion,
         LOG(LL_INFO, "    %p:%s\n", array[i], strings[i]);
     }
 
-    //fail
+    //core dump
+    *((char*)-1) = 'x';
     exit(1);
   }
 

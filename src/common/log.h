@@ -19,7 +19,7 @@
 #define MSG_INFO                 LL_INFO, __FILE__, __LINE__, __FUNCTION__
 #define MSG_DEBUG                LL_DEBUG, __FILE__, __LINE__, __FUNCTION__
 
-#define LOG(level, fmt, args...)  { if (level <= LL_ERROR) fprintf(stderr, fmt, ##args); else fprintf(stdout, fmt, ##args); }
+#define LOG(level, fmt, args...)  { if (level <= LL_ERROR) { fprintf(stderr, fmt, ##args); fprintf(stderr, "\n"); } else { fprintf(stdout, fmt, ##args); fprintf(stdout, "\n"); } }
 //#define LOGV(level, fmt, args...) if (level <= LOGGER.log_level()) LOGGER.Write(level, __FILE__, __LINE__, __FUNCTION__, fmt, ##args)
 
 #endif
