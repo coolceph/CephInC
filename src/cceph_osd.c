@@ -106,10 +106,10 @@ static void new_connection(int base_fd, int new_fd) {
 
 
 static int read_conn(int data_fd, void* buf, size_t size) {
-    int count = 0;
+    int total = 0;
     int closed = 0;
     while(size > 0) {
-        count = read(data_fd, buf, size);
+        int count = read(data_fd, buf, size);
         if (count == -1 && errno != EAGAIN) {
             /* If errno == EAGAIN, that means we have read all
                data. So go back to the main loop. */
@@ -129,20 +129,21 @@ static int read_conn(int data_fd, void* buf, size_t size) {
         
         buf  += count;
         size -= count;
+        total += count;
     }
     if (closed) {
         LOG(LL_INFO, "Closed connection on descriptor %d\n", data_fd);
         close(data_fd);
     }
-    return count;
+    return total;
 }
 
-static int read_uint8(int data_fd, int8_t* value) {
+static int read_int8(int data_fd, int8_t* value) {
     return read_conn(data_fd, value, sizeof(*value)) == sizeof(*value) ? 0 : -1;
 }
 
-static int read_uint64(int data_fd, int64_t* value) {
-    return read_conn(data_fd, value, sizeof(*value)) == sizeof(*value)? 0 : -1;
+static int read_int64(int data_fd, int64_t* value) {
+    return read_conn(data_fd, value, sizeof(*value)) == sizeof(*value) ? 0 : -1;
 }
 
 static int read_string(int data_fd, int16_t *size, char **string) {
@@ -176,24 +177,16 @@ static int read_data(int data_fd, int64_t *size, char **data) {
 
 static struct msg_header* read_message(int data_fd) {
     int8_t op;
-    if(!read_uint8(data_fd, &op))
-        return NULL;
+    if(read_int8(data_fd, &op) != 0) return NULL;
 
     assert(op == CCEPH_MSG_OP_WRITE);
     struct msg_req_write* msg = malloc(sizeof(struct msg_req_write));
     msg->header.op = op;
 
-    if(!read_string(data_fd, &(msg->oid_size), &(msg->oid))) {
-        return NULL;
-    }
-
-    if(!read_uint64(data_fd, &(msg->offset))) {
-        return NULL;
-    }
-
-    if(!read_data(data_fd, &(msg->length), &(msg->data))) {
-        return NULL;
-    }
+    if(read_string(data_fd, &(msg->oid_size), &(msg->oid)) != 0) return NULL;
+    if(read_int64(data_fd, &(msg->offset)) != 0) return NULL;
+    if(read_int64(data_fd, &(msg->length)) != 0) return NULL;
+    if(read_data(data_fd, &(msg->length), &(msg->data)) != 0) return NULL;
     
     return NULL;
 }
