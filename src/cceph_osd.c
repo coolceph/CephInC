@@ -9,9 +9,12 @@
 #include <fcntl.h>
 #include <sys/epoll.h>
 #include <errno.h>
+#include <inttypes.h>
 
 #include "common/log.h"
 #include "common/assert.h"
+
+#include "msg/message.h"
 
 #define MAXEVENTS 64
 
@@ -101,15 +104,12 @@ static void new_connection(int base_fd, int new_fd) {
     }
 }
 
-static void new_reqeust(int data_fd) {
+
+static int read_conn(int data_fd, void* buf, size_t size) {
+    int count = 0;
     int closed = 0;
-    int ret = 0;
-    
-    while(1) {
-        ssize_t count;
-        char buf[512];
-    
-        count = read(data_fd, buf, sizeof(buf));
+    while(size > 0) {
+        count = read(data_fd, buf, size);
         if (count == -1 && errno != EAGAIN) {
             /* If errno == EAGAIN, that means we have read all
                data. So go back to the main loop. */
@@ -126,20 +126,90 @@ static void new_reqeust(int data_fd) {
             closed = 1;
             break;
         }
-    
-        ret = write(1, buf, count);
-        if (ret == -1) {
-            LOG(LL_ERROR, "write");
-            abort();
-        }
+        
+        buf  += count;
+        size -= count;
     }
-    
     if (closed) {
         LOG(LL_INFO, "Closed connection on descriptor %d\n", data_fd);
         close(data_fd);
     }
+    return count;
 }
 
+static int read_uint8(int data_fd, uint8_t* value) {
+    int size = sizeof(uint8_t);
+    return read_conn(data_fd, value, size) == size ? 0 : -1;
+}
+static int read_uint64(int data_fd, uint64_t* value) {
+    int size = sizeof(uint64_t);
+    return read_conn(data_fd, value, size) == size ? 0 : -1;
+}
+static int read_string(int data_fd, uint16_t *size, char **string) {
+    int size_size = sizeof(uint16_t);
+    if(read_conn(data_fd, size, size_size) != size_size) {
+        return -1;
+    }
+    
+    *string = malloc(*size + 1);
+    (*string)[*size] = '\0';
+    if (read_conn(data_fd, *string, *size) != *size) {
+        free(*string);
+        *string = NULL;
+        return -1;
+    }
+    return 0;
+}
+static int read_data(int data_fd, uint64_t *size, char **data) {
+    int size_size = sizeof(uint64_t);
+    if(read_conn(data_fd, size, size_size) != size_size) {
+        return -1;
+    }
+    
+    *data = malloc(*size);
+    if (read_conn(data_fd, *data, *size) != *size) {
+        free(*data);
+        *data = NULL;
+        return -1;
+    }
+    return 0;
+}
+
+static struct msg_header* read_message(int data_fd) {
+    uint8_t op;
+    if(!read_uint8(data_fd, &op))
+        return NULL;
+
+    assert(op == CCEPH_MSG_OP_WRITE);
+    struct msg_req_write* msg = malloc(sizeof(struct msg_req_write));
+    msg->header.op = op;
+
+    if(!read_string(data_fd, &(msg->oid_size), &(msg->oid))) {
+        return NULL;
+    }
+
+    if(!read_uint64(data_fd, &(msg->offset))) {
+        return NULL;
+    }
+
+    if(!read_data(data_fd, &(msg->length), &(msg->data))) {
+        return NULL;
+    }
+}
+static void process_message(struct msg_header* message) {
+    assert(message->op == CCEPH_MSG_OP_WRITE);
+    struct msg_req_write *req_write = (struct msg_req_write*)message;
+    LOG(LL_INFO, "req_write, oid: %s, offset: " PRIu64 ", length: " PRIu64 "\n", 
+           req_write->oid, req_write->offset, req_write->length);
+
+    //TODO:
+    //  1) write data to disk
+    //  2) free req
+}
+static void new_reqeust(int data_fd) {
+    struct msg_header* message = read_message(data_fd);
+    if (message != NULL) process_message(message);
+}
 static int is_conn_err(struct epoll_event event) {
     return (event.events & EPOLLERR) 
            || (event.events & EPOLLHUP) 
