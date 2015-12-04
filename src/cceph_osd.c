@@ -185,10 +185,9 @@ static struct msg_header* read_message(int data_fd) {
 
     if(read_string(data_fd, &(msg->oid_size), &(msg->oid)) != 0) return NULL;
     if(read_int64(data_fd, &(msg->offset)) != 0) return NULL;
-    if(read_int64(data_fd, &(msg->length)) != 0) return NULL;
     if(read_data(data_fd, &(msg->length), &(msg->data)) != 0) return NULL;
     
-    return NULL;
+    return (struct msg_header*)msg;
 }
 
 static void do_req_write(struct msg_req_write* req_write) {
