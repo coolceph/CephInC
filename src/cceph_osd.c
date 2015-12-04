@@ -138,18 +138,15 @@ static int read_conn(int data_fd, void* buf, size_t size) {
 }
 
 static int read_uint8(int data_fd, uint8_t* value) {
-    int size = sizeof(uint8_t);
-    return read_conn(data_fd, value, size) == size ? 0 : -1;
+    return read_conn(data_fd, value, sizeof(uint8_t)) == size ? 0 : -1;
 }
 
 static int read_uint64(int data_fd, uint64_t* value) {
-    int size = sizeof(uint64_t);
-    return read_conn(data_fd, value, size) == size ? 0 : -1;
+    return read_conn(data_fd, value, sizeof(uint64_t)) == sizeof(uint64_t)? 0 : -1;
 }
 
-static int read_string(int data_fd, uint16_t *size, char **string) {
-    int size_size = sizeof(uint16_t);
-    if(read_conn(data_fd, size, size_size) != size_size) {
+static int read_string(int data_fd, int16_t *size, char **string) {
+    if(read_conn(data_fd, size, sizeof(uint16_t)) != sizeof(uint16_t)) {
         return -1;
     }
     
@@ -163,9 +160,8 @@ static int read_string(int data_fd, uint16_t *size, char **string) {
     return 0;
 }
 
-static int read_data(int data_fd, uint64_t *size, char **data) {
-    int size_size = sizeof(uint64_t);
-    if(read_conn(data_fd, size, size_size) != size_size) {
+static int read_data(int data_fd, int64_t *size, char **data) {
+    if(read_conn(data_fd, size, sizeof(uint64_t)) != sizeof(uint64_t)) {
         return -1;
     }
     
