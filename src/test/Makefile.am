@@ -11,7 +11,7 @@ UNITTEST_LDADD = \
         -lpthread
 
 
-unittest_librados_SOURCES = test/test_librados.cc
+unittest_librados_SOURCES = test/test_client.cc
 unittest_librados_LDADD = $(LIBRADOS) $(LIBCLIENT) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_librados_CXXFLAGS = $(UNITTEST_CXXFLAGS)
 check_PROGRAMS += unittest_librados

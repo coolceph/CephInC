@@ -12,7 +12,6 @@ cceph_osd_LDADD = \
 
 include client/Makefile.am
 include common/Makefile.am
-include librados/Makefile.am
 include test/Makefile.am
 
 
