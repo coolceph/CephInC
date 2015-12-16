@@ -3,8 +3,8 @@
 
 AC_PREREQ([2.63])
 AC_INIT(cceph, 0.1, [coolceph@gmail.com])
+AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_SUBDIRS([src/gtest])
-#AC_CONFIG_AUX_DIR([build-aux])
 AC_PROG_CC
 CFLAGS="-g -O0 -Wall -Wextra"
 
