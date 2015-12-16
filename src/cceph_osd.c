@@ -188,7 +188,7 @@ static struct msg_header* read_message(int data_fd) {
     if(read_int8(data_fd, &op) != 0) return NULL;
 
     assert(op == CCEPH_MSG_OP_WRITE);
-    struct msg_req_write* msg = malloc(sizeof(struct msg_req_write));
+    struct msg_write_req* msg = malloc(sizeof(struct msg_write_req));
     msg->header.op = op;
 
     if(read_string(data_fd, &(msg->oid_size), &(msg->oid)) != 0) return NULL;
@@ -198,7 +198,7 @@ static struct msg_header* read_message(int data_fd) {
     return (struct msg_header*)msg;
 }
 
-static void do_req_write(struct msg_req_write* req_write) {
+static void do_req_write(struct msg_write_req* req_write) {
     char data_dir[] = "./data";
     int max_path_length = 4096;
 
@@ -220,7 +220,7 @@ static void do_req_write(struct msg_req_write* req_write) {
 
 static void process_message(struct msg_header* message) {
     assert(message->op == CCEPH_MSG_OP_WRITE);
-    struct msg_req_write *req_write = (struct msg_req_write*)message;
+    struct msg_write_req *req_write = (struct msg_write_req*)message;
     LOG(LL_INFO, "req_write, oid: %s, offset: %lu, length: %lu \n",
            req_write->oid, req_write->offset, req_write->length);
 

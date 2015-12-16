@@ -8,7 +8,7 @@ struct msg_header {
 };
 
 //layout:op, oid, offset, length, data
-struct msg_req_write {
+struct msg_write_req {
     struct msg_header header;
 
     int16_t oid_size;
