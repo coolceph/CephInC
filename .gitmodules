@@ -1,0 +1,3 @@
+[submodule "src/gtest"]
+	path = src/gtest
+	url = git@github.com:coolceph/gtest.git
