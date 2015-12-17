@@ -31,5 +31,4 @@ check_SCRIPTS =
 ## library definitions and dependencies
 LIBCOMMON = libcommon.la
 LIBCLIENT = libclient.la
-LIBRADOS = librados.a
 

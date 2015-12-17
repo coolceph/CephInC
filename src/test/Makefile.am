@@ -3,11 +3,11 @@ unittests:: $(check_PROGRAMS)
 
 UNITTEST_CXXFLAGS = \
         $(AM_CXXFLAGS) \
-        -I$(top_srcdir)/src/gtest/include \
-        -I$(top_builddir)/src/gtest/include
+        -I$(top_builddir)/module/gtest/include \
+        -I$(top_builddir)/module/gtest/include
 UNITTEST_LDADD = \
-        $(top_builddir)/src/gtest/lib/libgtest.a \
-        $(top_builddir)/src/gtest/lib/libgtest_main.a \
+        $(top_builddir)/module/gtest/lib/libgtest.a \
+        $(top_builddir)/module/gtest/lib/libgtest_main.a \
         -lpthread
 
 
