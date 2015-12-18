@@ -1,4 +1,4 @@
 following linux kernel
 
-tab = 8
+tab = 4
 tab to space = true

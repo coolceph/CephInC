@@ -1,7 +1,6 @@
 include Makefile-env.am
 
 bin_PROGRAMS += cceph_osd
-bin_PROGRAMS += tmp_client
 
 
 cceph_osd_LDADD = \
