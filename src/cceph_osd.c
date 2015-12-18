@@ -16,6 +16,7 @@
 #include "common/status.h"
 
 #include "msg/message.h"
+#include "msg/msg_write_obj.h"
 
 #define MAXEVENTS 64
 
@@ -188,7 +189,7 @@ static struct msg_header* read_message(int data_fd) {
     if(read_int8(data_fd, &op) != 0) return NULL;
 
     assert(op == CCEPH_MSG_OP_WRITE);
-    struct msg_write_req* msg = malloc(sizeof(struct msg_write_req));
+    struct msg_write_obj_req* msg = malloc(sizeof(struct msg_write_obj_req));
     msg->header.op = op;
 
     if(read_string(data_fd, &(msg->oid_size), &(msg->oid)) != 0) return NULL;
@@ -198,7 +199,7 @@ static struct msg_header* read_message(int data_fd) {
     return (struct msg_header*)msg;
 }
 
-static void do_req_write(struct msg_write_req* req_write) {
+static void do_req_write(struct msg_write_obj_req* req) {
     char data_dir[] = "./data";
     int max_path_length = 4096;
 
@@ -207,24 +208,24 @@ static void do_req_write(struct msg_write_req* req_write) {
 
     strcat(path, data_dir);
     strcat(path, "/");
-    strcat(path, req_write->oid);
+    strcat(path, req->oid);
 
     int oid_fd = open(path, O_RDWR | O_CREAT);
-    pwrite(oid_fd, req_write->data, req_write->length, req_write->offset);
+    pwrite(oid_fd, req->data, req->length, req->offset);
     close(oid_fd);
 
-    free(req_write->oid);
-    free(req_write->data);
-    free(req_write);
+    free(req->oid);
+    free(req->data);
+    free(req);
 }
 
 static void process_message(struct msg_header* message) {
     assert(message->op == CCEPH_MSG_OP_WRITE);
-    struct msg_write_req *req_write = (struct msg_write_req*)message;
+    struct msg_write_obj_req *req = (struct msg_write_obj_req*)message;
     LOG(LL_INFO, "req_write, oid: %s, offset: %lu, length: %lu \n",
-           req_write->oid, req_write->offset, req_write->length);
+           req->oid, req->offset, req->length);
 
-    do_req_write(req_write);
+    do_req_write(req);
 }
 
 static void new_request(int data_fd) {

@@ -11,6 +11,7 @@
 
 #include "common/log.h"
 #include "msg/message.h"
+#include "msg/msg_write_obj.h"
 
 static int send_int8(int fd, int8_t value) {
     int ret = send(fd, &value, sizeof(int8_t), 0);
@@ -64,7 +65,7 @@ static int send_data(int fd, int64_t length, char* data) {
     return 0;
 }
 
-static int send_msg_write_req(char* host, int port, struct msg_write_req* req) {
+static int send_msg_write_req(char* host, int port, struct msg_write_obj_req* req) {
 
     struct sockaddr_in server_addr_in;
     bzero(&server_addr_in, sizeof(server_addr_in) );
@@ -98,19 +99,19 @@ static int send_msg_write_req(char* host, int port, struct msg_write_req* req) {
 int client_write_obj(struct osdmap* osdmap,
                      char* oid, int64_t offset, int64_t length, char* data) {
     
-    struct msg_write_req msg_write_req;
-    msg_write_req.header.op = CCEPH_MSG_OP_WRITE;
-    msg_write_req.oid = oid;
-    msg_write_req.offset = offset;
-    msg_write_req.length = length;
-    msg_write_req.data = data;
+    struct msg_write_obj_req req;
+    req.header.op = CCEPH_MSG_OP_WRITE;
+    req.oid = oid;
+    req.offset = offset;
+    req.length = length;
+    req.data = data;
 
     int i = 0;
     for (i = 0; i < osdmap->osd_count; i++) {
         char *host = osdmap->osds[i].host;
         int   port = osdmap->osds[i].port;
         
-        int ret = send_msg_write_req(host, port, &msg_write_req);
+        int ret = send_msg_write_req(host, port, &req);
         if (ret != 0) {
             LOG(LL_ERROR, "send write msg to %s:%d error: %d", host, port, ret);
             return ret;
