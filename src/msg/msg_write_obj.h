@@ -17,4 +17,6 @@ struct msg_write_obj_req {
     char* data;
 };
 
+extern int send_msg_write_req(char* host, int port, struct msg_write_obj_req* req);
+
 #endif

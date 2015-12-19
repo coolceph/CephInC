@@ -2,14 +2,14 @@ include Makefile-env.am
 
 bin_PROGRAMS += cceph_osd
 
-
 cceph_osd_LDADD = \
 	$(LIBCOMMON)
 
 #subdirs
 
-include client/Makefile.am
 include common/Makefile.am
+include msg/Makefile.am
+include client/Makefile.am
 include test/Makefile.am
 
 

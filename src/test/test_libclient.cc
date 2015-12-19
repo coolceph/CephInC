@@ -4,7 +4,6 @@ extern "C" {
 
 #include "gtest/gtest.h"
 
-
 TEST(libclient, write_obj) {
     struct osdmap osdmap;
     osdmap.osd_count = 3;
@@ -22,5 +21,4 @@ TEST(libclient, write_obj) {
     char    data[4096];
     
     EXPECT_EQ(client_write_obj(&osdmap, oid, offset, length, data), 0);
-
 }
