@@ -38,7 +38,7 @@ FS
 RBD
 -----------
 
-1.Common Protocol Supoort: iSCSI, FC, SRP
+1.Standard Protocol Supoort: iSCSI, FC, SRP
 
 
 QA
