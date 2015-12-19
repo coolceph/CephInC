@@ -1,5 +1,5 @@
-#ifndef CCEPH_LOG_H
-#define CCEPH_LOG_H
+#ifndef CCEPH_STATUS_H
+#define CCEPH_STATUS_H
 
 #define CCEPH_STATUS_MESSAGE_LENGTH 4096
 
