@@ -34,6 +34,14 @@
 #VIM swp
 *.swp
 
+#automake
+AUTHORS
+ChangeLog
+INSTALL
+NEWS
+README
+COPYING
+
 #Ctags
 tags
 
@@ -43,6 +51,7 @@ tags
 #configure & make
 Makefile
 Makefile.in
+build-aux
 autom4te.cache/
 config.guess
 config.h.in
@@ -86,3 +95,6 @@ test-driver
 #bin
 src/cceph_osd
 src/tmp_client
+
+#other
+data

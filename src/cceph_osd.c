@@ -15,7 +15,9 @@
 #include "common/assert.h"
 #include "common/status.h"
 
+#include "common/network.h"
 #include "msg/message.h"
+#include "msg/msg_write_obj.h"
 
 #define MAXEVENTS 64
 
@@ -109,86 +111,12 @@ static int new_connection(int epoll_fd, int socket_fd) {
 }
 
 
-static int read_conn(int data_fd, void* buf, size_t size) {
-    int total = 0;
-    int closed = 0;
-    while(size > 0) {
-        int count = recv(data_fd, buf, size, 0);
-        if (count == -1 && errno != EAGAIN) {
-            /* If errno == EAGAIN, that means we have read all
-               data. So go back to the main loop. */
-            LOG(LL_ERROR, "read close");
-            closed = 1;
-            break;
-        }
-
-        if (count == -1 && errno == EAGAIN && size > 0) {
-            LOG(LL_ERROR, "incomplete read, wait and retry to read");
-            sleep(1);
-            continue;
-        }
-
-        if (count == 0) {
-            if (size > 0) LOG(LL_ERROR, "incomplete read");
-            LOG(LL_ERROR, "read close by ret 0");
-            closed = 1;
-            break;
-        }
-        
-        buf  += count;
-        size -= count;
-        total += count;
-    }
-    if (closed) {
-        LOG(LL_INFO, "Closed connection on descriptor %d", data_fd);
-        close(data_fd);
-    }
-    return total;
-}
-
-static int read_int8(int data_fd, int8_t* value) {
-    return read_conn(data_fd, value, sizeof(*value)) == sizeof(*value) ? 0 : -1;
-}
-
-static int read_int64(int data_fd, int64_t* value) {
-    return read_conn(data_fd, value, sizeof(*value)) == sizeof(*value) ? 0 : -1;
-}
-
-static int read_string(int data_fd, int16_t *size, char **string) {
-    if(read_conn(data_fd, size, sizeof(*size)) != sizeof(*size)) {
-        return -1;
-    }
-    
-    *string = malloc(*size + 1);
-    (*string)[*size] = '\0';
-    if (read_conn(data_fd, *string, *size) != *size) {
-        free(*string);
-        *string = NULL;
-        return -1;
-    }
-    return 0;
-}
-
-static int read_data(int data_fd, int64_t *size, char **data) {
-    if(read_conn(data_fd, size, sizeof(*size)) != sizeof(*size)) {
-        return -1;
-    }
-    
-    *data = malloc(*size);
-    if (read_conn(data_fd, *data, *size) != *size) {
-        free(*data);
-        *data = NULL;
-        return -1;
-    }
-    return 0;
-}
-
 static struct msg_header* read_message(int data_fd) {
     int8_t op;
     if(read_int8(data_fd, &op) != 0) return NULL;
 
     assert(op == CCEPH_MSG_OP_WRITE);
-    struct msg_req_write* msg = malloc(sizeof(struct msg_req_write));
+    struct msg_write_obj_req* msg = malloc(sizeof(struct msg_write_obj_req));
     msg->header.op = op;
 
     if(read_string(data_fd, &(msg->oid_size), &(msg->oid)) != 0) return NULL;
@@ -198,7 +126,7 @@ static struct msg_header* read_message(int data_fd) {
     return (struct msg_header*)msg;
 }
 
-static void do_req_write(struct msg_req_write* req_write) {
+static void do_req_write(struct msg_write_obj_req* req) {
     char data_dir[] = "./data";
     int max_path_length = 4096;
 
@@ -207,24 +135,24 @@ static void do_req_write(struct msg_req_write* req_write) {
 
     strcat(path, data_dir);
     strcat(path, "/");
-    strcat(path, req_write->oid);
+    strcat(path, req->oid);
 
     int oid_fd = open(path, O_RDWR | O_CREAT);
-    pwrite(oid_fd, req_write->data, req_write->length, req_write->offset);
+    pwrite(oid_fd, req->data, req->length, req->offset);
     close(oid_fd);
 
-    free(req_write->oid);
-    free(req_write->data);
-    free(req_write);
+    free(req->oid);
+    free(req->data);
+    free(req);
 }
 
 static void process_message(struct msg_header* message) {
     assert(message->op == CCEPH_MSG_OP_WRITE);
-    struct msg_req_write *req_write = (struct msg_req_write*)message;
+    struct msg_write_obj_req *req = (struct msg_write_obj_req*)message;
     LOG(LL_INFO, "req_write, oid: %s, offset: %lu, length: %lu \n",
-           req_write->oid, req_write->offset, req_write->length);
+           req->oid, req->offset, req->length);
 
-    do_req_write(req_write);
+    do_req_write(req);
 }
 
 static void new_request(int data_fd) {
