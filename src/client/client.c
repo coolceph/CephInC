@@ -11,10 +11,11 @@
 
 #include "common/log.h"
 #include "common/network.h"
-#include "msg/message.h"
+
+#include "msg/msg_header.h"
 #include "msg/msg_write_obj.h"
 
-int client_write_obj(struct osdmap* osdmap,
+int client_write_obj(struct osdmap* osdmap, int64_t log_id, 
                      char* oid, int64_t offset, int64_t length, char* data) {
     
     struct msg_write_obj_req req;
@@ -29,14 +30,15 @@ int client_write_obj(struct osdmap* osdmap,
         char *host = osdmap->osds[i].host;
         int   port = osdmap->osds[i].port;
         
-        int ret = send_msg_write_req(host, port, &req);
+        int ret = send_msg_write_req(host, port, &req, log_id);
         if (ret != 0) {
-            LOG(LL_ERROR, "send write msg to %s:%d error: %d", host, port, ret);
+            LOG(LL_ERROR, log_id, "send write msg to %s:%d error: %d", host, port, ret);
             return ret;
         }
 
-        LOG(LL_INFO, "send req_write oid: %s, offset: %ld, length: %ld " \
-                     "to osd %s: %d.", oid, offset, length, host, port);
+        LOG(LL_INFO, log_id, 
+            "send req_write oid: %s, offset: %ld, length: %ld " \
+            "to osd %s: %d.", oid, offset, length, host, port);
     }
 
     return 0;

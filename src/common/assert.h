@@ -1,11 +1,15 @@
 #ifndef CCEPH_ASSERT_H
 #define CCEPH_ASSERT_H
 
-extern void __cceph_assert_fail(const char *assertion, const char *file, int line, const char *function)
-  __attribute__ ((__noreturn__));
-extern void __cceph_assertf_fail(const char *assertion, const char *file, int line, const char *function, const char* msg, ...)
-  __attribute__ ((__noreturn__));
-extern void __cceph_assert_warn(const char *assertion, const char *file, int line, const char *function);
+#include "include/types.h"
+#include "include/int_types.h"
+
+extern void __cceph_assert_fail(int64_t log_id, const char *assertion, 
+                                const char *file, int line, const char *function);
+extern void __cceph_assertf_fail(int64_t log_id, const char *assertion, 
+                                const char *file, int line, const char *function, const char* msg, ...);
+extern void __cceph_assert_warn(int64_t log_id, const char *assertion, 
+                                const char *file, int line, const char *function);
 
 #ifdef HAVE_STATIC_CAST
 # define __CCEPH_ASSERT_VOID_CAST static_cast<void>
@@ -14,15 +18,15 @@ extern void __cceph_assert_warn(const char *assertion, const char *file, int lin
 #endif
 
 
-#define cceph_assert(expr)							\
+#define cceph_assert(logid, expr)							\
   ((expr)								\
    ? __CCEPH_ASSERT_VOID_CAST (0)					\
-   : __cceph_assert_fail (__STRING(expr), __FILE__, __LINE__, __CCEPH_ASSERT_FUNCTION))
+   : __cceph_assert_fail (log_id, __STRING(expr), __FILE__, __LINE__, __CCEPH_ASSERT_FUNCTION))
 
 #define assert_warn(expr)							\
   ((expr)								\
    ? __CCEPH_ASSERT_VOID_CAST (0)					\
-   : __cceph_assert_warn (__STRING(expr), __FILE__, __LINE__, __CCEPH_ASSERT_FUNCTION))
+   : __cceph_assert_warn (log_id, __STRING(expr), __FILE__, __LINE__, __CCEPH_ASSERT_FUNCTION))
 
 #define cceph_abort() assert(0)
 
@@ -42,9 +46,9 @@ extern void __cceph_assert_warn(const char *assertion, const char *file, int lin
 #undef __ASSERT_FUNCTION
 #define __ASSERT_FUNCTION
 
-#define assert(expr)							\
+#define assert(log_id, expr)							\
   ((expr)								\
    ? __CCEPH_ASSERT_VOID_CAST (0)					\
-   : __cceph_assert_fail (__STRING(expr), __FILE__, __LINE__, __func__))
+   : __cceph_assert_fail (log_id, __STRING(expr), __FILE__, __LINE__, __func__))
 
 #endif

@@ -14,13 +14,13 @@ struct osdmap {
     struct osd* osds;
 };
 
-extern int client_write_obj(struct osdmap* osdmap,
+extern int client_write_obj(struct osdmap* osdmap, int64_t log_id,
                      char* oid, int64_t offset, int64_t length, char* data);
 
-extern int client_read_obj(struct osdmap* osdmap,
+extern int client_read_obj(struct osdmap* osdmap, int64_t log_id,
                     char* oid, int64_t offset, int64_t length, char* data);
 
-extern int client_delete_obj(struct osdmap* osdmap,
+extern int client_delete_obj(struct osdmap* osdmap, int64_t log_id,
                       char* oid);
 
 #endif
