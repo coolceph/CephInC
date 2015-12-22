@@ -9,7 +9,7 @@
 #include "common/log.h"
 #include "common/network.h"
 
-int send_msg_write_req(char* host, int port, struct msg_write_obj_req* req) {
+int send_msg_write_req(char* host, int port, struct msg_write_obj_req* req, int64_t log_id) {
 
     struct sockaddr_in server_addr_in;
     bzero(&server_addr_in, sizeof(server_addr_in) );
@@ -20,20 +20,20 @@ int send_msg_write_req(char* host, int port, struct msg_write_obj_req* req) {
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     int ret = connect(fd, (struct sockaddr *)&server_addr_in, sizeof(server_addr_in));
     if (ret < 0) {
-        LOG(LL_ERROR, "connect to %s:%d error: %d", host, port, ret);
+        LOG(LL_ERROR, log_id, "connect to %s:%d error: %d", host, port, ret);
         return ret;
     }
 
-    ret = send_int8(fd, req->header.op);
+    ret = send_int8(fd, req->header.op, log_id);
     if (ret < 0) return ret;
 
-    ret = send_string(fd, req->oid);
+    ret = send_string(fd, req->oid, log_id);
     if (ret < 0) return ret;
 
-    ret = send_int64(fd, req->offset);
+    ret = send_int64(fd, req->offset, log_id);
     if (ret < 0) return ret;
 
-    ret = send_data(fd, req->length, req->data);
+    ret = send_data(fd, req->length, req->data, log_id);
     if (ret < 0) return ret;
 
     close(fd);
