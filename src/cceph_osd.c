@@ -149,7 +149,7 @@ static void do_req_write(struct msg_write_obj_req* req) {
 static void process_message(struct msg_header* message, int64_t log_id) {
     assert(log_id, message->op == CCEPH_MSG_OP_WRITE);
     struct msg_write_obj_req *req = (struct msg_write_obj_req*)message;
-    LOG(LL_INFO, log_id, "req_write, oid: %s, offset: %lu, length: %lu \n",
+    LOG(LL_INFO, log_id, "req_write, oid: %s, offset: %lu, length: %lu",
            req->oid, req->offset, req->length);
 
     do_req_write(req);
@@ -158,7 +158,7 @@ static void process_message(struct msg_header* message, int64_t log_id) {
 static void new_request(int data_fd, int64_t log_id) {
     struct msg_header* message = read_message(data_fd, log_id);
     while (message != NULL) {
-        LOG(LL_INFO, log_id, "New Message from fd: %d\n", data_fd);
+        LOG(LL_INFO, log_id, "New Message from fd: %d", data_fd);
         process_message(message, log_id);
         message = read_message(data_fd, log_id);
     }
@@ -237,7 +237,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    int32_t log_prefix = 0201;
+    int32_t log_prefix = 201;
     initial_log_id(log_prefix);
 
     start_server(argv[1], new_log_id());
