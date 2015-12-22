@@ -14,10 +14,11 @@
 #include "common/log.h"
 #include "common/assert.h"
 #include "common/status.h"
-#include "common/network.h"
 
-#include "msg/msg_header.h"
-#include "msg/msg_write_obj.h"
+#include "network/io.h"
+
+#include "message/msg_header.h"
+#include "message/msg_write_obj.h"
 
 #define MAXEVENTS 64
 
@@ -111,22 +112,22 @@ static int new_connection(int epoll_fd, int socket_fd, int64_t log_id) {
 }
 
 
-static struct msg_header* read_message(int data_fd, int64_t log_id) {
+static msg_header* read_message(int data_fd, int64_t log_id) {
     int8_t op;
     if(read_int8(data_fd, &op, log_id) != 0) return NULL;
 
     assert(log_id, op == CCEPH_MSG_OP_WRITE);
-    struct msg_write_obj_req* msg = malloc(sizeof(struct msg_write_obj_req));
+    msg_write_obj_req* msg = malloc(sizeof(msg_write_obj_req));
     msg->header.op = op;
 
     if(read_string(data_fd, &(msg->oid_size), &(msg->oid), log_id) != 0) return NULL;
     if(read_int64(data_fd, &(msg->offset), log_id) != 0) return NULL;
     if(read_data(data_fd, &(msg->length), &(msg->data), log_id) != 0) return NULL;
     
-    return (struct msg_header*)msg;
+    return (msg_header*)msg;
 }
 
-static void do_req_write(struct msg_write_obj_req* req) {
+static void do_req_write(msg_write_obj_req* req) {
     char data_dir[] = "./data";
     int max_path_length = 4096;
 
@@ -146,9 +147,9 @@ static void do_req_write(struct msg_write_obj_req* req) {
     free(req);
 }
 
-static void process_message(struct msg_header* message, int64_t log_id) {
+static void process_message(msg_header* message, int64_t log_id) {
     assert(log_id, message->op == CCEPH_MSG_OP_WRITE);
-    struct msg_write_obj_req *req = (struct msg_write_obj_req*)message;
+    msg_write_obj_req *req = (msg_write_obj_req*)message;
     LOG(LL_INFO, log_id, "req_write, oid: %s, offset: %lu, length: %lu",
            req->oid, req->offset, req->length);
 
@@ -156,7 +157,7 @@ static void process_message(struct msg_header* message, int64_t log_id) {
 }
 
 static void new_request(int data_fd, int64_t log_id) {
-    struct msg_header* message = read_message(data_fd, log_id);
+    msg_header* message = read_message(data_fd, log_id);
     while (message != NULL) {
         LOG(LL_INFO, log_id, "New Message from fd: %d", data_fd);
         process_message(message, log_id);

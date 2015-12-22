@@ -1,10 +1,10 @@
 #ifndef CCEPH_MSG_WRITE_OBJ_H
 #define CCEPH_MSG_WRITE_OBJ_H
 
-#include "msg/msg_header.h"
+#include "message/msg_header.h"
 
-struct msg_write_obj_req {
-    struct msg_header header;
+typedef struct {
+    msg_header header;
     
     int32_t client_id;
     int32_t req_id;
@@ -15,8 +15,8 @@ struct msg_write_obj_req {
     int64_t offset;
     int64_t length;
     char* data;
-};
+} msg_write_obj_req;
 
-extern int send_msg_write_req(char* host, int port, struct msg_write_obj_req* req, int64_t log_id);
+extern int send_msg_write_req(char* host, int port, msg_write_obj_req* req, int64_t log_id);
 
 #endif

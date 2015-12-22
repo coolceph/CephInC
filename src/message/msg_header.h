@@ -10,8 +10,8 @@
 #define CCEPH_MSG_OP_READ      3
 #define CCEPH_MSG_OP_READ_ACK  4
 
-struct msg_header {
+typedef struct {
     int8_t op;
-};
+} msg_header;
 
 #endif

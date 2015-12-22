@@ -9,9 +9,9 @@ TEST(libclient, write_obj) {
 
     initial_log_id(0301);
 
-    struct osdmap osdmap;
+    osdmap osdmap;
     osdmap.osd_count = 3;
-    osdmap.osds = (struct osd*)malloc(sizeof(struct osd) * 3);
+    osdmap.osds = (osd_id*)malloc(sizeof(osd_id) * 3);
     osdmap.osds[0].host = (char*)"127.0.0.1";
     osdmap.osds[0].port = 9000;
     osdmap.osds[1].host = (char*)"127.0.0.1";

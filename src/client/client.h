@@ -4,23 +4,23 @@
 #include "include/types.h"
 #include "include/int_types.h"
 
-struct osd {
+typedef struct {
     char* host;
     int   port;
-};
+} osd_id;
 
-struct osdmap {
+typedef struct {
     int osd_count;
-    struct osd* osds;
-};
+    osd_id* osds;
+} osdmap;
 
-extern int client_write_obj(struct osdmap* osdmap, int64_t log_id,
+extern int client_write_obj(osdmap* osdmap, int64_t log_id,
                      char* oid, int64_t offset, int64_t length, char* data);
 
-extern int client_read_obj(struct osdmap* osdmap, int64_t log_id,
+extern int client_read_obj(osdmap* osdmap, int64_t log_id,
                     char* oid, int64_t offset, int64_t length, char* data);
 
-extern int client_delete_obj(struct osdmap* osdmap, int64_t log_id,
+extern int client_delete_obj(osdmap* osdmap, int64_t log_id,
                       char* oid);
 
 #endif

@@ -1,4 +1,4 @@
-#include "msg/msg_write_obj.h"
+#include "message/msg_write_obj.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -7,9 +7,9 @@
 #include <arpa/inet.h>
 
 #include "common/log.h"
-#include "common/network.h"
+#include "network/io.h"
 
-int send_msg_write_req(char* host, int port, struct msg_write_obj_req* req, int64_t log_id) {
+int send_msg_write_req(char* host, int port, msg_write_obj_req* req, int64_t log_id) {
 
     struct sockaddr_in server_addr_in;
     bzero(&server_addr_in, sizeof(server_addr_in) );
