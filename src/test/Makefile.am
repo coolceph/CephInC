@@ -16,6 +16,6 @@ unittest_common_log_CXXFLAGS = $(UNITTEST_CXXFLAGS)
 check_PROGRAMS += unittest_common_log
 
 unittest_libclient_SOURCES = test/test_libclient.cc
-unittest_libclient_LDADD = $(LIBCLIENT) $(LIBMESSAGE) $(LIBNETWORK) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
+unittest_libclient_LDADD = $(LIBCLIENT) $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_libclient_CXXFLAGS = $(UNITTEST_CXXFLAGS)
 check_PROGRAMS += unittest_libclient

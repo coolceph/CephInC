@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 
 #include "common/log.h"
-#include "network/io.h"
+#include "message/io.h"
 
 int send_msg_write_req(char* host, int port, msg_write_obj_req* req, int64_t log_id) {
 

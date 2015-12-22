@@ -1,5 +1,5 @@
-#ifndef CCEPH_MSG_WRITE_OBJ_H
-#define CCEPH_MSG_WRITE_OBJ_H
+#ifndef CCEPH_MESSAGE_MSG_WRITE_OBJ_H
+#define CCEPH_MESSAGE_MSG_WRITE_OBJ_H
 
 #include "message/msg_header.h"
 

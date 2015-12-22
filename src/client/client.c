@@ -10,8 +10,8 @@
 #include <netinet/in.h>
 
 #include "common/log.h"
-#include "network/io.h"
 
+#include "message/io.h"
 #include "message/msg_header.h"
 #include "message/msg_write_obj.h"
 

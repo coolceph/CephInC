@@ -1,5 +1,5 @@
-#ifndef CCEPH_NETWORK_H
-#define CCEPH_NETWORK_H
+#ifndef CCEPH_MESSAGE_IO_H
+#define CCEPH_MESSAGE_IO_H
 
 #include "include/types.h"
 #include "common/log.h"

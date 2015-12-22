@@ -1,4 +1,5 @@
-libmessage_la_SOURCES = \
+libmessage_la_SOURCES =     \
+	message/io.c            \
 	message/msg_write_obj.c
 
 libmessage_la_ADLDD = \
