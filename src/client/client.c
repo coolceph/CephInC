@@ -11,7 +11,8 @@
 
 #include "common/log.h"
 #include "common/network.h"
-#include "msg/message.h"
+
+#include "msg/msg_header.h"
 #include "msg/msg_write_obj.h"
 
 int client_write_obj(struct osdmap* osdmap,

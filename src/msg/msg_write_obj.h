@@ -1,7 +1,7 @@
 #ifndef CCEPH_MSG_WRITE_OBJ_H
 #define CCEPH_MSG_WRITE_OBJ_H
 
-#include "msg/message.h"
+#include "msg/msg_header.h"
 
 struct msg_write_obj_req {
     struct msg_header header;
