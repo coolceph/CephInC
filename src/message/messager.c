@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sys/epoll.h>
 
+#include "common/assert.h"
 #include "common/log.h"
 
 static int is_conn_err(struct epoll_event event) {
@@ -15,9 +16,15 @@ static int is_conn_err(struct epoll_event event) {
            || !(event.events & EPOLLIN);
 }
 
-static void start_epoll(void* arg, int64_t log_id) {
+static msg_header* read_message(int fd, int64_t log_id) {
+    LOG(LL_NOTICE, log_id, "Read Message from fd %d, call fd_process.", fd);
+    return NULL;
+}
+
+static void start_epoll(void* arg) {
     msg_handle_t* handle = (msg_handle_t*)arg;
-    assert(log_id, handle->epoll_fd == 0);
+    int64_t log_id = handle->log_id;
+    assert(log_id, handle->epoll_fd == -1);
 
     handle->epoll_fd = epoll_create1(0);
     if (handle->epoll_fd == -1) {
@@ -25,33 +32,50 @@ static void start_epoll(void* arg, int64_t log_id) {
         abort();
     }
 
+    struct epoll_event event;
     while (1) {
-        int fd_count = epoll_wait(handle->epoll_fd, handle->events, MAX_EPOLL_EVENT_COUNT, -1);
-        int i = 0;
-        for (i = 0; i < fd_count; i++) {
-            int fd = handle->events[i].data.fd;
-            if(is_conn_err(handle->events[i])) {
-                LOG(LL_NOTICE, log_id, "Network closed for fd %d.", fd);
-                close(fd);
-                continue;
-            } 
-            
-            LOG(LL_NOTICE, log_id, "New data from fd %d, call fd_process.", fd);
-            handle->fd_process(handle, fd);
+        int fd_count = epoll_wait(handle->epoll_fd, &event, 1, -1);
+        if (fd_count < 0) {
+            //TODO: log herer
+            continue;
         }
+
+        int fd = event.data.fd;
+        if (is_conn_err(event)) {
+            LOG(LL_NOTICE, log_id, "Network closed for fd %d.", fd);
+            close(fd);
+            continue;
+        }
+
+        msg_header* msg = read_message(fd, log_id);
+        handle->msg_process(handle, msg);
     }
 }
 
-extern msg_handle_t* start_messager(int (*fd_process)(msg_handle_t* handle, int fd), 
+extern msg_handle_t* start_messager(int (*msg_process)(msg_handle_t*, msg_header*), 
                                     int64_t log_id) {
     //New msg_handle_t;
     msg_handle_t* handle = (msg_handle_t*)malloc(sizeof(msg_handle_t));
     handle->epoll_fd = -1;
-    handle->fd_process = fd_process;
-    handle->events = malloc(MAX_EPOLL_EVENT_COUNT * sizeof(struct epoll_event));
+    handle->log_id = log_id;
+    handle->msg_process = msg_process;
 
-    //run start_epoll in anther thread
+    //run start_epoll by thread pool
+    start_epoll(handle);
     
     return handle;
+}
+
+extern int wait_msg(msg_handle_t* handle, int fd, int64_t log_id) {
+    struct epoll_event event;
+    event.data.fd = fd;
+    event.data.u64 = log_id;
+    event.events = EPOLLIN | EPOLLONESHOT;
+    int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &event);
+    if (ret == -1) {
+        LOG(LL_ERROR, log_id, "epoll_ctl");
+        abort();
+    }
+    return ret;
 }
 
