@@ -16,6 +16,7 @@
 #include "common/status.h"
 
 #include "message/io.h"
+#include "message/messager.h"
 #include "message/msg_header.h"
 #include "message/msg_write_obj.h"
 

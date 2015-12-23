@@ -4,6 +4,8 @@
 #include <stdarg.h>
 #include <pthread.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define LL_FATAL                 0 
 #define LL_ERROR                 1 
