@@ -6,9 +6,12 @@
 typedef struct msg_handle_t_ msg_handle_t_;
 
 struct msg_handle_t_ {
-    int epoll_fd;
     int log_id;
     int (*msg_process)(struct msg_handle_t_*, msg_header*);
+
+    int epoll_fd;
+    int thread_count;
+    pthread_t *thread_ids;
 };
 
 typedef msg_handle_t_ msg_handle_t;

@@ -4,6 +4,7 @@
 #include <netdb.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <pthread.h>
 #include <unistd.h>
 #include <sys/epoll.h>
 
@@ -21,7 +22,7 @@ static msg_header* read_message(int fd, int64_t log_id) {
     return NULL;
 }
 
-static void start_epoll(void* arg) {
+static void* start_epoll(void* arg) {
     msg_handle_t* handle = (msg_handle_t*)arg;
     int64_t log_id = handle->log_id;
     assert(log_id, handle->epoll_fd == -1);
@@ -59,9 +60,15 @@ extern msg_handle_t* start_messager(int (*msg_process)(msg_handle_t*, msg_header
     handle->epoll_fd = -1;
     handle->log_id = log_id;
     handle->msg_process = msg_process;
+    handle->thread_count = 2; //TODO: we need a opinion
+    handle->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * handle->thread_count);
 
     //run start_epoll by thread pool
-    start_epoll(handle);
+    pthread_attr_t thread_attr;
+    int i = 0; for (i = 0; i < handle->thread_count; i++) {
+        //TODO: we need error handle and log
+        pthread_create(handle->thread_ids + i, &thread_attr, &start_epoll, handle);
+    }
     
     return handle;
 }
