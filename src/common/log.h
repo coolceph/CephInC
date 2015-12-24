@@ -4,6 +4,8 @@
 #include <stdarg.h>
 #include <pthread.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define LL_FATAL                 0 
 #define LL_ERROR                 1 
@@ -21,13 +23,15 @@
 
 #define LOG(level, log_id, fmt, args...)  {     \
     if (level <= LL_ERROR) {                    \
-        fprintf(stderr, "logid %ld,", log_id);  \
+        fprintf(stderr, "[logid %ld]", log_id); \
         fprintf(stderr, fmt, ##args);           \
-        fprintf(stderr, "\n"); }                \
-    else {                                      \
-        fprintf(stderr, "logid %ld,", log_id);  \
+        fprintf(stderr, "\n");                  \
+        fflush(stderr);                         \
+    } else {                                    \
+        fprintf(stdout, "[logid %ld]", log_id); \
         fprintf(stdout, fmt, ##args);           \
         fprintf(stdout, "\n");                  \
+        fflush(stdout);                         \
     }                                           \
 }
 

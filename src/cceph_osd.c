@@ -14,10 +14,11 @@
 #include "common/log.h"
 #include "common/assert.h"
 #include "common/status.h"
-#include "common/network.h"
 
-#include "msg/msg_header.h"
-#include "msg/msg_write_obj.h"
+#include "message/io.h"
+#include "message/messenger.h"
+#include "message/msg_header.h"
+#include "message/msg_write_obj.h"
 
 #define MAXEVENTS 64
 
@@ -73,60 +74,34 @@ static int create_and_bind(char *port, int64_t log_id) {
     return socket_fd;
 }
 
-static int new_connection(int epoll_fd, int socket_fd, int64_t log_id) {
-    struct sockaddr in_addr;
-    socklen_t in_len;
-    int infd;
-    char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
+static int new_connection(int socket_fd, msg_handle_t* msg_handle, int64_t log_id) {
     int ret;
     
-    in_len = sizeof(in_addr);
-    infd = accept(socket_fd, &in_addr, &in_len);
+    struct sockaddr in_addr;
+    socklen_t in_len = sizeof(in_addr);
+    int infd = accept(socket_fd, &in_addr, &in_len);
     if (infd == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
-        LOG(LL_ERROR, log_id, "accept");
+        LOG(LL_ERROR, log_id, "Accept error.");
+        return -1;
     }
     
+    char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
     ret = getnameinfo(&in_addr, in_len, 
                       hbuf, sizeof(hbuf), sbuf, sizeof(sbuf),
                       NI_NUMERICHOST | NI_NUMERICSERV);
     if (ret == 0) {
         LOG(LL_INFO, log_id, "Accepted connection on descriptor %d "
-               "(host=%s, port=%s)", infd, hbuf, sbuf);
+                             "(host=%s, port=%s).", infd, hbuf, sbuf);
     }
 
-    ret = make_socket_non_blocking(infd, log_id);
-    if (ret == -1) abort();
-    
-    struct epoll_event event;
-    event.data.fd = infd;
-    event.events = EPOLLIN | EPOLLET;
-    ret = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, infd, &event);
-    if (ret == -1) {
-        LOG(LL_ERROR, log_id, "epoll_ctl");
-        abort();
-    }
-
+    ret = wait_msg(msg_handle, infd, log_id);
     if (ret == -1) return -1;
     else return infd;
 }
 
 
-static struct msg_header* read_message(int data_fd, int64_t log_id) {
-    int8_t op;
-    if(read_int8(data_fd, &op, log_id) != 0) return NULL;
 
-    assert(log_id, op == CCEPH_MSG_OP_WRITE);
-    struct msg_write_obj_req* msg = malloc(sizeof(struct msg_write_obj_req));
-    msg->header.op = op;
-
-    if(read_string(data_fd, &(msg->oid_size), &(msg->oid), log_id) != 0) return NULL;
-    if(read_int64(data_fd, &(msg->offset), log_id) != 0) return NULL;
-    if(read_data(data_fd, &(msg->length), &(msg->data), log_id) != 0) return NULL;
-    
-    return (struct msg_header*)msg;
-}
-
-static void do_req_write(struct msg_write_obj_req* req) {
+static void do_req_write(msg_write_obj_req* req) {
     char data_dir[] = "./data";
     int max_path_length = 4096;
 
@@ -146,22 +121,16 @@ static void do_req_write(struct msg_write_obj_req* req) {
     free(req);
 }
 
-static void process_message(struct msg_header* message, int64_t log_id) {
+static int process_message(msg_handle_t* msg_handle, msg_header* message) {
+    int64_t log_id = msg_handle->log_id;
+
     assert(log_id, message->op == CCEPH_MSG_OP_WRITE);
-    struct msg_write_obj_req *req = (struct msg_write_obj_req*)message;
-    LOG(LL_INFO, log_id, "req_write, oid: %s, offset: %lu, length: %lu \n",
+    msg_write_obj_req *req = (msg_write_obj_req*)message;
+    LOG(LL_INFO, log_id, "req_write, oid: %s, offset: %lu, length: %lu",
            req->oid, req->offset, req->length);
 
     do_req_write(req);
-}
-
-static void new_request(int data_fd, int64_t log_id) {
-    struct msg_header* message = read_message(data_fd, log_id);
-    while (message != NULL) {
-        LOG(LL_INFO, log_id, "New Message from fd: %d\n", data_fd);
-        process_message(message, log_id);
-        message = read_message(data_fd, log_id);
-    }
+    return 0;
 }
 
 static int is_conn_err(struct epoll_event event) {
@@ -170,13 +139,10 @@ static int is_conn_err(struct epoll_event event) {
            || !(event.events & EPOLLIN);
 }
 
-static int start_server(char* port, int64_t log_id) {
-    int socket_fd, epoll_fd;
+static int start_server(char* port, msg_handle_t* msg_handle, int64_t log_id) {
     int ret;
-    struct epoll_event event;
-    struct epoll_event *events;
 
-    socket_fd = create_and_bind(port, log_id);
+    int socket_fd = create_and_bind(port, log_id);
     if (socket_fd == -1) abort();
 
     ret = make_socket_non_blocking(socket_fd, log_id);
@@ -188,12 +154,13 @@ static int start_server(char* port, int64_t log_id) {
         abort();
     }
 
-    epoll_fd = epoll_create1(0);
+    int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
         LOG(LL_ERROR, log_id, "epoll_create");
         abort();
     }
 
+    struct epoll_event event;
     event.data.fd = socket_fd;
     event.events = EPOLLIN | EPOLLET;
     ret = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket_fd, &event);
@@ -202,31 +169,24 @@ static int start_server(char* port, int64_t log_id) {
         abort();
     }
 
-    /* Buffer where events are returned */
-    events = calloc(MAXEVENTS, sizeof(event));
-
-    /* The event loop */
     while (1) {
-        int fd_count = epoll_wait(epoll_fd, events, MAXEVENTS, -1);
-        int i = 0;
-        for (i = 0; i < fd_count; i++) {
-            int fd = events[i].data.fd;
-            if(is_conn_err(events[i])) {
-                LOG(LL_NOTICE, log_id, "Network closed for fd %d.", fd);
-                close(fd);
-            } else if (socket_fd == fd) {
-                int64_t log_id = new_log_id();
-                LOG(LL_NOTICE, log_id, "New Connection.");
-                new_connection(epoll_fd, fd, log_id);
-            } else {
-                int64_t log_id = new_log_id();
-                LOG(LL_NOTICE, log_id, "New Request from fd %d.", fd);
-                new_request(fd, log_id);
-            }
+        int fd_count = epoll_wait(epoll_fd, &event, 1, -1);
+        if (fd_count <= 0) {
+            //TODO: error log here
+            continue;
         }
+
+        int fd = event.data.fd;
+        assert(log_id, fd == socket_fd);
+        if (is_conn_err(event)) {
+            LOG(LL_FATAL, log_id, "Listen Socked Closed.");
+            close(fd);
+            abort();
+        }
+
+        new_connection(socket_fd, msg_handle, log_id);
     }
 
-    free(events);
     close(socket_fd);
 }
 
@@ -236,11 +196,13 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Usage: %s [port]\n", argv[0]);
         exit(EXIT_FAILURE);
     }
+    char* port = argv[1];
 
-    int32_t log_prefix = 0201;
+    int32_t log_prefix = 201;
     initial_log_id(log_prefix);
 
-    start_server(argv[1], new_log_id());
+    msg_handle_t* msg_handle = start_messager(&process_message, new_log_id());
+    start_server(port, msg_handle, new_log_id());
     return 0;
 }
 

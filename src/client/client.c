@@ -10,15 +10,15 @@
 #include <netinet/in.h>
 
 #include "common/log.h"
-#include "common/network.h"
 
-#include "msg/msg_header.h"
-#include "msg/msg_write_obj.h"
+#include "message/io.h"
+#include "message/msg_header.h"
+#include "message/msg_write_obj.h"
 
-int client_write_obj(struct osdmap* osdmap, int64_t log_id, 
+int client_write_obj(osdmap* osdmap, int64_t log_id, 
                      char* oid, int64_t offset, int64_t length, char* data) {
     
-    struct msg_write_obj_req req;
+    msg_write_obj_req req;
     req.header.op = CCEPH_MSG_OP_WRITE;
     req.oid = oid;
     req.offset = offset;

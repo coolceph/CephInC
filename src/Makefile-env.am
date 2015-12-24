@@ -29,7 +29,7 @@ check_SCRIPTS =
 
 #####################
 ## library definitions and dependencies
-LIBCOMMON = libcommon.la
-LIBMSG = libmsg.la
-LIBCLIENT = libclient.la
+LIBCOMMON  = libcommon.la
+LIBMESSAGE = libmessage.la
+LIBCLIENT  = libclient.la
 

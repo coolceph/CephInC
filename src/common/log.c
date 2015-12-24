@@ -10,7 +10,7 @@ void initial_log_id(int32_t prefix) {
     srand((unsigned)time(0));
 
     int64_t log_id = prefix;
-    log_id = (log_id + 10000000000) + rand();
+    log_id = (log_id * 10000000000) + rand();
 
     atomic_set64(&g_log_id, log_id);
 }
