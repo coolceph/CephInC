@@ -26,7 +26,8 @@ struct msg_handle_t_ {
     conn_t conn_list;
 
     pthread_mutex_t send_msg_list_lock;
-    msg_header send_msg_list;
+    msg_header send_msg_list; //send_msg will put msg here
+    int send_msg_pipe_fd[2]; //used to wake up thread to send msg
 };
 
 typedef msg_handle_t_ msg_handle_t;
