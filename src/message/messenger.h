@@ -1,10 +1,17 @@
 #ifndef CCEPH_MESSAGE_MESSAGER_H
 #define CCEPH_MESSAGE_MESSAGER_H
 
+#include "common/list.h"
 #include "message/msg_header.h"
 
-typedef struct msg_handle_t_ msg_handle_t_;
+typedef struct {
+    char* host;
+    int   port;
+    int   fd;
+    struct list_head node;
+} conn_t;
 
+typedef struct msg_handle_t_ msg_handle_t_;
 struct msg_handle_t_ {
     int log_id;
     int (*msg_process)(struct msg_handle_t_*, msg_header*);
@@ -12,8 +19,10 @@ struct msg_handle_t_ {
     int epoll_fd;
     int thread_count;
     pthread_t *thread_ids;
-};
 
+    conn_t conn_list;
+    msg_header send_msg_list;
+};
 typedef msg_handle_t_ msg_handle_t;
 
 extern msg_handle_t* start_messager(int (*msg_process)(msg_handle_t* handle, msg_header* msg), 
