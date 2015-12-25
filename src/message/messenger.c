@@ -62,19 +62,20 @@ static void* start_epoll(void* arg) {
             //TODO: log
             continue;
         }
-        handle->msg_process(handle, msg);
+
+        //TODO: we should pass the real conn
+        handle->msg_process(handle, NULL, msg);
     }
 
     return NULL;
 }
 
-extern msg_handle_t* start_messager(int (*msg_process)(msg_handle_t*, msg_header*), 
-                                    int64_t log_id) {
+extern msg_handle_t* start_messager(msg_handler msg_handler, int64_t log_id) {
     //New msg_handle_t;
     msg_handle_t* handle = (msg_handle_t*)malloc(sizeof(msg_handle_t));
     handle->epoll_fd = -1;
     handle->log_id = log_id;
-    handle->msg_process = msg_process;
+    handle->msg_process = msg_handler;
     handle->thread_count = 2; //TODO: we need a opinion
     handle->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * handle->thread_count);
     
@@ -96,7 +97,7 @@ extern msg_handle_t* start_messager(int (*msg_process)(msg_handle_t*, msg_header
     return handle;
 }
 
-extern int wait_msg(msg_handle_t* handle, int fd, int64_t log_id) {
+extern conn_t* new_conn(msg_handle_t* handle, char* host, int port, int fd, int64_t log_id) {
     struct epoll_event event;
     event.data.fd = fd;
     event.events = EPOLLIN | EPOLLONESHOT;
@@ -105,6 +106,7 @@ extern int wait_msg(msg_handle_t* handle, int fd, int64_t log_id) {
         LOG(LL_ERROR, log_id, "epoll_ctl");
         abort();
     }
-    return ret;
+    //TODO: return the real conn
+    return NULL;
 }
 

@@ -8,28 +8,36 @@ typedef struct {
     char* host;
     int   port;
     int   fd;
+
+    pthread_mutex_t write_lock;
+
     struct list_head node;
 } conn_t;
 
 typedef struct msg_handle_t_ msg_handle_t_;
 struct msg_handle_t_ {
     int log_id;
-    int (*msg_process)(struct msg_handle_t_*, msg_header*);
+    int (*msg_process)(struct msg_handle_t_*, conn_t* conn, msg_header*);
 
     int epoll_fd;
     int thread_count;
     pthread_t *thread_ids;
 
     conn_t conn_list;
+
+    pthread_mutex_t send_msg_list_lock;
     msg_header send_msg_list;
 };
+
 typedef msg_handle_t_ msg_handle_t;
+typedef int (*msg_handler)(msg_handle_t*, conn_t*, msg_header*);
 
-extern msg_handle_t* start_messager(int (*msg_process)(msg_handle_t* handle, msg_header* msg), 
-                                    int64_t log_id);
+extern msg_handle_t* start_messager(msg_handler msg_handler, int64_t log_id);
 
-extern int send_msg(msg_handle_t* handle, msg_header* msg, int64_t log_id);
+extern conn_t* new_conn(msg_handle_t* handle, char* host, int port, int fd, int64_t log_id);
+extern conn_t* get_conn(msg_handle_t* handle, char* host, int port, int64_t log_id);
 
-extern int wait_msg(msg_handle_t* handle, int fd, int64_t log_id);
+extern int send_msg(msg_handle_t* handle, conn_t* conn, msg_header* msg, int64_t log_id);
+extern int wait_msg(msg_handle_t* handle, conn_t* conn, int64_t log_id);
 
 #endif

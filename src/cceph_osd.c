@@ -94,9 +94,12 @@ static int new_connection(int socket_fd, msg_handle_t* msg_handle, int64_t log_i
                              "(host=%s, port=%s).", infd, hbuf, sbuf);
     }
 
-    ret = wait_msg(msg_handle, infd, log_id);
-    if (ret == -1) return -1;
-    else return infd;
+    conn_t* conn = new_conn(msg_handle, hbuf, atoi(sbuf), infd, log_id);
+    if (conn == NULL)  {
+        return -1;
+    } else { 
+        return 0;
+    }
 }
 
 
@@ -121,7 +124,7 @@ static void do_req_write(msg_write_obj_req* req) {
     free(req);
 }
 
-static int process_message(msg_handle_t* msg_handle, msg_header* message) {
+static int process_message(msg_handle_t* msg_handle, conn_t* conn, msg_header* message) {
     int64_t log_id = msg_handle->log_id;
 
     assert(log_id, message->op == CCEPH_MSG_OP_WRITE);
