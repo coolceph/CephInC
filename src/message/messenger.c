@@ -99,7 +99,6 @@ extern msg_handle_t* start_messager(int (*msg_process)(msg_handle_t*, msg_header
 extern int wait_msg(msg_handle_t* handle, int fd, int64_t log_id) {
     struct epoll_event event;
     event.data.fd = fd;
-    //event.data.u64 = log_id;
     event.events = EPOLLIN | EPOLLONESHOT;
     int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &event);
     if (ret == -1) {
