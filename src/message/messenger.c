@@ -22,7 +22,7 @@ static conn_t* get_conn_by_host_and_port(msg_handle_t* handle, char* host, int p
     return NULL;
 }
 
-static int free_conn(msg_handle_t* handle, int fd, int64_t log_id) {
+static int close_conn(msg_handle_t* handle, int fd, int64_t log_id) {
     //TODO:
     //  1) get conn from conn_list
     //  2) if conn is not found, A ERROR log and return;
@@ -72,11 +72,14 @@ static void* start_epoll(void* arg) {
         int fd = event.data.fd;
         if (is_conn_err(event)) {
             LOG(LL_INFO, log_id, "Network closed for fd %d.", fd);
-            free_conn(handle, fd, log_id);
+            close_conn(handle, fd, log_id);
             continue;
         }
 
         //TODO: if fd == handle->send_msg_pipe_fd[1];
+        if (fd == handle->send_msg_pipe_fd[1]) {
+            LOG(LL_INFO, log_id, "thread is wake up to send msg, thread_id: %d", pthread_self());
+        }
 
         conn_t* conn = get_conn_by_fd(handle, fd);
         if (conn == NULL) {
@@ -130,8 +133,11 @@ extern msg_handle_t* start_messager(msg_handler msg_handler, int64_t log_id) {
     pthread_attr_t thread_attr;
     pthread_attr_init(&thread_attr);
     int i = 0; for (i = 0; i < handle->thread_count; i++) {
-        //TODO: we need error handle and log
-        pthread_create(handle->thread_ids + i, &thread_attr, &start_epoll, handle);
+        int ret = pthread_create(handle->thread_ids + i, &thread_attr, &start_epoll, handle);
+        if (ret < 0) {
+            LOG(LL_FATAL, log_id, "create start_epoll thread error: %d", ret);
+            abort();
+        }
     }
 
     //add the send_msg_pipe_fd to epoll set
