@@ -13,7 +13,9 @@
 #define CCEPH_MSG_OP_READ_ACK  4
 
 typedef struct {
-    int8_t op;
+    int8_t  op;
+    int64_t log_id;
+
     struct list_head node;
 } msg_header;
 

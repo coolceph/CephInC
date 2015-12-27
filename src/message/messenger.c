@@ -55,6 +55,41 @@ static msg_header* read_message(int fd, int64_t log_id) {
     
     return (msg_header*)msg;
 }
+static void try_send_msg(msg_handle_t* handle, int64_t log_id) {
+    //TODO:
+    //  lock msg_lock
+    //      pop msg from handle->send_msg_list
+    //  unlock msg_lock
+    //
+    //  read_lock conn_list_lock
+    //  if (!find_conn) {
+    //      unlock conn_list_lock
+    //      free msg;
+    //      return;
+    //  }
+    //
+    //  lock conn_lock
+    //  if (conn->state == closed) {
+    //      unlock conn_lock
+    //      unlock conn_list_lock
+    //      free msg;
+    //      return;
+    //  }
+    //
+    //  if (!send_msg) {
+    //      conn->state = closed;
+    //      unlock conn_lock;
+    //      unlock conn_list_lock;
+    //      free msg;
+    //      free_conn_lock(conn);
+    //      return;
+    //  }
+    //
+    //  unlock_conn_lock;
+    //  unlock_conn_list_lock;
+    //  free_msg;
+    //  return;
+}
 
 static void* start_epoll(void* arg) {
     msg_handle_t* handle = (msg_handle_t*)arg;
@@ -76,9 +111,9 @@ static void* start_epoll(void* arg) {
             continue;
         }
 
-        //TODO: if fd == handle->send_msg_pipe_fd[1];
         if (fd == handle->send_msg_pipe_fd[1]) {
-            LOG(LL_INFO, log_id, "thread is wake up to send msg, thread_id: %d", pthread_self());
+            LOG(LL_INFO, log_id, "thread is wake up to send msg, thread_id: %lu", pthread_self());
+            try_send_msg(handle, log_id);
         }
 
         conn_t* conn = get_conn_by_fd(handle, fd);
