@@ -5,6 +5,7 @@
 #include <netdb.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <sys/epoll.h>
@@ -15,15 +16,42 @@
 #include "message/io.h"
 #include "message/msg_write_obj.h"
 
+//caller must has handle->conn_list_lock
 static conn_t* get_conn_by_fd(msg_handle_t* handle, int fd) {
-    return NULL;
+    struct list_head *pos;
+    conn_t *conn = NULL;
+    conn_t *result = NULL;
+
+    list_for_each(pos, &(handle->conn_list.conn_list_node))
+    {
+        conn = list_entry(pos, conn_t, conn_list_node);
+        if (conn->fd == fd) {
+            result = conn;
+        }
+    }
+    
+    return result;
 }
+//caller must has handle->conn_list_lock
 static conn_t* get_conn_by_host_and_port(msg_handle_t* handle, char* host, int port) {
-    return NULL;
+    struct list_head *pos;
+    conn_t *conn = NULL;
+    conn_t *result = NULL;
+
+    list_for_each(pos, &(handle->conn_list.conn_list_node))
+    {
+        conn = list_entry(pos, conn_t, conn_list_node);
+        if (conn->port == port && strcmp(conn->host, host) == 0) {
+            result = conn;
+        }
+    }
+    
+    return result;
 }
 
 static int close_conn(msg_handle_t* handle, int fd, int64_t log_id) {
     //TODO:
+    //  0) wrlock handle->conn_list_lock
     //  1) get conn from conn_list
     //  2) if conn is not found, A ERROR log and return;
     //  3) if conn is found:
@@ -148,10 +176,10 @@ extern msg_handle_t* start_messager(msg_handler msg_handler, int64_t log_id) {
     handle->thread_count = 2; //TODO: we need a opinion
     handle->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * handle->thread_count);
 
-    init_list_head(&(handle->conn_list.node));
+    init_list_head(&(handle->conn_list.conn_list_node));
     pthread_rwlock_init(&(handle->conn_list_lock), NULL);
 
-    init_list_head(&(handle->send_msg_list.node));
+    init_list_head(&(handle->send_msg_list.msg_list_node));
     pthread_mutex_init(&(handle->send_msg_list_lock), NULL);
 
     //initial send_msg_pipe;
