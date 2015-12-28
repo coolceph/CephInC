@@ -80,8 +80,9 @@ static void try_send_msg(msg_handle_t* handle, int64_t log_id) {
     //      conn->state = closed;
     //      unlock conn_lock;
     //      unlock conn_list_lock;
+    //
+    //      close_conn(conn);
     //      free msg;
-    //      free_conn_lock(conn);
     //      return;
     //  }
     //
@@ -146,8 +147,12 @@ extern msg_handle_t* start_messager(msg_handler msg_handler, int64_t log_id) {
     handle->msg_process = msg_handler;
     handle->thread_count = 2; //TODO: we need a opinion
     handle->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * handle->thread_count);
+
     init_list_head(&(handle->conn_list.node));
+    pthread_rwlock_init(&(handle->conn_list_lock), NULL);
+
     init_list_head(&(handle->send_msg_list.node));
+    pthread_mutex_init(&(handle->send_msg_list_lock), NULL);
 
     //initial send_msg_pipe;
     int ret = pipe(handle->send_msg_pipe_fd);
