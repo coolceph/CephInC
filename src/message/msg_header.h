@@ -4,6 +4,8 @@
 #include "include/types.h"
 #include "include/int_types.h"
 
+#include "common/list.h"
+
 #define CCEPH_MSG_OP_UNKNOWN   0
 #define CCEPH_MSG_OP_WRITE     1
 #define CCEPH_MSG_OP_WRITE_ACK 2
@@ -11,7 +13,10 @@
 #define CCEPH_MSG_OP_READ_ACK  4
 
 typedef struct {
-    int8_t op;
+    int8_t  op;
+    int64_t log_id;
+
+    struct list_head msg_list_node;
 } msg_header;
 
 #endif
