@@ -22,8 +22,7 @@ static conn_t* get_conn_by_fd(msg_handle_t* handle, int fd) {
     conn_t *conn = NULL;
     conn_t *result = NULL;
 
-    list_for_each(pos, &(handle->conn_list.conn_list_node))
-    {
+    list_for_each(pos, &(handle->conn_list.conn_list_node)) {
         conn = list_entry(pos, conn_t, conn_list_node);
         if (conn->fd == fd) {
             result = conn;
@@ -38,8 +37,7 @@ static conn_t* get_conn_by_host_and_port(msg_handle_t* handle, char* host, int p
     conn_t *conn = NULL;
     conn_t *result = NULL;
 
-    list_for_each(pos, &(handle->conn_list.conn_list_node))
-    {
+    list_for_each(pos, &(handle->conn_list.conn_list_node)) {
         conn = list_entry(pos, conn_t, conn_list_node);
         if (conn->port == port && strcmp(conn->host, host) == 0) {
             result = conn;
@@ -52,12 +50,16 @@ static conn_t* get_conn_by_host_and_port(msg_handle_t* handle, char* host, int p
 static int close_conn(msg_handle_t* handle, int fd, int64_t log_id) {
     //TODO:
     //  0) wrlock handle->conn_list_lock
-    //  1) get conn from conn_list
-    //  2) if conn is not found, A ERROR log and return;
+    //  1) get conn from conn_list by fd
+    //  2) if conn is not found
+    //      2.1) ERROR log
+    //      2.2) unlock hanlde->conn_list_lock
+    //      2.3) return;
     //  3) if conn is found:
     //      3.1) remove it from conn_list
     //      3.2) close fd
     //      3.3) NOTICE log
+    //      3.4) unlock handle->conn_list_lock
     return 0;
 }
 
