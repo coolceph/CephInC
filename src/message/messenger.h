@@ -11,7 +11,7 @@ typedef struct {
 
     pthread_mutex_t write_lock;
 
-    struct list_head conn_list_node;
+    struct list_head list_node;
 } conn_t;
 
 typedef struct msg_handle_t_ msg_handle_t_;

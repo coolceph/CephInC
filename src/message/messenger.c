@@ -22,8 +22,8 @@ extern conn_t* get_conn_by_fd(msg_handle_t* handle, int fd) {
     conn_t *conn = NULL;
     conn_t *result = NULL;
 
-    list_for_each(pos, &(handle->conn_list.conn_list_node)) {
-        conn = list_entry(pos, conn_t, conn_list_node);
+    list_for_each(pos, &(handle->conn_list.list_node)) {
+        conn = list_entry(pos, conn_t, list_node);
         if (conn->fd == fd) {
             result = conn;
         }
@@ -37,8 +37,8 @@ static conn_t* get_conn_by_host_and_port(msg_handle_t* handle, char* host, int p
     conn_t *conn = NULL;
     conn_t *result = NULL;
 
-    list_for_each(pos, &(handle->conn_list.conn_list_node)) {
-        conn = list_entry(pos, conn_t, conn_list_node);
+    list_for_each(pos, &(handle->conn_list.list_node)) {
+        conn = list_entry(pos, conn_t, list_node);
         if (conn->port == port && strcmp(conn->host, host) == 0) {
             result = conn;
         }
@@ -178,11 +178,11 @@ extern msg_handle_t* start_messager(msg_handler msg_handler, int64_t log_id) {
     handle->thread_count = 2; //TODO: we need a opinion
     handle->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * handle->thread_count);
 
-    init_list_head(&(handle->conn_list.conn_list_node));
-    pthread_rwlock_init(&(handle->conn_list_lock), NULL);
+    init_list_head(&handle->conn_list.list_node);
+    pthread_rwlock_init(&handle->conn_list_lock, NULL);
 
-    init_list_head(&(handle->send_msg_list.msg_list_node));
-    pthread_mutex_init(&(handle->send_msg_list_lock), NULL);
+    init_list_head(&handle->send_msg_list.list_node);
+    pthread_mutex_init(&handle->send_msg_list_lock, NULL);
 
     //initial send_msg_pipe;
     int ret = pipe(handle->send_msg_pipe_fd);
