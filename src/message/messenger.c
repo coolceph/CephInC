@@ -17,7 +17,7 @@
 #include "message/msg_write_obj.h"
 
 //caller must has handle->conn_list_lock
-static conn_t* get_conn_by_fd(msg_handle_t* handle, int fd) {
+extern conn_t* get_conn_by_fd(msg_handle_t* handle, int fd) {
     struct list_head *pos;
     conn_t *conn = NULL;
     conn_t *result = NULL;
@@ -229,3 +229,6 @@ extern conn_t* new_conn(msg_handle_t* handle, char* host, int port, int fd, int6
     return NULL;
 }
 
+extern conn_t* TEST_get_conn_by_fd(msg_handle_t* handle, int fd) {
+    return get_conn_by_fd(handle, fd);
+}
