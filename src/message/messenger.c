@@ -233,3 +233,6 @@ extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, in
 extern conn_t* TEST_get_conn_by_fd(msg_handle_t* handle, int fd) {
     return get_conn_by_fd(handle, fd);
 }
+extern conn_t* TEST_get_conn_by_host_and_port(msg_handle_t* handle, char* host, int port) {
+    return get_conn_by_host_and_port(handle, host, port);
+}
