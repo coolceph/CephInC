@@ -177,6 +177,7 @@ extern msg_handle_t* start_messager(msg_handler msg_handler, int64_t log_id) {
     handle->msg_process = msg_handler;
     handle->thread_count = 2; //TODO: we need a opinion
     handle->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * handle->thread_count);
+    atomic_set64(&handle->next_conn_id, 1);
 
     init_list_head(&handle->conn_list.list_node);
     pthread_rwlock_init(&handle->conn_list_lock, NULL);
@@ -216,7 +217,7 @@ extern msg_handle_t* start_messager(msg_handler msg_handler, int64_t log_id) {
     return handle;
 }
 
-extern conn_t* new_conn(msg_handle_t* handle, char* host, int port, int fd, int64_t log_id) {
+extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, int64_t log_id) {
     struct epoll_event event;
     event.data.fd = fd;
     event.events = EPOLLIN | EPOLLONESHOT;
@@ -226,7 +227,7 @@ extern conn_t* new_conn(msg_handle_t* handle, char* host, int port, int fd, int6
         abort();
     }
     //TODO: return the real conn
-    return NULL;
+    return 0;
 }
 
 extern conn_t* TEST_get_conn_by_fd(msg_handle_t* handle, int fd) {
