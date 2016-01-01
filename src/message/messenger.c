@@ -17,7 +17,22 @@
 #include "message/msg_write_obj.h"
 
 //caller must has handle->conn_list_lock
-extern conn_t* get_conn_by_fd(msg_handle_t* handle, int fd) {
+static conn_t* get_conn_by_id(msg_handle_t* handle, int id) {
+    struct list_head *pos;
+    conn_t *conn = NULL;
+    conn_t *result = NULL;
+
+    list_for_each(pos, &(handle->conn_list.list_node)) {
+        conn = list_entry(pos, conn_t, list_node);
+        if (conn->id == id) {
+            result = conn;
+	    break;
+        }
+    }
+    return result;
+}
+//caller must has handle->conn_list_lock
+static conn_t* get_conn_by_fd(msg_handle_t* handle, int fd) {
     struct list_head *pos;
     conn_t *conn = NULL;
     conn_t *result = NULL;
@@ -26,9 +41,9 @@ extern conn_t* get_conn_by_fd(msg_handle_t* handle, int fd) {
         conn = list_entry(pos, conn_t, list_node);
         if (conn->fd == fd) {
             result = conn;
+	    break;
         }
     }
-    
     return result;
 }
 //caller must has handle->conn_list_lock
@@ -41,9 +56,9 @@ static conn_t* get_conn_by_host_and_port(msg_handle_t* handle, char* host, int p
         conn = list_entry(pos, conn_t, list_node);
         if (conn->port == port && strcmp(conn->host, host) == 0) {
             result = conn;
+	    break;
         }
     }
-    
     return result;
 }
 
@@ -230,6 +245,9 @@ extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, in
     return 0;
 }
 
+extern conn_t* TEST_get_conn_by_id(msg_handle_t* handle, int id) {
+    return get_conn_by_id(handle, id);
+}
 extern conn_t* TEST_get_conn_by_fd(msg_handle_t* handle, int fd) {
     return get_conn_by_fd(handle, fd);
 }

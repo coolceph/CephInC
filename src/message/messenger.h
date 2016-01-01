@@ -51,6 +51,7 @@ extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, in
 extern int wait_msg(msg_handle_t* handle, conn_id_t conn_id, int64_t log_id);
 
 //for test
+extern conn_t* TEST_get_conn_by_id(msg_handle_t* handle, int id);
 extern conn_t* TEST_get_conn_by_fd(msg_handle_t* handle, int fd);
 extern conn_t* TEST_get_conn_by_host_and_port(msg_handle_t* handle, char* host, int port);
 #endif

@@ -94,12 +94,8 @@ static int new_connection(int socket_fd, msg_handle_t* msg_handle, int64_t log_i
                              "(host=%s, port=%s).", infd, hbuf, sbuf);
     }
 
-    conn_t* conn = new_conn(msg_handle, hbuf, atoi(sbuf), infd, log_id);
-    if (conn == NULL)  {
-        return -1;
-    } else { 
-        return 0;
-    }
+    conn_id_t conn_id = new_conn(msg_handle, hbuf, atoi(sbuf), infd, log_id);
+    return conn_id < 0 ? conn_id : 0;
 }
 
 
