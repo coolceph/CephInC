@@ -238,11 +238,18 @@ extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, in
     event.events = EPOLLIN | EPOLLONESHOT;
     int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &event);
     if (ret == -1) {
-        LOG(LL_ERROR, log_id, "epoll_ctl");
+        LOG(LL_ERROR, log_id, "epoll_ctl for new conn %s:%d, fd %d, error: %d", host, port, fd, ret);
         abort();
     }
-    //TODO: return the real conn
-    return 0;
+    conn_t* conn = (conn_t*)malloc(sizeof(conn_t));
+    conn->id = atomic_add64(&handle->next_conn_id, 1);
+    conn->fd = fd;
+    conn->port = port;
+    conn->host = (char*)malloc(sizeof(char) * strlen(host));
+    strcpy(conn->host, host);
+    LOG(LL_NOTICE, log_id, "New conn %s:%d, fd %d", host, port, fd);
+
+    return conn->id;
 }
 
 extern conn_t* TEST_get_conn_by_id(msg_handle_t* handle, int id) {
