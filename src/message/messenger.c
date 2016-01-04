@@ -162,6 +162,7 @@ static void* start_epoll(void* arg) {
             try_send_msg(handle, log_id);
         }
 
+	//TODO: caller must has handle->conn_list_lock
         conn_t* conn = get_conn_by_fd(handle, fd);
         if (conn == NULL) {
             LOG(LL_ERROR, log_id, "epoll_wait return fd %d, but conn is not found", fd);
@@ -178,7 +179,7 @@ static void* start_epoll(void* arg) {
             LOG(LL_INFO, log_id, "Msg read from conn %s:%d, fd %d, op %d", conn->host, conn->port, fd, msg->op);
         }
 
-	//TODO: call wait_msg for the conn here
+	//TODO: call wait_msg for the conn before process
         handle->msg_process(handle, conn, msg);
     }
 
@@ -245,13 +246,15 @@ extern msg_handle_t* start_messager(msg_handler_t msg_handler, int64_t log_id) {
 }
 
 extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, int64_t log_id) {
+    //New connection from params
     conn_t* conn = (conn_t*)malloc(sizeof(conn_t));
     conn->id = atomic_add64(&handle->next_conn_id, 1);
     conn->fd = fd;
     conn->port = port;
     conn->host = (char*)malloc(sizeof(char) * strlen(host));
-
     strcpy(conn->host, host);
+
+    //Add fd to epoll set
     struct epoll_event event;
     event.data.fd = fd;
     event.data.ptr = conn;
@@ -264,9 +267,12 @@ extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, in
 	return -1;
     }
 
-    //TODO: add conn to handle->conn_list;
-    LOG(LL_NOTICE, log_id, "New conn %s:%d, fd %d", host, port, fd);
+    //Add conn to handle->conn_list
+    pthread_rwlock_wrlock(&handle->conn_list_lock);
+    list_add(&conn->list_node, &handle->conn_list.list_node);
+    pthread_rwlock_unlock(&handle->conn_list_lock);
 
+    LOG(LL_NOTICE, log_id, "New conn %s:%d, fd %d", host, port, fd);
     return conn->id;
 }
 
