@@ -184,8 +184,7 @@ static void* start_epoll(void* arg) {
     return NULL;
 }
 
-extern msg_handle_t* start_messager(msg_handler msg_handler, int64_t log_id) {
-    //New msg_handle_t;
+static msg_handle_t* new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
     msg_handle_t* handle = (msg_handle_t*)malloc(sizeof(msg_handle_t));
     handle->epoll_fd = -1;
     handle->log_id = log_id;
@@ -203,7 +202,7 @@ extern msg_handle_t* start_messager(msg_handler msg_handler, int64_t log_id) {
     //initial send_msg_pipe;
     int ret = pipe(handle->send_msg_pipe_fd);
     if (ret < 0) {
-        LOG(LL_FATAL, log_id, "start_messager can't initial send_msg_pipe, error: %d", ret);
+        LOG(LL_FATAL, log_id, "can't initial msg_handle->send_msg_pipe, error: %d", ret);
         free(handle->thread_ids);
         return NULL;
     }
@@ -211,8 +210,20 @@ extern msg_handle_t* start_messager(msg_handler msg_handler, int64_t log_id) {
     //create epoll_fd
     handle->epoll_fd = epoll_create1(0);
     if (handle->epoll_fd == -1) {
-        LOG(LL_ERROR, log_id, "epoll_create error, errno: %d", errno);
-        abort();
+        LOG(LL_FATAL, log_id, "epoll_create for msg_handle error, errno: %d", errno);
+        free(handle->thread_ids);
+	//TODO: destory pipe
+        return NULL;
+    }
+    return handle;
+}
+
+extern msg_handle_t* start_messager(msg_handler_t msg_handler, int64_t log_id) {
+
+    msg_handle_t* handle = new_msg_handle(msg_handler, log_id);
+    if (handle == NULL) {
+        LOG(LL_FATAL, log_id, "new_msg_handle failed");
+	return NULL;
     }
 
     //run start_epoll by thread pool

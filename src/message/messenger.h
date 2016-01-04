@@ -40,9 +40,9 @@ struct msg_handle_t_ {
 };
 
 typedef msg_handle_t_ msg_handle_t;
-typedef int (*msg_handler)(msg_handle_t*, conn_t*, msg_header*);
+typedef int (*msg_handler_t)(msg_handle_t*, conn_t*, msg_header*);
 
-extern msg_handle_t* start_messager(msg_handler msg_handler, int64_t log_id);
+extern msg_handle_t* start_messager(msg_handler_t msg_handler, int64_t log_id);
 
 extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, int64_t log_id);
 extern conn_id_t get_conn(msg_handle_t* handle, char* host, int port, int64_t log_id);
