@@ -4,3 +4,6 @@
 [submodule "module/gtest"]
 	path = module/gtest
 	url = git@github.com:coolceph/gtest.git
+[submodule "module/bhook"]
+	path = module/bhook
+	url = git@github.com:coolceph/bhook.git

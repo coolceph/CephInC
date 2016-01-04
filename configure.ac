@@ -7,6 +7,7 @@ AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_SUBDIRS([module/gtest])
 AC_PROG_CC
 CFLAGS="-g -O0 -Wall -Wextra"
+CXXFLAGS="-g -O0 -Wall -Wextra"
 
 AM_INIT_AUTOMAKE([-Wall -Werror])
 AM_PROG_LIBTOOL

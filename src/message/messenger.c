@@ -17,18 +17,33 @@
 #include "message/msg_write_obj.h"
 
 //caller must has handle->conn_list_lock
+static conn_t* get_conn_by_id(msg_handle_t* handle, int id) {
+    struct list_head *pos;
+    conn_t *conn = NULL;
+    conn_t *result = NULL;
+
+    list_for_each(pos, &(handle->conn_list.list_node)) {
+        conn = list_entry(pos, conn_t, list_node);
+        if (conn->id == id) {
+            result = conn;
+	    break;
+        }
+    }
+    return result;
+}
+//caller must has handle->conn_list_lock
 static conn_t* get_conn_by_fd(msg_handle_t* handle, int fd) {
     struct list_head *pos;
     conn_t *conn = NULL;
     conn_t *result = NULL;
 
-    list_for_each(pos, &(handle->conn_list.conn_list_node)) {
-        conn = list_entry(pos, conn_t, conn_list_node);
+    list_for_each(pos, &(handle->conn_list.list_node)) {
+        conn = list_entry(pos, conn_t, list_node);
         if (conn->fd == fd) {
             result = conn;
+	    break;
         }
     }
-    
     return result;
 }
 //caller must has handle->conn_list_lock
@@ -37,13 +52,13 @@ static conn_t* get_conn_by_host_and_port(msg_handle_t* handle, char* host, int p
     conn_t *conn = NULL;
     conn_t *result = NULL;
 
-    list_for_each(pos, &(handle->conn_list.conn_list_node)) {
-        conn = list_entry(pos, conn_t, conn_list_node);
+    list_for_each(pos, &(handle->conn_list.list_node)) {
+        conn = list_entry(pos, conn_t, list_node);
         if (conn->port == port && strcmp(conn->host, host) == 0) {
             result = conn;
+	    break;
         }
     }
-    
     return result;
 }
 
@@ -169,25 +184,25 @@ static void* start_epoll(void* arg) {
     return NULL;
 }
 
-extern msg_handle_t* start_messager(msg_handler msg_handler, int64_t log_id) {
-    //New msg_handle_t;
+static msg_handle_t* new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
     msg_handle_t* handle = (msg_handle_t*)malloc(sizeof(msg_handle_t));
     handle->epoll_fd = -1;
     handle->log_id = log_id;
     handle->msg_process = msg_handler;
     handle->thread_count = 2; //TODO: we need a opinion
     handle->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * handle->thread_count);
+    atomic_set64(&handle->next_conn_id, 1);
 
-    init_list_head(&(handle->conn_list.conn_list_node));
-    pthread_rwlock_init(&(handle->conn_list_lock), NULL);
+    init_list_head(&handle->conn_list.list_node);
+    pthread_rwlock_init(&handle->conn_list_lock, NULL);
 
-    init_list_head(&(handle->send_msg_list.msg_list_node));
-    pthread_mutex_init(&(handle->send_msg_list_lock), NULL);
+    init_list_head(&handle->send_msg_list.list_node);
+    pthread_mutex_init(&handle->send_msg_list_lock, NULL);
 
     //initial send_msg_pipe;
     int ret = pipe(handle->send_msg_pipe_fd);
     if (ret < 0) {
-        LOG(LL_FATAL, log_id, "start_messager can't initial send_msg_pipe, error: %d", ret);
+        LOG(LL_FATAL, log_id, "can't initial msg_handle->send_msg_pipe, error: %d", ret);
         free(handle->thread_ids);
         return NULL;
     }
@@ -195,8 +210,20 @@ extern msg_handle_t* start_messager(msg_handler msg_handler, int64_t log_id) {
     //create epoll_fd
     handle->epoll_fd = epoll_create1(0);
     if (handle->epoll_fd == -1) {
-        LOG(LL_ERROR, log_id, "epoll_create error, errno: %d", errno);
-        abort();
+        LOG(LL_FATAL, log_id, "epoll_create for msg_handle error, errno: %d", errno);
+        free(handle->thread_ids);
+	//TODO: destory pipe
+        return NULL;
+    }
+    return handle;
+}
+
+extern msg_handle_t* start_messager(msg_handler_t msg_handler, int64_t log_id) {
+
+    msg_handle_t* handle = new_msg_handle(msg_handler, log_id);
+    if (handle == NULL) {
+        LOG(LL_FATAL, log_id, "new_msg_handle failed");
+	return NULL;
     }
 
     //run start_epoll by thread pool
@@ -216,16 +243,32 @@ extern msg_handle_t* start_messager(msg_handler msg_handler, int64_t log_id) {
     return handle;
 }
 
-extern conn_t* new_conn(msg_handle_t* handle, char* host, int port, int fd, int64_t log_id) {
+extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, int64_t log_id) {
     struct epoll_event event;
     event.data.fd = fd;
     event.events = EPOLLIN | EPOLLONESHOT;
     int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &event);
     if (ret == -1) {
-        LOG(LL_ERROR, log_id, "epoll_ctl");
+        LOG(LL_ERROR, log_id, "epoll_ctl for new conn %s:%d, fd %d, error: %d", host, port, fd, ret);
         abort();
     }
-    //TODO: return the real conn
-    return NULL;
+    conn_t* conn = (conn_t*)malloc(sizeof(conn_t));
+    conn->id = atomic_add64(&handle->next_conn_id, 1);
+    conn->fd = fd;
+    conn->port = port;
+    conn->host = (char*)malloc(sizeof(char) * strlen(host));
+    strcpy(conn->host, host);
+    LOG(LL_NOTICE, log_id, "New conn %s:%d, fd %d", host, port, fd);
+
+    return conn->id;
 }
 
+extern conn_t* TEST_get_conn_by_id(msg_handle_t* handle, int id) {
+    return get_conn_by_id(handle, id);
+}
+extern conn_t* TEST_get_conn_by_fd(msg_handle_t* handle, int fd) {
+    return get_conn_by_fd(handle, fd);
+}
+extern conn_t* TEST_get_conn_by_host_and_port(msg_handle_t* handle, char* host, int port) {
+    return get_conn_by_host_and_port(handle, host, port);
+}
