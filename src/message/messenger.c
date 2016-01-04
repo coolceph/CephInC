@@ -178,6 +178,7 @@ static void* start_epoll(void* arg) {
             LOG(LL_INFO, log_id, "Msg read from conn %s:%d, fd %d, op %d", conn->host, conn->port, fd, msg->op);
         }
 
+	//TODO: call wait_msg for the conn here
         handle->msg_process(handle, conn, msg);
     }
 
@@ -244,23 +245,34 @@ extern msg_handle_t* start_messager(msg_handler_t msg_handler, int64_t log_id) {
 }
 
 extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, int64_t log_id) {
-    struct epoll_event event;
-    event.data.fd = fd;
-    event.events = EPOLLIN | EPOLLONESHOT;
-    int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &event);
-    if (ret == -1) {
-        LOG(LL_ERROR, log_id, "epoll_ctl for new conn %s:%d, fd %d, error: %d", host, port, fd, ret);
-        abort();
-    }
     conn_t* conn = (conn_t*)malloc(sizeof(conn_t));
     conn->id = atomic_add64(&handle->next_conn_id, 1);
     conn->fd = fd;
     conn->port = port;
     conn->host = (char*)malloc(sizeof(char) * strlen(host));
+
     strcpy(conn->host, host);
+    struct epoll_event event;
+    event.data.fd = fd;
+    event.data.ptr = conn;
+    event.events = EPOLLIN | EPOLLONESHOT;
+    int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &event);
+    if (ret < -1) {
+        LOG(LL_ERROR, log_id, "epoll_ctl for new conn %s:%d, fd %d, error: %d", host, port, fd, ret);
+	free(conn->host);
+	free(conn);
+	return -1;
+    }
+
+    //TODO: add conn to handle->conn_list;
     LOG(LL_NOTICE, log_id, "New conn %s:%d, fd %d", host, port, fd);
 
     return conn->id;
+}
+
+
+extern msg_handle_t* TEST_new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
+    return new_msg_handle(msg_handler, log_id);
 }
 
 extern conn_t* TEST_get_conn_by_id(msg_handle_t* handle, int id) {
