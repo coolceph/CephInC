@@ -4,10 +4,11 @@ unittests:: $(check_PROGRAMS)
 UNITTEST_CXXFLAGS = \
         $(AM_CXXFLAGS) \
         -I$(top_builddir)/module/gtest/include \
-        -I$(top_builddir)/module/gtest/include
+        -I$(top_builddir)/module/bhook/include
 UNITTEST_LDADD = \
         $(top_builddir)/module/gtest/lib/libgtest.a \
         $(top_builddir)/module/gtest/lib/libgtest_main.a \
+        $(top_builddir)/module/bhook/libbhook.a \
         -lpthread
 
 unittest_common_log_SOURCES = test/test_common_log.cc
@@ -24,3 +25,4 @@ unittest_libclient_SOURCES = test/test_libclient.cc
 unittest_libclient_LDADD = $(LIBCLIENT) $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_libclient_CXXFLAGS = $(UNITTEST_CXXFLAGS)
 check_PROGRAMS += unittest_libclient
+
