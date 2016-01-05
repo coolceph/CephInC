@@ -3,6 +3,7 @@
 
 #include "common/atomic.h"
 #include "common/list.h"
+
 #include "message/msg_header.h"
 
 typedef int64_t conn_id_t;
@@ -51,6 +52,7 @@ extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, in
 extern int wait_msg(msg_handle_t* handle, conn_id_t conn_id, int64_t log_id);
 
 //for test
+extern msg_handle_t* TEST_new_msg_handle(msg_handler_t msg_handler, int64_t log_id);
 extern conn_t* TEST_get_conn_by_id(msg_handle_t* handle, int id);
 extern conn_t* TEST_get_conn_by_fd(msg_handle_t* handle, int fd);
 extern conn_t* TEST_get_conn_by_host_and_port(msg_handle_t* handle, char* host, int port);
