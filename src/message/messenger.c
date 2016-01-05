@@ -84,7 +84,7 @@ static int is_conn_err(struct epoll_event event) {
            || !(event.events & EPOLLIN);
 }
 
-static msg_header* read_message(int fd, int64_t log_id) {
+static msg_header* try_read_msg(int fd, int64_t log_id) {
     LOG(LL_NOTICE, log_id, "Read Message from fd %d.", fd);
 
     int8_t op;
@@ -121,7 +121,7 @@ static void try_send_msg(msg_handle_t* handle, int64_t log_id) {
     //      return;
     //  }
     //
-    //  if (!send_msg) {
+    //  if (!do_send_msg) {
     //      conn->state = closed;
     //      unlock conn_lock;
     //      unlock conn_list_lock;
@@ -162,8 +162,9 @@ static void* start_epoll(void* arg) {
             try_send_msg(handle, log_id);
         }
 
-	//TODO: caller must has handle->conn_list_lock
+        pthread_rwlock_rdlock(&handle->conn_list_lock);
         conn_t* conn = get_conn_by_fd(handle, fd);
+        pthread_rwlock_unlock(&handle->conn_list_lock);
         if (conn == NULL) {
             LOG(LL_ERROR, log_id, "epoll_wait return fd %d, but conn is not found", fd);
             continue;
@@ -171,7 +172,7 @@ static void* start_epoll(void* arg) {
             LOG(LL_INFO, log_id, "Data received from conn %s:%d, fd %d", conn->host, conn->port, fd);
         }
 
-        msg_header* msg = read_message(fd, log_id);
+        msg_header* msg = try_read_msg(fd, log_id);
         if (msg == NULL) {
             LOG(LL_ERROR, log_id, "Read message from conn: %s:%d, fd %d error.", conn->host, conn->port, fd);
             continue;
@@ -179,7 +180,18 @@ static void* start_epoll(void* arg) {
             LOG(LL_INFO, log_id, "Msg read from conn %s:%d, fd %d, op %d", conn->host, conn->port, fd, msg->op);
         }
 
-	//TODO: call wait_msg for the conn before process
+        //Wait for the next msg
+        struct epoll_event ctl_event;
+        ctl_event.data.fd = fd;
+        ctl_event.data.ptr = conn;
+        ctl_event.events = EPOLLIN | EPOLLONESHOT;
+        int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &event);
+        if (ret < -1) {
+            LOG(LL_ERROR, log_id, "epoll_ctl for conn %s:%d, fd %d, error: %d", conn->host, conn->port, fd, ret);
+            close_conn(handle, fd, log_id);
+        }
+
+        //Process the msg
         handle->msg_process(handle, conn, msg);
     }
 
@@ -206,6 +218,7 @@ static msg_handle_t* new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
     if (ret < 0) {
         LOG(LL_FATAL, log_id, "can't initial msg_handle->send_msg_pipe, error: %d", ret);
         free(handle->thread_ids);
+        free(handle);
         return NULL;
     }
     
@@ -214,9 +227,12 @@ static msg_handle_t* new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
     if (handle->epoll_fd == -1) {
         LOG(LL_FATAL, log_id, "epoll_create for msg_handle error, errno: %d", errno);
         free(handle->thread_ids);
-	//TODO: destory pipe
+        close(handle->send_msg_pipe_fd[0]);
+        close(handle->send_msg_pipe_fd[1]);
+        free(handle);
         return NULL;
     }
+
     return handle;
 }
 
@@ -225,7 +241,7 @@ extern msg_handle_t* start_messager(msg_handler_t msg_handler, int64_t log_id) {
     msg_handle_t* handle = new_msg_handle(msg_handler, log_id);
     if (handle == NULL) {
         LOG(LL_FATAL, log_id, "new_msg_handle failed");
-	return NULL;
+        return NULL;
     }
 
     //run start_epoll by thread pool
@@ -262,9 +278,9 @@ extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, in
     int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &event);
     if (ret < -1) {
         LOG(LL_ERROR, log_id, "epoll_ctl for new conn %s:%d, fd %d, error: %d", host, port, fd, ret);
-	free(conn->host);
-	free(conn);
-	return -1;
+        free(conn->host);
+        free(conn);
+        return -1;
     }
 
     //Add conn to handle->conn_list
@@ -275,7 +291,6 @@ extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, in
     LOG(LL_NOTICE, log_id, "New conn %s:%d, fd %d", host, port, fd);
     return conn->id;
 }
-
 
 extern msg_handle_t* TEST_new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
     return new_msg_handle(msg_handler, log_id);
