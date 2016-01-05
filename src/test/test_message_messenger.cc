@@ -1,5 +1,6 @@
 extern "C" {
 #include "message/messenger.h"
+#include <sys/epoll.h>
 }
 
 #include "bhook.h"
@@ -68,4 +69,31 @@ TEST(message_messenger, find_conn_by_port_and_ip) {
     EXPECT_EQ(NULL, TEST_get_conn_by_host_and_port(handle, (char*)"no_this_host", 1));
     EXPECT_EQ(conn1, TEST_get_conn_by_host_and_port(handle, (char*)"host1", 9001));
     EXPECT_EQ(conn2, TEST_get_conn_by_host_and_port(handle, (char*)"host2", 9002));
+}
+
+int MOCK_new_conn_epoll_ctl(int epfd, int op, int fd, struct epoll_event *event) {
+	EXPECT_TRUE(epfd > 0);
+	EXPECT_EQ(op, EPOLL_CTL_ADD);
+	EXPECT_EQ(fd, 1);
+	EXPECT_EQ(event->events, EPOLLIN | EPOLLONESHOT);
+    return 0;
+}
+TEST(message_messenger, new_conn) {
+    msg_handle_t* handle = TEST_new_msg_handle(&mock_process_message, 1);
+
+    char* epoll_ctl_func_name = (char*)"epoll_ctl";
+    attach_func(epoll_ctl_func_name, (void*)&MOCK_new_conn_epoll_ctl);
+    fault_enable(epoll_ctl_func_name, 100, 0, NULL);
+
+    conn_id_t conn_id = new_conn(handle, (char*)"host1", 9001, 1, 1);
+    EXPECT_TRUE(conn_id > 0);
+
+    fault_disable(epoll_ctl_func_name);
+    detach_func(epoll_ctl_func_name);
+
+	conn_t* conn = TEST_get_conn_by_id(handle, conn_id);
+	EXPECT_TRUE(conn != NULL);
+	EXPECT_STREQ(conn->host, "host1");
+	EXPECT_EQ(conn->port, 9001);
+	EXPECT_EQ(conn->fd, 1);
 }

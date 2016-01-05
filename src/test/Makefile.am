@@ -9,7 +9,7 @@ UNITTEST_LDADD = \
         $(top_builddir)/module/gtest/lib/libgtest.a \
         $(top_builddir)/module/gtest/lib/libgtest_main.a \
         $(top_builddir)/module/bhook/libbhook.a \
-        -lpthread
+	-lbfd -ldl -lopcodes -lpthread
 
 unittest_common_log_SOURCES = test/test_common_log.cc
 unittest_common_log_LDADD = $(LIBCOMMON) -lm $(UNITTEST_LDADD)

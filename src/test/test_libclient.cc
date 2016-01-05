@@ -6,7 +6,6 @@ extern "C" {
 #include "gtest/gtest.h"
 
 TEST(libclient, write_obj) {
-
     initial_log_id(0301);
 
     osdmap osdmap;
