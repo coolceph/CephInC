@@ -62,7 +62,7 @@ static conn_t* get_conn_by_host_and_port(msg_handle_t* handle, char* host, int p
     return result;
 }
 
-static int close_conn(msg_handle_t* handle, int fd, int64_t log_id) {
+static int close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id) {
     //TODO:
     //  0) wrlock handle->conn_list_lock
     //  1) get conn from conn_list by fd
@@ -157,6 +157,7 @@ static void* start_epoll(void* arg) {
             continue;
         }
 
+        //Send msg?
         if (fd == handle->send_msg_pipe_fd[1]) {
             LOG(LL_INFO, log_id, "thread is wake up to send msg, thread_id: %lu", pthread_self());
             try_send_msg(handle, log_id);
@@ -185,7 +186,7 @@ static void* start_epoll(void* arg) {
         ctl_event.data.fd = fd;
         ctl_event.data.ptr = conn;
         ctl_event.events = EPOLLIN | EPOLLONESHOT;
-        int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &event);
+        int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &ctl_event);
         if (ret < -1) {
             LOG(LL_ERROR, log_id, "epoll_ctl for conn %s:%d, fd %d, error: %d", conn->host, conn->port, fd, ret);
             close_conn(handle, fd, log_id);
@@ -208,8 +209,9 @@ static msg_handle_t* new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
     atomic_set64(&handle->next_conn_id, 1);
 
     init_list_head(&handle->conn_list.list_node);
-    pthread_rwlock_init(&handle->conn_list_lock, NULL);
+    pthread_rwlockattr_t attr;
     pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
+    pthread_rwlock_init(&handle->conn_list_lock, &attr);
 
     init_list_head(&handle->send_msg_list.list_node);
     pthread_mutex_init(&handle->send_msg_list_lock, NULL);
@@ -284,7 +286,7 @@ extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, in
     int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &event);
     if (ret < -1) {
         LOG(LL_ERROR, log_id, "epoll_ctl for new conn %s:%d, fd %d, error: %d", host, port, fd, ret);
-        close_conn(handle, conn, log_id);
+        close_conn(handle, conn->id, log_id);
         return -1;
     }
 
