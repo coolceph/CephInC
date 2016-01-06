@@ -41,7 +41,7 @@ static conn_t* get_conn_by_fd(msg_handle_t* handle, int fd) {
         conn = list_entry(pos, conn_t, list_node);
         if (conn->fd == fd) {
             result = conn;
-	    break;
+            break;
         }
     }
     return result;
@@ -56,7 +56,7 @@ static conn_t* get_conn_by_host_and_port(msg_handle_t* handle, char* host, int p
         conn = list_entry(pos, conn_t, list_node);
         if (conn->port == port && strcmp(conn->host, host) == 0) {
             result = conn;
-	    break;
+            break;
         }
     }
     return result;
@@ -220,8 +220,8 @@ static msg_handle_t* new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
     int ret = pipe(handle->send_msg_pipe_fd);
     if (ret < 0) {
         LOG(LL_FATAL, log_id, "can't initial msg_handle->send_msg_pipe, error: %d", ret);
-        free(handle->thread_ids);
-        free(handle);
+        free(handle->thread_ids); handle->thread_ids = NULL;
+        free(handle); handle = NULL;
         return NULL;
     }
     
@@ -229,10 +229,10 @@ static msg_handle_t* new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
     handle->epoll_fd = epoll_create1(0);
     if (handle->epoll_fd == -1) {
         LOG(LL_FATAL, log_id, "epoll_create for msg_handle error, errno: %d", errno);
-        free(handle->thread_ids);
         close(handle->send_msg_pipe_fd[0]);
         close(handle->send_msg_pipe_fd[1]);
-        free(handle);
+        free(handle->thread_ids); handle->thread_ids = NULL;
+        free(handle); handle = NULL;
         return NULL;
     }
 
