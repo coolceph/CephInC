@@ -7,3 +7,6 @@
 [submodule "module/bhook"]
 	path = module/bhook
 	url = git@github.com:coolceph/bhook.git
+[submodule "module/googletest"]
+	path = module/googletest
+	url = git@github.com:coolceph/googletest.git
