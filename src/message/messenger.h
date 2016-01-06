@@ -24,7 +24,7 @@ typedef struct {
 typedef struct msg_handle_t_ msg_handle_t_;
 struct msg_handle_t_ {
     int log_id;
-    int (*msg_process)(struct msg_handle_t_*, conn_t* conn, msg_header*);
+    int (*msg_process)(struct msg_handle_t_*, conn_id_t, msg_header*);
 
     int epoll_fd;
     int thread_count;
@@ -41,12 +41,15 @@ struct msg_handle_t_ {
 };
 
 typedef msg_handle_t_ msg_handle_t;
-typedef int (*msg_handler_t)(msg_handle_t*, conn_t*, msg_header*);
+typedef int (*msg_handler_t)(msg_handle_t*, conn_id_t, msg_header*);
 
 extern msg_handle_t* start_messager(msg_handler_t msg_handler, int64_t log_id);
+extern int stop_messager(msg_handle_t* msg_handle, int64_t log_id);
 
 extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, int64_t log_id);
 extern conn_id_t get_conn(msg_handle_t* handle, char* host, int port, int64_t log_id);
+
+extern int close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id);
 
 extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, int64_t log_id);
 

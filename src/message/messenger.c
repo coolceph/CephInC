@@ -62,19 +62,23 @@ static conn_t* get_conn_by_host_and_port(msg_handle_t* handle, char* host, int p
     return result;
 }
 
-static int close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id) {
-    //TODO:
-    //  0) wrlock handle->conn_list_lock
-    //  1) get conn from conn_list by fd
-    //  2) if conn is not found
-    //      2.1) ERROR log
-    //      2.2) unlock hanlde->conn_list_lock
-    //      2.3) return;
-    //  3) if conn is found:
-    //      3.1) remove it from conn_list
-    //      3.2) close fd
-    //      3.3) NOTICE log
-    //      3.4) unlock handle->conn_list_lock
+extern int close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id) {
+    pthread_rwlock_wrlock(&handle->conn_list_lock);
+    conn_t* conn = get_conn_by_id(handle, id);
+    if (conn == NULL) {
+        pthread_rwlock_unlock(&handle->conn_list_lock);
+        LOG(LL_NOTICE, log_id, "The conn %ld is not found when close", id);
+        return -1;
+    }
+
+    list_del(&conn->list_node);
+    pthread_rwlock_unlock(&handle->conn_list_lock);
+
+    LOG(LL_NOTICE, log_id, "Close conn %s:%d, conn_id %ld, fd %d", conn->host, conn->port, conn->id, conn->fd);
+    close(conn->fd);
+    free(conn->host); conn->host = NULL;
+    free(conn); conn = NULL;
+
     return 0;
 }
 
@@ -151,9 +155,23 @@ static void* start_epoll(void* arg) {
         }
 
         int fd = event.data.fd;
+
+        pthread_rwlock_rdlock(&handle->conn_list_lock);
+        conn_t* conn = get_conn_by_fd(handle, fd);
+        conn_id_t conn_id = conn->id;
+        if (conn == NULL) {
+            LOG(LL_ERROR, log_id, "epoll_wait return fd %d, but conn is not found", fd);
+            pthread_rwlock_unlock(&handle->conn_list_lock);
+            continue;
+        } else {
+            LOG(LL_INFO, log_id, "Data received from conn %s:%d, conn_id %ld, fd %d", conn->host, conn->port, conn_id, fd);
+            conn = NULL; //conn can NOT be used with conn_list_lock, it may be freed.
+            pthread_rwlock_unlock(&handle->conn_list_lock);
+        }
+
         if (is_conn_err(event)) {
-            LOG(LL_INFO, log_id, "Network closed for fd %d.", fd);
-            close_conn(handle, fd, log_id);
+            LOG(LL_INFO, log_id, "Network closed for conn %ld, fd %d.", conn_id, fd);
+            close_conn(handle, conn_id, log_id);
             continue;
         }
 
@@ -163,22 +181,13 @@ static void* start_epoll(void* arg) {
             try_send_msg(handle, log_id);
         }
 
-        pthread_rwlock_rdlock(&handle->conn_list_lock);
-        conn_t* conn = get_conn_by_fd(handle, fd);
-        pthread_rwlock_unlock(&handle->conn_list_lock);
-        if (conn == NULL) {
-            LOG(LL_ERROR, log_id, "epoll_wait return fd %d, but conn is not found", fd);
-            continue;
-        } else {
-            LOG(LL_INFO, log_id, "Data received from conn %s:%d, fd %d", conn->host, conn->port, fd);
-        }
-
+        log_id = new_log_id(); //new message, new log_id, just for read process
         msg_header* msg = try_read_msg(fd, log_id);
         if (msg == NULL) {
-            LOG(LL_ERROR, log_id, "Read message from conn: %s:%d, fd %d error.", conn->host, conn->port, fd);
+            LOG(LL_ERROR, log_id, "Read message from conn %ld, fd %d error.", conn_id, fd);
             continue;
         } else {
-            LOG(LL_INFO, log_id, "Msg read from conn %s:%d, fd %d, op %d", conn->host, conn->port, fd, msg->op);
+            LOG(LL_INFO, log_id, "Msg read from conn %ld, fd %d, op %d, log_id %ld", conn_id, fd, msg->op, msg->log_id);
         }
 
         //Wait for the next msg
@@ -188,12 +197,17 @@ static void* start_epoll(void* arg) {
         ctl_event.events = EPOLLIN | EPOLLONESHOT;
         int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &ctl_event);
         if (ret < -1) {
-            LOG(LL_ERROR, log_id, "epoll_ctl for conn %s:%d, fd %d, error: %d", conn->host, conn->port, fd, ret);
-            close_conn(handle, fd, log_id);
+            LOG(LL_ERROR, log_id, "epoll_ctl for conn %ld, fd %d, error: %d", conn_id, fd, ret);
+            close_conn(handle, conn_id, log_id);
+        } else {
+            LOG(LL_INFO, log_id, "epoll_ctl for conn %ld, fd %d, wait for next msg", conn_id, fd);
         }
 
+        log_id = handle->log_id; //reset log_id back to handle->log_id
+
         //Process the msg
-        handle->msg_process(handle, conn, msg);
+        //the log id will not be passed, while the msg->log_id will be used
+        handle->msg_process(handle, conn_id, msg);
     }
 
     return NULL;

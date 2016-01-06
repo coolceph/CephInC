@@ -120,8 +120,10 @@ static void do_req_write(msg_write_obj_req* req) {
     free(req);
 }
 
-static int process_message(msg_handle_t* msg_handle, conn_t* conn, msg_header* message) {
-    int64_t log_id = msg_handle->log_id;
+static int process_message(msg_handle_t* msg_handle, conn_id_t conn_id, msg_header* message) {
+    int64_t log_id = message->log_id;
+    assert(log_id, msg_handle != NULL); //to avoid unused param warning, will removed later
+    LOG(LL_NOTICE, log_id, "Begin to process msg from conn %ld", conn_id);
 
     assert(log_id, message->op == CCEPH_MSG_OP_WRITE);
     msg_write_obj_req *req = (msg_write_obj_req*)message;
