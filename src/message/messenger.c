@@ -209,6 +209,7 @@ static msg_handle_t* new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
 
     init_list_head(&handle->conn_list.list_node);
     pthread_rwlock_init(&handle->conn_list_lock, NULL);
+    pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
 
     init_list_head(&handle->send_msg_list.list_node);
     pthread_mutex_init(&handle->send_msg_list_lock, NULL);
@@ -270,6 +271,11 @@ extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, in
     conn->host = (char*)malloc(sizeof(char) * strlen(host));
     strcpy(conn->host, host);
 
+    //Add conn to handle->conn_list
+    pthread_rwlock_wrlock(&handle->conn_list_lock);
+    list_add(&conn->list_node, &handle->conn_list.list_node);
+    pthread_rwlock_unlock(&handle->conn_list_lock);
+
     //Add fd to epoll set
     struct epoll_event event;
     event.data.fd = fd;
@@ -278,15 +284,9 @@ extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, in
     int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &event);
     if (ret < -1) {
         LOG(LL_ERROR, log_id, "epoll_ctl for new conn %s:%d, fd %d, error: %d", host, port, fd, ret);
-        free(conn->host);
-        free(conn);
+        close_conn(handle, conn, log_id);
         return -1;
     }
-
-    //Add conn to handle->conn_list
-    pthread_rwlock_wrlock(&handle->conn_list_lock);
-    list_add(&conn->list_node, &handle->conn_list.list_node);
-    pthread_rwlock_unlock(&handle->conn_list_lock);
 
     LOG(LL_NOTICE, log_id, "New conn %s:%d, fd %d", host, port, fd);
     return conn->id;
