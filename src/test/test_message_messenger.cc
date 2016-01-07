@@ -18,6 +18,7 @@ conn_t* add_conn(msg_handle_t* handle, char* host, int port, int fd) {
     conn->fd   = fd;
     conn->id   = fd + port;
     conn->host = (char*)malloc(sizeof(char) * strlen(host));
+    conn->state = CCEPH_CONN_STATE_OPEN;
     strcpy(conn->host, host);
     pthread_mutex_init(&conn->lock, NULL);
 
@@ -90,8 +91,7 @@ int MOCK_new_conn_epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)
 TEST(message_messenger, new_conn) {
     msg_handle_t* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
 
-    attach_func(sys_func_name_epoll_ctl, (void*)&MOCK_new_conn_epoll_ctl);
-    fault_enable(sys_func_name_epoll_ctl, 100, 0, NULL);
+    attach_and_enable_func(sys_func_name_epoll_ctl, (void*)&MOCK_new_conn_epoll_ctl);
 
     conn_id_t conn_id = new_conn(handle, (char*)"host1", 9001, 1, 1);
     EXPECT_TRUE(conn_id > 0);
@@ -115,8 +115,7 @@ TEST(message_messenger, close_conn) {
     add_conn(handle, (char*)"host2", 9002, 2);
 
     char* close_func_name = (char*)"close";
-    attach_func(close_func_name, (void*)&MOCK_close_conn_close);
-    fault_enable(close_func_name, 100, 0, NULL);
+    attach_and_enable_func(close_func_name, (void*)&MOCK_close_conn_close);
 
     EXPECT_EQ(0, close_conn(handle, 9002, 1));
     EXPECT_EQ(NULL, TEST_get_conn_by_id(handle, 9002));
@@ -149,6 +148,9 @@ int MOCK_send_msg_close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id)
     EXPECT_TRUE(handle != NULL);
     EXPECT_EQ(9004, id);
     EXPECT_EQ(1, log_id);
+
+    conn_t* conn = TEST_get_conn_by_id(handle, 9004);
+    EXPECT_EQ(CCEPH_CONN_STATE_CLOSED, conn->state);
     return -1;
 }
 TEST(message_messenger, send_msg) {
@@ -165,16 +167,13 @@ TEST(message_messenger, send_msg) {
     EXPECT_EQ(-1, send_msg(handle, 9002, &msg, 1));
 
     //Case: Normal
-    attach_func_lib(lib_func_name_write_message, (void*)&MOCK_send_msg_write_message_success);
-    fault_enable(lib_func_name_write_message, 100, 0, NULL);
+    attach_and_enable_func_lib(lib_func_name_write_message, (void*)&MOCK_send_msg_write_message_success);
     EXPECT_EQ(0, send_msg(handle, 9004, &msg, 1));
     detach_func_lib(lib_func_name_write_message);
 
     //Case: Write failed
-    attach_func_lib(lib_func_name_write_message, (void*)&MOCK_send_msg_write_message_failed);
-    fault_enable(lib_func_name_write_message, 100, 0, NULL);
-    attach_func_lib(lib_func_name_close_conn, (void*)&MOCK_send_msg_close_conn);
-    fault_enable(lib_func_name_close_conn, 100, 0, NULL);
+    attach_and_enable_func_lib(lib_func_name_write_message, (void*)&MOCK_send_msg_write_message_failed);
+    attach_and_enable_func_lib(lib_func_name_close_conn, (void*)&MOCK_send_msg_close_conn);
 
     EXPECT_EQ(-1, send_msg(handle, 9004, &msg, 1));
 
