@@ -136,7 +136,7 @@ static void* start_epoll(void* arg) {
             continue;
         } else {
             LOG(LL_INFO, log_id, "Data received from conn %s:%d, conn_id %ld, fd %d", conn->host, conn->port, conn_id, fd);
-            conn = NULL; //conn can NOT be used with conn_list_lock, it may be freed.
+            conn = NULL; //conn can NOT be used with conn_list_lock or conn->lock, it may be freed.
             pthread_rwlock_unlock(&handle->conn_list_lock);
         }
 

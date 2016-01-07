@@ -116,6 +116,12 @@ TEST(message_messenger, close_conn) {
     fault_enable(close_func_name, 100, 0, NULL);
 
     EXPECT_EQ(0, close_conn(handle, 9002, 1));
+    EXPECT_EQ(NULL, TEST_get_conn_by_id(handle, 9002));
+    EXPECT_EQ(-1, close_conn(handle, 9002, 1));
+
+    EXPECT_EQ(0, close_conn(handle, 9004, 1));
+    EXPECT_EQ(NULL, TEST_get_conn_by_id(handle, 9004));
+    EXPECT_EQ(-1, close_conn(handle, 9004, 1));
 
     fault_disable(close_func_name);
     detach_func(close_func_name);
