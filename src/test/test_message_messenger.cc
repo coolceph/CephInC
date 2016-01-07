@@ -7,6 +7,11 @@ extern "C" {
 #include "bhook.h"
 #include "gtest/gtest.h"
 
+char* sys_func_name_epoll_ctl = (char*)"epoll_ctl";
+
+char* lib_func_name_close_conn = (char*)"close_conn";
+char* lib_func_name_write_message = (char*)"write_message";
+
 conn_t* add_conn(msg_handle_t* handle, char* host, int port, int fd) {
     conn_t* conn = (conn_t*)malloc(sizeof(conn_t));
     conn->port = port;
@@ -85,15 +90,13 @@ int MOCK_new_conn_epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)
 TEST(message_messenger, new_conn) {
     msg_handle_t* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
 
-    char* epoll_ctl_func_name = (char*)"epoll_ctl";
-    attach_func(epoll_ctl_func_name, (void*)&MOCK_new_conn_epoll_ctl);
-    fault_enable(epoll_ctl_func_name, 100, 0, NULL);
+    attach_func(sys_func_name_epoll_ctl, (void*)&MOCK_new_conn_epoll_ctl);
+    fault_enable(sys_func_name_epoll_ctl, 100, 0, NULL);
 
     conn_id_t conn_id = new_conn(handle, (char*)"host1", 9001, 1, 1);
     EXPECT_TRUE(conn_id > 0);
 
-    fault_disable(epoll_ctl_func_name);
-    detach_func(epoll_ctl_func_name);
+    detach_func(sys_func_name_epoll_ctl);
 
 	conn_t* conn = TEST_get_conn_by_id(handle, conn_id);
 	EXPECT_TRUE(conn != NULL);
@@ -123,6 +126,58 @@ TEST(message_messenger, close_conn) {
     EXPECT_EQ(NULL, TEST_get_conn_by_id(handle, 9004));
     EXPECT_EQ(-1, close_conn(handle, 9004, 1));
 
-    fault_disable(close_func_name);
     detach_func(close_func_name);
+}
+
+int MOCK_send_msg_write_message_success(msg_handle_t* handle, conn_t* conn, msg_header* msg, int64_t log_id) {
+    EXPECT_TRUE(handle != NULL);
+    EXPECT_TRUE(conn != NULL);
+    EXPECT_TRUE(msg != NULL);
+    EXPECT_EQ(2, conn->fd);
+    EXPECT_EQ(1, log_id);
+    return 0;
+}
+int MOCK_send_msg_write_message_failed(msg_handle_t* handle, conn_t* conn, msg_header* msg, int64_t log_id) {
+    EXPECT_TRUE(handle != NULL);
+    EXPECT_TRUE(conn != NULL);
+    EXPECT_TRUE(msg != NULL);
+    EXPECT_EQ(2, conn->fd);
+    EXPECT_EQ(1, log_id);
+    return -1;
+}
+int MOCK_send_msg_close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id) {
+    EXPECT_TRUE(handle != NULL);
+    EXPECT_EQ(9004, id);
+    EXPECT_EQ(1, log_id);
+    return -1;
+}
+TEST(message_messenger, send_msg) {
+    msg_header msg;
+    msg_handle_t* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
+    conn_t* conn = add_conn(handle, (char*)"host1", 9001, 1);
+    add_conn(handle, (char*)"host2", 9002, 2);
+
+    //Case: Conn not found
+    EXPECT_EQ(-1, send_msg(handle, 1, &msg, 1));
+
+    //Case: Conn is closed
+    conn->state = CCEPH_CONN_STATE_CLOSED;
+    EXPECT_EQ(-1, send_msg(handle, 9002, &msg, 1));
+
+    //Case: Normal
+    attach_func_lib(lib_func_name_write_message, (void*)&MOCK_send_msg_write_message_success);
+    fault_enable(lib_func_name_write_message, 100, 0, NULL);
+    EXPECT_EQ(0, send_msg(handle, 9004, &msg, 1));
+    detach_func_lib(lib_func_name_write_message);
+
+    //Case: Write failed
+    attach_func_lib(lib_func_name_write_message, (void*)&MOCK_send_msg_write_message_failed);
+    fault_enable(lib_func_name_write_message, 100, 0, NULL);
+    attach_func_lib(lib_func_name_close_conn, (void*)&MOCK_send_msg_close_conn);
+    fault_enable(lib_func_name_close_conn, 100, 0, NULL);
+
+    EXPECT_EQ(-1, send_msg(handle, 9004, &msg, 1));
+
+    detach_func_lib(lib_func_name_write_message);
+    detach_func_lib(lib_func_name_close_conn);
 }

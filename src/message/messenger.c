@@ -277,6 +277,9 @@ extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, in
 }
 
 extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, int64_t log_id) {
+    assert(log_id, msg != NULL);
+    assert(log_id, handle != NULL);
+
     pthread_rwlock_rdlock(&handle->conn_list_lock);
     conn_t* conn = get_conn_by_id(handle, conn_id);
     if (conn == NULL) {
