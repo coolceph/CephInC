@@ -75,13 +75,13 @@ extern int close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id) {
     pthread_rwlock_unlock(&handle->conn_list_lock);
 
     LOG(LL_NOTICE, log_id, "Close conn %s:%d, conn_id %ld, fd %d", conn->host, conn->port, conn->id, conn->fd);
-    pthread_mutex_lock(&conn->lock);
 
+    pthread_mutex_lock(&conn->lock);
     close(conn->fd);
     free(conn->host); conn->host = NULL;
     pthread_mutex_unlock(&conn->lock);
-    pthread_mutex_destroy(&conn->lock);
 
+    pthread_mutex_destroy(&conn->lock);
     free(conn); conn = NULL;
     return 0;
 }
@@ -181,8 +181,8 @@ static void* start_epoll(void* arg) {
 
         //Send msg?
         if (fd == handle->wake_thread_pipe_fd[1]) {
-            LOG(LL_INFO, log_id, "thread is wake up to send msg, thread_id: %lu", pthread_self());
-            try_send_msg(handle, log_id);
+            LOG(LL_INFO, log_id, "thread is wake up by wake_up_pipe, thread_id: %lu", pthread_self());
+            //try_send_msg(handle, log_id); TODO: we will impl async send later
         }
 
         log_id = new_log_id(); //new message, new log_id, just for read process
@@ -230,9 +230,6 @@ static msg_handle_t* new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
     pthread_rwlockattr_t attr;
     pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
     pthread_rwlock_init(&handle->conn_list_lock, &attr);
-
-    init_list_head(&handle->send_msg_list.list_node);
-    pthread_mutex_init(&handle->send_msg_list_lock, NULL);
 
     //initial send_msg_pipe;
     int ret = pipe(handle->wake_thread_pipe_fd);

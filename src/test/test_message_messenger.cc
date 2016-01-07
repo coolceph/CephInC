@@ -43,8 +43,6 @@ TEST(message_messenger, new_msg_handle) {
 
     EXPECT_EQ(handle->conn_list.list_node.prev, &handle->conn_list.list_node);
     EXPECT_EQ(handle->conn_list.list_node.next, &handle->conn_list.list_node);
-    EXPECT_EQ(handle->send_msg_list.list_node.prev, &handle->send_msg_list.list_node);
-    EXPECT_EQ(handle->send_msg_list.list_node.next, &handle->send_msg_list.list_node);
 }
 
 TEST(message_messenger, find_conn_by_id) {

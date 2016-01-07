@@ -15,8 +15,6 @@
 typedef struct {
     int8_t  op;
     int64_t log_id;
-
-    struct list_head list_node;
 } msg_header;
 
 #endif
