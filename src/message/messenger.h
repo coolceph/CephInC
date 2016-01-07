@@ -1,6 +1,8 @@
 #ifndef CCEPH_MESSAGE_MESSAGER_H
 #define CCEPH_MESSAGE_MESSAGER_H
 
+#include <pthread.h>
+
 #include "common/atomic.h"
 #include "common/list.h"
 
@@ -15,7 +17,7 @@ typedef struct {
     int   port;
     int   fd;
 
-    pthread_mutex_t write_lock;
+    pthread_mutex_t lock;
 
     struct list_head list_node;
 } conn_t;
@@ -37,7 +39,7 @@ struct msg_handle_t_ {
     msg_header send_msg_list; //send_msg will put msg here
     pthread_mutex_t send_msg_list_lock;
 
-    int send_msg_pipe_fd[2]; //used to wake up thread to send msg
+    int wake_thread_pipe_fd[2]; //used to wake up thread to send msg
 };
 
 typedef msg_handle_t_ msg_handle_t;

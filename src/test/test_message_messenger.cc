@@ -3,6 +3,7 @@ extern "C" {
 #include <sys/epoll.h>
 }
 
+#include <pthread.h>
 #include "bhook.h"
 #include "gtest/gtest.h"
 
@@ -13,6 +14,7 @@ conn_t* add_conn(msg_handle_t* handle, char* host, int port, int fd) {
     conn->id   = fd + port;
     conn->host = (char*)malloc(sizeof(char) * strlen(host));
     strcpy(conn->host, host);
+    pthread_mutex_init(&conn->lock, NULL);
 
     list_add(&conn->list_node, &handle->conn_list.list_node);
     return conn;
@@ -29,8 +31,8 @@ TEST(message_messenger, new_msg_handle) {
     EXPECT_NE(handle, (msg_handle_t*)NULL);
 
     EXPECT_TRUE(handle->epoll_fd > 0);
-    EXPECT_TRUE(handle->send_msg_pipe_fd[0] > 0);
-    EXPECT_TRUE(handle->send_msg_pipe_fd[1] > 0);
+    EXPECT_TRUE(handle->wake_thread_pipe_fd[0] > 0);
+    EXPECT_TRUE(handle->wake_thread_pipe_fd[1] > 0);
     EXPECT_TRUE(handle->msg_process == &MOCK_process_message);
 
     EXPECT_EQ(handle->log_id, 1);

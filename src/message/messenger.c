@@ -75,10 +75,14 @@ extern int close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id) {
     pthread_rwlock_unlock(&handle->conn_list_lock);
 
     LOG(LL_NOTICE, log_id, "Close conn %s:%d, conn_id %ld, fd %d", conn->host, conn->port, conn->id, conn->fd);
+    pthread_mutex_lock(&conn->lock);
+
     close(conn->fd);
     free(conn->host); conn->host = NULL;
-    free(conn); conn = NULL;
+    pthread_mutex_unlock(&conn->lock);
+    pthread_mutex_destroy(&conn->lock);
 
+    free(conn); conn = NULL;
     return 0;
 }
 
@@ -111,6 +115,7 @@ static void try_send_msg(msg_handle_t* handle, int64_t log_id) {
     //  unlock msg_lock
     //
     //  read_lock conn_list_lock
+    //  get_conn_by_id
     //  if (!find_conn) {
     //      unlock conn_list_lock
     //      free msg;
@@ -118,9 +123,10 @@ static void try_send_msg(msg_handle_t* handle, int64_t log_id) {
     //  }
     //
     //  lock conn_lock
+    //  unlock conn_list_lock
+    //
     //  if (conn->state == closed) {
     //      unlock conn_lock
-    //      unlock conn_list_lock
     //      free msg;
     //      return;
     //  }
@@ -128,15 +134,13 @@ static void try_send_msg(msg_handle_t* handle, int64_t log_id) {
     //  if (!do_send_msg) {
     //      conn->state = closed;
     //      unlock conn_lock;
-    //      unlock conn_list_lock;
     //
-    //      close_conn(conn);
     //      free msg;
+    //      close_conn(conn);
     //      return;
     //  }
     //
     //  unlock_conn_lock;
-    //  unlock_conn_list_lock;
     //  free_msg;
     //  return;
 }
@@ -176,7 +180,7 @@ static void* start_epoll(void* arg) {
         }
 
         //Send msg?
-        if (fd == handle->send_msg_pipe_fd[1]) {
+        if (fd == handle->wake_thread_pipe_fd[1]) {
             LOG(LL_INFO, log_id, "thread is wake up to send msg, thread_id: %lu", pthread_self());
             try_send_msg(handle, log_id);
         }
@@ -231,7 +235,7 @@ static msg_handle_t* new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
     pthread_mutex_init(&handle->send_msg_list_lock, NULL);
 
     //initial send_msg_pipe;
-    int ret = pipe(handle->send_msg_pipe_fd);
+    int ret = pipe(handle->wake_thread_pipe_fd);
     if (ret < 0) {
         LOG(LL_FATAL, log_id, "can't initial msg_handle->send_msg_pipe, error: %d", ret);
         free(handle->thread_ids); handle->thread_ids = NULL;
@@ -243,8 +247,8 @@ static msg_handle_t* new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
     handle->epoll_fd = epoll_create1(0);
     if (handle->epoll_fd == -1) {
         LOG(LL_FATAL, log_id, "epoll_create for msg_handle error, errno: %d", errno);
-        close(handle->send_msg_pipe_fd[0]);
-        close(handle->send_msg_pipe_fd[1]);
+        close(handle->wake_thread_pipe_fd[0]);
+        close(handle->wake_thread_pipe_fd[1]);
         free(handle->thread_ids); handle->thread_ids = NULL;
         free(handle); handle = NULL;
         return NULL;
@@ -273,7 +277,7 @@ extern msg_handle_t* start_messager(msg_handler_t msg_handler, int64_t log_id) {
     }
 
     //add the send_msg_pipe_fd to epoll set
-    new_conn(handle, "send_msg_pipe", 0, handle->send_msg_pipe_fd[1], log_id);
+    new_conn(handle, "send_msg_pipe", 0, handle->wake_thread_pipe_fd[1], log_id);
     
     return handle;
 }
@@ -286,6 +290,7 @@ extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, in
     conn->port = port;
     conn->host = (char*)malloc(sizeof(char) * strlen(host));
     strcpy(conn->host, host);
+    pthread_mutex_init(&conn->lock, NULL);
 
     //Add conn to handle->conn_list
     pthread_rwlock_wrlock(&handle->conn_list_lock);
