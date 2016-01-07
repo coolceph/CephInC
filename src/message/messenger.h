@@ -3,6 +3,8 @@
 
 #include <pthread.h>
 
+#include "include/errno.h"
+
 #include "common/atomic.h"
 #include "common/list.h"
 

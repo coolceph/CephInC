@@ -26,7 +26,7 @@ static conn_t* get_conn_by_id(msg_handle_t* handle, int id) {
         conn = list_entry(pos, conn_t, list_node);
         if (conn->id == id) {
             result = conn;
-	    break;
+            break;
         }
     }
     return result;
@@ -68,7 +68,7 @@ extern int close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id) {
     if (conn == NULL) {
         pthread_rwlock_unlock(&handle->conn_list_lock);
         LOG(LL_NOTICE, log_id, "The conn %ld is not found when close", id);
-        return -1;
+        return CCEPH_ERRNO_CONN_NOT_FOUND;
     }
 
     list_del(&conn->list_node);
@@ -285,7 +285,7 @@ extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, in
     if (conn == NULL) {
         pthread_rwlock_unlock(&handle->conn_list_lock);
         LOG(LL_ERROR, log_id, "send_msg can't find conn_id %ld.", conn_id);
-        return -1;
+        return CCEPH_ERRNO_CONN_NOT_FOUND;
     }
 
     pthread_mutex_lock(&conn->lock);
@@ -294,7 +294,7 @@ extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, in
     if (conn->state == CCEPH_CONN_STATE_CLOSED) {
         pthread_mutex_unlock(&conn->lock);
         LOG(LL_ERROR, log_id, "Conn %ld has already closed.", conn_id);
-        return -1;
+        return CCEPH_ERRNO_CONN_CLOSED;
     }
 
     LOG(LL_INFO, log_id, "Send msg to %s:%d, conn_id %ld, fd %d, op %d.",
@@ -305,7 +305,7 @@ extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, in
 
         LOG(LL_ERROR, log_id, "Write message to conn_id %ld failed, close it.", conn_id);
         close_conn(handle, conn_id, log_id);
-        return -1;
+        return CCEPH_ERRNO_WRITE_CONN_ERR;
     }
 
     pthread_mutex_unlock(&conn->lock);

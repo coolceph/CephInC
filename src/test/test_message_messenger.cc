@@ -119,11 +119,11 @@ TEST(message_messenger, close_conn) {
 
     EXPECT_EQ(0, close_conn(handle, 9002, 1));
     EXPECT_EQ(NULL, TEST_get_conn_by_id(handle, 9002));
-    EXPECT_EQ(-1, close_conn(handle, 9002, 1));
+    EXPECT_EQ(CCEPH_ERRNO_CONN_NOT_FOUND, close_conn(handle, 9002, 1));
 
     EXPECT_EQ(0, close_conn(handle, 9004, 1));
     EXPECT_EQ(NULL, TEST_get_conn_by_id(handle, 9004));
-    EXPECT_EQ(-1, close_conn(handle, 9004, 1));
+    EXPECT_EQ(CCEPH_ERRNO_CONN_NOT_FOUND, close_conn(handle, 9004, 1));
 
     detach_func(close_func_name);
 }
@@ -160,11 +160,11 @@ TEST(message_messenger, send_msg) {
     add_conn(handle, (char*)"host2", 9002, 2);
 
     //Case: Conn not found
-    EXPECT_EQ(-1, send_msg(handle, 1, &msg, 1));
+    EXPECT_EQ(CCEPH_ERRNO_CONN_NOT_FOUND, send_msg(handle, 1, &msg, 1));
 
     //Case: Conn is closed
     conn->state = CCEPH_CONN_STATE_CLOSED;
-    EXPECT_EQ(-1, send_msg(handle, 9002, &msg, 1));
+    EXPECT_EQ(CCEPH_ERRNO_CONN_CLOSED, send_msg(handle, 9002, &msg, 1));
 
     //Case: Normal
     attach_and_enable_func_lib(lib_func_name_write_message, (void*)&MOCK_send_msg_write_message_success);
@@ -175,7 +175,7 @@ TEST(message_messenger, send_msg) {
     attach_and_enable_func_lib(lib_func_name_write_message, (void*)&MOCK_send_msg_write_message_failed);
     attach_and_enable_func_lib(lib_func_name_close_conn, (void*)&MOCK_send_msg_close_conn);
 
-    EXPECT_EQ(-1, send_msg(handle, 9004, &msg, 1));
+    EXPECT_EQ(CCEPH_ERRNO_WRITE_CONN_ERR, send_msg(handle, 9004, &msg, 1));
 
     detach_func_lib(lib_func_name_write_message);
     detach_func_lib(lib_func_name_close_conn);
