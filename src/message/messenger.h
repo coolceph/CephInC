@@ -8,6 +8,10 @@
 
 #include "message/msg_header.h"
 
+#define CCEPH_CONN_STATE_UNKNOWN 0
+#define CCEPH_CONN_STATE_OPEN    1
+#define CCEPH_CONN_STATE_CLOSED  2
+
 typedef int64_t conn_id_t;
 
 typedef struct {
@@ -16,6 +20,8 @@ typedef struct {
     char* host;
     int   port;
     int   fd;
+
+    int   state;
 
     pthread_mutex_t lock;
 
@@ -50,6 +56,9 @@ extern conn_id_t get_conn(msg_handle_t* handle, char* host, int port, int64_t lo
 
 extern int close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id);
 
+//Send msg to conn_id
+//  if success return 0, else -1 and close the conn
+//  this function will not free the msg
 extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, int64_t log_id);
 
 //for test

@@ -92,7 +92,7 @@ static int is_conn_err(struct epoll_event event) {
            || !(event.events & EPOLLIN);
 }
 
-static msg_header* try_read_msg(int fd, int64_t log_id) {
+static msg_header* read_message(int fd, int64_t log_id) {
     LOG(LL_NOTICE, log_id, "Read Message from fd %d.", fd);
 
     int8_t op;
@@ -108,41 +108,8 @@ static msg_header* try_read_msg(int fd, int64_t log_id) {
     
     return (msg_header*)msg;
 }
-static void try_send_msg(msg_handle_t* handle, int64_t log_id) {
-    //TODO:
-    //  lock msg_lock
-    //      pop msg from handle->send_msg_list
-    //  unlock msg_lock
-    //
-    //  read_lock conn_list_lock
-    //  get_conn_by_id
-    //  if (!find_conn) {
-    //      unlock conn_list_lock
-    //      free msg;
-    //      return;
-    //  }
-    //
-    //  lock conn_lock
-    //  unlock conn_list_lock
-    //
-    //  if (conn->state == closed) {
-    //      unlock conn_lock
-    //      free msg;
-    //      return;
-    //  }
-    //
-    //  if (!do_send_msg) {
-    //      conn->state = closed;
-    //      unlock conn_lock;
-    //
-    //      free msg;
-    //      close_conn(conn);
-    //      return;
-    //  }
-    //
-    //  unlock_conn_lock;
-    //  free_msg;
-    //  return;
+static int write_message(msg_handle_t* handle, conn_t* conn, msg_header* msg, int64_t log_id) {
+    return 0;
 }
 
 static void* start_epoll(void* arg) {
@@ -179,14 +146,13 @@ static void* start_epoll(void* arg) {
             continue;
         }
 
-        //Send msg?
         if (fd == handle->wake_thread_pipe_fd[1]) {
             LOG(LL_INFO, log_id, "thread is wake up by wake_up_pipe, thread_id: %lu", pthread_self());
-            //try_send_msg(handle, log_id); TODO: we will impl async send later
+            //TODO: stop messenger
         }
 
         log_id = new_log_id(); //new message, new log_id, just for read process
-        msg_header* msg = try_read_msg(fd, log_id);
+        msg_header* msg = read_message(fd, log_id);
         if (msg == NULL) {
             LOG(LL_ERROR, log_id, "Read message from conn %ld, fd %d error.", conn_id, fd);
             continue;
@@ -308,6 +274,39 @@ extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, in
 
     LOG(LL_NOTICE, log_id, "New conn %s:%d, fd %d", host, port, fd);
     return conn->id;
+}
+
+extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, int64_t log_id) {
+    pthread_rwlock_rdlock(&handle->conn_list_lock);
+    conn_t* conn = get_conn_by_id(handle, conn_id);
+    if (conn == NULL) {
+        pthread_rwlock_unlock(&handle->conn_list_lock);
+        LOG(LL_ERROR, log_id, "send_msg can't find conn_id %ld.", conn_id);
+        return -1;
+    }
+
+    pthread_mutex_lock(&conn->lock);
+    pthread_rwlock_unlock(&handle->conn_list_lock);
+
+    if (conn->state == CCEPH_CONN_STATE_CLOSED) {
+        pthread_mutex_unlock(&conn->lock);
+        LOG(LL_ERROR, log_id, "Conn %ld has already closed.", conn_id);
+        return -1;
+    }
+
+    LOG(LL_INFO, log_id, "Send msg to %s:%d, conn_id %ld, fd %d, op %d.",
+                         conn->host, conn->port, conn->id, conn->fd, msg->op);
+    if (write_message(handle, conn, msg, log_id) != 0) {
+        conn->state = CCEPH_CONN_STATE_CLOSED;
+        pthread_mutex_unlock(&conn->lock);
+
+        LOG(LL_ERROR, log_id, "Write message to conn_id %ld failed, close it.", conn_id);
+        close_conn(handle, conn_id, log_id);
+        return -1;
+    }
+
+    pthread_mutex_unlock(&conn->lock);
+    return 0;
 }
 
 extern msg_handle_t* TEST_new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
