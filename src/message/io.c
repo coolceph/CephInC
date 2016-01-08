@@ -126,7 +126,6 @@ static int read_from_conn(int data_fd, void* buf, size_t size, int64_t log_id) {
     }
     if (closed) {
         LOG(LL_INFO, log_id, "Closed connection on descriptor %d", data_fd);
-        close(data_fd);
     }
     return total;
 }

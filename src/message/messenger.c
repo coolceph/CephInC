@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <sys/epoll.h>
 
+#include "include/errno.h"
+
 #include "common/assert.h"
 #include "common/log.h"
 
@@ -68,7 +70,7 @@ extern int close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id) {
     if (conn == NULL) {
         pthread_rwlock_unlock(&handle->conn_list_lock);
         LOG(LL_NOTICE, log_id, "The conn %ld is not found when close", id);
-        return CCEPH_ERRNO_CONN_NOT_FOUND;
+        return CCEPH_ERR_CONN_NOT_FOUND;
     }
 
     list_del(&conn->list_node);
@@ -92,21 +94,50 @@ static int is_conn_err(struct epoll_event event) {
            || !(event.events & EPOLLIN);
 }
 
-static msg_header* read_message(int fd, int64_t log_id) {
-    LOG(LL_NOTICE, log_id, "Read Message from fd %d.", fd);
+static msg_header* read_message(msg_handle_t *handle, conn_id_t conn_id, int fd, int64_t log_id) {
+    LOG(LL_INFO, log_id, "Read Message from conn_id %ld, fd %d.", conn_id, fd);
 
-    int8_t op;
-    if(read_int8(fd, &op, log_id) != 0) return NULL;
+    //Read msg_hedaer
+    msg_header header;
+    int ret = msg_header_read(fd, &header, log_id);
+    if (ret == CCEPH_ERR_CONN_CLOSED) {
+        LOG(LL_NOTICE, log_id, "Read msg_header from conn_id %ld error, conn closed", conn_id);
+        close_conn(handle, conn_id, log_id);
+        return NULL;
+    } else if (ret != 0) {
+        LOG(LL_ERROR, log_id, "Read msg_header from conn_id %ld error %d.", conn_id, ret);
+        return NULL;
+    } else {
+        LOG(LL_INFO, log_id, "read msg_header form conn_id %ld, op %d, log_id %ld", conn_id, header.op, header.log_id);
+    }
 
-    assert(log_id, op == CCEPH_MSG_OP_WRITE);
-    msg_write_obj_req* msg = malloc(sizeof(msg_write_obj_req));
-    msg->header.op = op;
+    //Read message
+    msg_header *message = NULL;
+    switch (header.op) {
+        case CCEPH_MSG_OP_WRITE:
+            assert(log_id, "Not Impl" != 0);
+        case CCEPH_MSG_OP_WRITE_ACK:
+            assert(log_id, "Not Impl" != 0);
+        case CCEPH_MSG_OP_READ:
+            assert(log_id, "Not Impl" != 0);
+        case CCEPH_MSG_OP_READ_ACK:
+            assert(log_id, "Not Impl" != 0);
+        default:
+            ret = CCEPH_ERR_UNKNOWN_OP;
+    }
 
-    if(read_string(fd, &(msg->oid_size), &(msg->oid), log_id) != 0) return NULL;
-    if(read_int64(fd, &(msg->offset), log_id) != 0) return NULL;
-    if(read_data(fd, &(msg->length), &(msg->data), log_id) != 0) return NULL;
-    
-    return (msg_header*)msg;
+    if (ret == CCEPH_ERR_CONN_CLOSED) {
+        LOG(LL_NOTICE, log_id, "Read message from conn_id %ld error, conn closed", conn_id);
+        close_conn(handle, conn_id, log_id);
+        return NULL;
+    } else if (ret != 0) {
+        LOG(LL_ERROR, log_id, "Read message from conn_id %ld error %d.", conn_id, ret);
+        return NULL;
+    } else {
+        LOG(LL_INFO, log_id, "Read message form conn_id %ld, op %d, log_id %ld", conn_id, header.op, header.log_id);
+    }
+
+    return message;
 }
 static int write_message(msg_handle_t* handle, conn_t* conn, msg_header* msg, int64_t log_id) {
     return 0;
@@ -152,7 +183,7 @@ static void* start_epoll(void* arg) {
         }
 
         log_id = new_log_id(); //new message, new log_id, just for read process
-        msg_header* msg = read_message(fd, log_id);
+        msg_header* msg = read_message(handle, conn_id, fd, log_id);
         if (msg == NULL) {
             LOG(LL_ERROR, log_id, "Read message from conn %ld, fd %d error.", conn_id, fd);
             continue;
@@ -285,7 +316,7 @@ extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, in
     if (conn == NULL) {
         pthread_rwlock_unlock(&handle->conn_list_lock);
         LOG(LL_ERROR, log_id, "send_msg can't find conn_id %ld.", conn_id);
-        return CCEPH_ERRNO_CONN_NOT_FOUND;
+        return CCEPH_ERR_CONN_NOT_FOUND;
     }
 
     pthread_mutex_lock(&conn->lock);
@@ -294,7 +325,7 @@ extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, in
     if (conn->state == CCEPH_CONN_STATE_CLOSED) {
         pthread_mutex_unlock(&conn->lock);
         LOG(LL_ERROR, log_id, "Conn %ld has already closed.", conn_id);
-        return CCEPH_ERRNO_CONN_CLOSED;
+        return CCEPH_ERR_CONN_CLOSED;
     }
 
     LOG(LL_INFO, log_id, "Send msg to %s:%d, conn_id %ld, fd %d, op %d.",
@@ -305,7 +336,7 @@ extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, in
 
         LOG(LL_ERROR, log_id, "Write message to conn_id %ld failed, close it.", conn_id);
         close_conn(handle, conn_id, log_id);
-        return CCEPH_ERRNO_WRITE_CONN_ERR;
+        return CCEPH_ERR_WRITE_CONN_ERR;
     }
 
     pthread_mutex_unlock(&conn->lock);
