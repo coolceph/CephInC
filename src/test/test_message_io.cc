@@ -9,6 +9,7 @@ extern "C" {
 #include "gtest/gtest.h"
 
 char* sys_func_name_recv = (char*)"recv";
+char* sys_func_name_send = (char*)"send";
 char* lib_func_name_recv_from_conn = (char*)"recv_from_conn";
 
 ssize_t MOCK_recv_from_conn_recv_normal(int sockfd, void *buf, size_t len, int flags) {
@@ -185,4 +186,46 @@ TEST(message_io, recv_string) {
     ret = recv_string(1, &length, &buf, 122);
     EXPECT_EQ(-1, ret);
     detach_func(lib_func_name_recv_from_conn);
+}
+
+//int send_int8(int fd, int8_t value, int64_t log_id);
+ssize_t MOCK_send_int8_send_succ(int socket, const void *buffer, size_t length, int flags) {
+    EXPECT_EQ(1, socket);
+    EXPECT_NE((void*)NULL, buffer);
+    EXPECT_EQ(sizeof(int8_t), length);
+    EXPECT_EQ(0, flags);
+    return length;
+}
+ssize_t MOCK_send_int8_send_fail1(int socket, const void *buffer, size_t length, int flags) {
+    EXPECT_EQ(1, socket);
+    EXPECT_NE((void*)NULL, buffer);
+    EXPECT_EQ(sizeof(int8_t), length);
+    EXPECT_EQ(0, flags);
+    return length - 1;
+}
+ssize_t MOCK_send_int8_send_fail2(int socket, const void *buffer, size_t length, int flags) {
+    EXPECT_EQ(1, socket);
+    EXPECT_NE((void*)NULL, buffer);
+    EXPECT_EQ(sizeof(int8_t), length);
+    EXPECT_EQ(0, flags);
+    return -1;
+}
+TEST(message_io, send_int8) {
+    //Case: normal
+    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_int8_send_succ);
+    int ret = send_int8(1, 37, 122);
+    EXPECT_EQ(0, ret);
+    detach_func(sys_func_name_send);
+
+    //Case: incomplete send
+    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_int8_send_fail1);
+    ret = send_int8(1, 37, 122);
+    EXPECT_EQ(-1, ret);
+    detach_func(sys_func_name_send);
+
+    //Case: failed when send
+    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_int8_send_fail2);
+    ret = send_int8(1, 37, 122);
+    EXPECT_EQ(-1, ret);
+    detach_func(sys_func_name_send);
 }
