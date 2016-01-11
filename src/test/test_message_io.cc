@@ -75,19 +75,19 @@ TEST(message_io, recv_from_conn) {
 }
 
 int MOCK_recv_int8_recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id) {
+    EXPECT_EQ(sizeof(int8_t), size);
     EXPECT_TRUE(buf != NULL);
     EXPECT_EQ(122, log_id);
-    EXPECT_EQ(sizeof(int8_t), size);
 
     int8_t value = 37;
     memcpy(buf, &value, size);
 
-   if (data_fd == 1) return 1; 
-   if (data_fd == 2) return 0; 
-   if (data_fd == 3) return -2; 
+    if (data_fd == 1) return 1; 
+    if (data_fd == 2) return 0; 
+    if (data_fd == 3) return -2; 
 
-   EXPECT_TRUE(0 == 1);
-   return 0;
+    EXPECT_TRUE(0 == 1);
+    return 0;
 }
 TEST(message_io, recv_int8) {
     attach_and_enable_func_lib(lib_func_name_recv_from_conn, (void*)&MOCK_recv_int8_recv_from_conn);

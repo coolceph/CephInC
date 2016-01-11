@@ -66,6 +66,14 @@ int recv_int8(int data_fd, int8_t* value, int64_t log_id) {
     int ret = recv_from_conn(data_fd, value, sizeof(int8_t), log_id);
     return (ret == sizeof(int8_t)) ? 0 : (ret < 0 ? ret : -1);
 }
+int recv_int16(int data_fd, int16_t* value, int64_t log_id) {
+    int ret = recv_from_conn(data_fd, value, sizeof(int16_t), log_id);
+    return (ret == sizeof(int16_t)) ? 0 : (ret < 0 ? ret : -1);
+}
+int recv_int32(int data_fd, int32_t* value, int64_t log_id) {
+    int ret = recv_from_conn(data_fd, value, sizeof(int32_t), log_id);
+    return (ret == sizeof(int32_t)) ? 0 : (ret < 0 ? ret : -1);
+}
 int read_int64(int data_fd, int64_t* value, int64_t log_id) {
     int ret = recv_from_conn(data_fd, value, sizeof(int64_t), log_id);
     return (ret == sizeof(int64_t)) ? 0 : (ret < 0 ? ret : -1);
