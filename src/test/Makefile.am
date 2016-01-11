@@ -16,13 +16,18 @@ unittest_common_log_LDADD = $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_common_log_CXXFLAGS = $(UNITTEST_CXXFLAGS)
 check_PROGRAMS += unittest_common_log
 
+unittest_message_io_SOURCES = test/test_message_io.cc
+unittest_message_io_LDADD = $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
+unittest_message_io_CXXFLAGS = $(UNITTEST_CXXFLAGS)
+check_PROGRAMS += unittest_message_io
+
 unittest_message_messenger_SOURCES = test/test_message_messenger.cc
 unittest_message_messenger_LDADD = $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_message_messenger_CXXFLAGS = $(UNITTEST_CXXFLAGS)
 check_PROGRAMS += unittest_message_messenger
 
-unittest_libclient_SOURCES = test/test_libclient.cc
-unittest_libclient_LDADD = $(LIBCLIENT) $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
-unittest_libclient_CXXFLAGS = $(UNITTEST_CXXFLAGS)
-check_PROGRAMS += unittest_libclient
+#unittest_libclient_SOURCES = test/test_libclient.cc
+#unittest_libclient_LDADD = $(LIBCLIENT) $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
+#unittest_libclient_CXXFLAGS = $(UNITTEST_CXXFLAGS)
+#check_PROGRAMS += unittest_libclient
 
