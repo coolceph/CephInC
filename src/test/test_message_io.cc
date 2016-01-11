@@ -110,3 +110,79 @@ TEST(message_io, recv_int8) {
 
     detach_func(lib_func_name_recv_from_conn);
 }
+
+int MOCK_recv_string_recv_from_conn_sucess(int data_fd, void* buf, size_t size, int64_t log_id) {
+    static int call_time = -1;
+    call_time++;
+
+    EXPECT_EQ(1, data_fd);
+    EXPECT_TRUE(buf != NULL);
+    EXPECT_EQ(122, log_id);
+
+    if (call_time == 0) {
+        EXPECT_EQ(sizeof(int16_t), size);
+        int16_t value = 5;
+        memcpy(buf, &value, size);
+        return size;
+    } else if (call_time == 1) {
+        EXPECT_EQ(5, size);
+        char* value = (char*)"cceph";
+        memcpy(buf, value, size);
+        return size;
+    }
+
+    EXPECT_TRUE(0 == 1);
+    return -1;
+}
+int MOCK_recv_string_recv_from_conn_fail1(int data_fd, void* buf, size_t size, int64_t log_id) {
+    EXPECT_EQ(1, data_fd);
+    EXPECT_TRUE(buf != NULL);
+    EXPECT_EQ(122, log_id);
+    EXPECT_EQ(sizeof(int16_t), size);
+    return 1;
+}
+int MOCK_recv_string_recv_from_conn_fail2(int data_fd, void* buf, size_t size, int64_t log_id) {
+    static int call_time = -1;
+    call_time++;
+
+    EXPECT_EQ(1, data_fd);
+    EXPECT_TRUE(buf != NULL);
+    EXPECT_EQ(122, log_id);
+
+    if (call_time == 0) {
+        EXPECT_EQ(sizeof(int16_t), size);
+        int16_t value = 5;
+        memcpy(buf, &value, size);
+        return size;
+    } else if (call_time == 1) {
+        EXPECT_EQ(5, size);
+        return size - 1;
+    }
+
+    EXPECT_TRUE(0 == 1);
+    return -1;
+}
+TEST(message_io, recv_string) {
+    int16_t length = 0;
+    char* buf = NULL;
+
+    //Case: normal
+    attach_and_enable_func_lib(lib_func_name_recv_from_conn, (void*)&MOCK_recv_string_recv_from_conn_sucess);
+    int ret = recv_string(1, &length, &buf, 122);
+    EXPECT_EQ(0, ret);
+    EXPECT_EQ(5, length);
+    EXPECT_STREQ("cceph", buf);
+    detach_func(lib_func_name_recv_from_conn);
+
+    //Case: failed when read length;
+    attach_and_enable_func_lib(lib_func_name_recv_from_conn, (void*)&MOCK_recv_string_recv_from_conn_fail1);
+    ret = recv_string(1, &length, &buf, 122);
+    EXPECT_EQ(-1, ret);
+    detach_func(lib_func_name_recv_from_conn);
+
+    //Case: failed when read string;
+    attach_and_enable_func_lib(lib_func_name_recv_from_conn, (void*)&MOCK_recv_string_recv_from_conn_fail2);
+    ret = recv_string(1, &length, &buf, 122);
+    EXPECT_EQ(-1, ret);
+    detach_func(lib_func_name_recv_from_conn);
+}

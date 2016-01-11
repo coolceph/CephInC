@@ -271,7 +271,7 @@ extern msg_handle_t* start_messager(msg_handler_t msg_handler, int64_t log_id) {
     }
 
     //add the send_msg_pipe_fd to epoll set
-    new_conn(handle, "send_msg_pipe", 0, handle->wake_thread_pipe_fd[1], log_id);
+    new_conn(handle, "wake_thread_pipe", 0, handle->wake_thread_pipe_fd[1], log_id);
     
     return handle;
 }

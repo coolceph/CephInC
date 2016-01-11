@@ -74,13 +74,13 @@ int recv_int32(int data_fd, int32_t* value, int64_t log_id) {
     int ret = recv_from_conn(data_fd, value, sizeof(int32_t), log_id);
     return (ret == sizeof(int32_t)) ? 0 : (ret < 0 ? ret : -1);
 }
-int read_int64(int data_fd, int64_t* value, int64_t log_id) {
+int recv_int64(int data_fd, int64_t* value, int64_t log_id) {
     int ret = recv_from_conn(data_fd, value, sizeof(int64_t), log_id);
     return (ret == sizeof(int64_t)) ? 0 : (ret < 0 ? ret : -1);
 }
-int read_string(int data_fd, int16_t *size, char **string, int64_t log_id) {
+int recv_string(int data_fd, int16_t *size, char **string, int64_t log_id) {
     int ret = recv_from_conn(data_fd, size, sizeof(int16_t), log_id);
-    return (ret == sizeof(int16_t)) ? 0 : (ret < 0 ? ret : -1);
+    if (ret != sizeof(int16_t)) return (ret < 0 ? ret : -1);
     
     *string = malloc(*size + 1);
     (*string)[*size] = '\0';
@@ -91,9 +91,9 @@ int read_string(int data_fd, int16_t *size, char **string, int64_t log_id) {
     }
     return (ret == *size) ? 0 : (ret < 0 ? ret : -1);
 }
-int read_data(int data_fd, int64_t *size, char **data, int64_t log_id) {
+int recv_data(int data_fd, int64_t *size, char **data, int64_t log_id) {
     int ret = recv_from_conn(data_fd, size, sizeof(*size), log_id);
-    return (ret == sizeof(int64_t)) ? 0 : (ret < 0 ? ret : -1);
+    if (ret != sizeof(int64_t)) return (ret < 0 ? ret : -1);
     
     *data = malloc(*size);
     ret = recv_from_conn(data_fd, *data, *size, log_id);
@@ -114,7 +114,7 @@ static int recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id) {
         }
 
         if (count == -1 && errno == EAGAIN && size > 0) {
-            LOG(LL_INFO, log_id, "incomplete read, wait and retry to read");
+            LOG(LL_INFO, log_id, "incomplete read, retry");
             continue;
         }
 

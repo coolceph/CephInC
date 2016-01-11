@@ -176,9 +176,7 @@ TEST(message_messenger, send_msg) {
     //Case: Write failed
     attach_and_enable_func_lib(lib_func_name_write_message, (void*)&MOCK_send_msg_write_message_failed);
     attach_and_enable_func_lib(lib_func_name_close_conn, (void*)&MOCK_send_msg_close_conn);
-
     EXPECT_EQ(CCEPH_ERR_WRITE_CONN_ERR, send_msg(handle, 9004, &msg, 1));
-
     detach_func_lib(lib_func_name_write_message);
     detach_func_lib(lib_func_name_close_conn);
 }
