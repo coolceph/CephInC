@@ -101,8 +101,6 @@ static int recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id) {
     while(size > 0) {
         int count = recv(data_fd, buf, size, 0);
         if (count == -1 && errno != EAGAIN) {
-            /* If errno == EAGAIN, that means we have read all
-               data. So go back to the main loop. */
             LOG(LL_ERROR, log_id, "conn closed when read, fd %d, errno %d.", data_fd, errno);
             return CCEPH_ERR_CONN_CLOSED; //messenger will close it
         }
