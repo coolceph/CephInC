@@ -14,8 +14,8 @@ char* sys_func_name_epoll_ctl = (char*)"epoll_ctl";
 char* lib_func_name_close_conn = (char*)"close_conn";
 char* lib_func_name_write_message = (char*)"write_message";
 
-conn_t* add_conn(msg_handle_t* handle, char* host, int port, int fd) {
-    conn_t* conn = (conn_t*)malloc(sizeof(conn_t));
+connection* add_conn(msg_handle_t* handle, char* host, int port, int fd) {
+    connection* conn = (connection*)malloc(sizeof(connection));
     conn->port = port;
     conn->fd   = fd;
     conn->id   = fd + port;
@@ -55,8 +55,8 @@ TEST(message_messenger, new_msg_handle) {
 
 TEST(message_messenger, find_conn_by_id) {
     msg_handle_t* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
-    conn_t* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
-    conn_t* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
+    connection* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
+    connection* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
 
     EXPECT_EQ(NULL, TEST_get_conn_by_id(handle, 0));
     EXPECT_EQ(conn1, TEST_get_conn_by_id(handle, 9002));
@@ -65,8 +65,8 @@ TEST(message_messenger, find_conn_by_id) {
 
 TEST(message_messenger, find_conn_by_fd) {
     msg_handle_t* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
-    conn_t* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
-    conn_t* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
+    connection* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
+    connection* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
 
     EXPECT_EQ(NULL, TEST_get_conn_by_fd(handle, 0));
     EXPECT_EQ(conn1, TEST_get_conn_by_fd(handle, 1));
@@ -75,8 +75,8 @@ TEST(message_messenger, find_conn_by_fd) {
 
 TEST(message_messenger, find_conn_by_port_and_ip) {
     msg_handle_t* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
-    conn_t* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
-    conn_t* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
+    connection* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
+    connection* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
 
     EXPECT_EQ(NULL, TEST_get_conn_by_host_and_port(handle, (char*)"no_this_host", 1));
     EXPECT_EQ(conn1, TEST_get_conn_by_host_and_port(handle, (char*)"host1", 9001));
@@ -100,7 +100,7 @@ TEST(message_messenger, new_conn) {
 
     detach_func(sys_func_name_epoll_ctl);
 
-	conn_t* conn = TEST_get_conn_by_id(handle, conn_id);
+	connection* conn = TEST_get_conn_by_id(handle, conn_id);
 	EXPECT_TRUE(conn != NULL);
 	EXPECT_STREQ(conn->host, "host1");
 	EXPECT_EQ(conn->port, 9001);
@@ -130,7 +130,7 @@ TEST(message_messenger, close_conn) {
     detach_func(close_func_name);
 }
 
-int MOCK_send_msg_write_message_success(msg_handle_t* handle, conn_t* conn, msg_header* msg, int64_t log_id) {
+int MOCK_send_msg_write_message_success(msg_handle_t* handle, connection* conn, msg_header* msg, int64_t log_id) {
     EXPECT_TRUE(handle != NULL);
     EXPECT_TRUE(conn != NULL);
     EXPECT_TRUE(msg != NULL);
@@ -138,7 +138,7 @@ int MOCK_send_msg_write_message_success(msg_handle_t* handle, conn_t* conn, msg_
     EXPECT_EQ(1, log_id);
     return 0;
 }
-int MOCK_send_msg_write_message_failed(msg_handle_t* handle, conn_t* conn, msg_header* msg, int64_t log_id) {
+int MOCK_send_msg_write_message_failed(msg_handle_t* handle, connection* conn, msg_header* msg, int64_t log_id) {
     EXPECT_TRUE(handle != NULL);
     EXPECT_TRUE(conn != NULL);
     EXPECT_TRUE(msg != NULL);
@@ -151,14 +151,14 @@ int MOCK_send_msg_close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id)
     EXPECT_EQ(9004, id);
     EXPECT_EQ(1, log_id);
 
-    conn_t* conn = TEST_get_conn_by_id(handle, 9004);
+    connection* conn = TEST_get_conn_by_id(handle, 9004);
     EXPECT_EQ(CCEPH_CONN_STATE_CLOSED, conn->state);
     return -1;
 }
 TEST(message_messenger, send_msg) {
     msg_header msg;
     msg_handle_t* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
-    conn_t* conn = add_conn(handle, (char*)"host1", 9001, 1);
+    connection* conn = add_conn(handle, (char*)"host1", 9001, 1);
     add_conn(handle, (char*)"host2", 9002, 2);
 
     //Case: Conn not found

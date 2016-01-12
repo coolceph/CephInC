@@ -13,7 +13,6 @@
 
 #include "common/log.h"
 #include "common/assert.h"
-#include "common/status.h"
 
 #include "message/io.h"
 #include "message/messenger.h"

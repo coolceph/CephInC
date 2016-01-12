@@ -19,13 +19,13 @@
 #include "message/msg_write_obj.h"
 
 //caller must has handle->conn_list_lock
-static conn_t* get_conn_by_id(msg_handle_t* handle, int id) {
+static connection* get_conn_by_id(msg_handle_t* handle, int id) {
     struct list_head *pos;
-    conn_t *conn = NULL;
-    conn_t *result = NULL;
+    connection *conn = NULL;
+    connection *result = NULL;
 
     list_for_each(pos, &(handle->conn_list.list_node)) {
-        conn = list_entry(pos, conn_t, list_node);
+        conn = list_entry(pos, connection, list_node);
         if (conn->id == id) {
             result = conn;
             break;
@@ -34,13 +34,13 @@ static conn_t* get_conn_by_id(msg_handle_t* handle, int id) {
     return result;
 }
 //caller must has handle->conn_list_lock
-static conn_t* get_conn_by_fd(msg_handle_t* handle, int fd) {
+static connection* get_conn_by_fd(msg_handle_t* handle, int fd) {
     struct list_head *pos;
-    conn_t *conn = NULL;
-    conn_t *result = NULL;
+    connection *conn = NULL;
+    connection *result = NULL;
 
     list_for_each(pos, &(handle->conn_list.list_node)) {
-        conn = list_entry(pos, conn_t, list_node);
+        conn = list_entry(pos, connection, list_node);
         if (conn->fd == fd) {
             result = conn;
             break;
@@ -49,13 +49,13 @@ static conn_t* get_conn_by_fd(msg_handle_t* handle, int fd) {
     return result;
 }
 //caller must has handle->conn_list_lock
-static conn_t* get_conn_by_host_and_port(msg_handle_t* handle, char* host, int port) {
+static connection* get_conn_by_host_and_port(msg_handle_t* handle, char* host, int port) {
     struct list_head *pos;
-    conn_t *conn = NULL;
-    conn_t *result = NULL;
+    connection *conn = NULL;
+    connection *result = NULL;
 
     list_for_each(pos, &(handle->conn_list.list_node)) {
-        conn = list_entry(pos, conn_t, list_node);
+        conn = list_entry(pos, connection, list_node);
         if (conn->port == port && strcmp(conn->host, host) == 0) {
             result = conn;
             break;
@@ -66,7 +66,7 @@ static conn_t* get_conn_by_host_and_port(msg_handle_t* handle, char* host, int p
 
 extern int close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id) {
     pthread_rwlock_wrlock(&handle->conn_list_lock);
-    conn_t* conn = get_conn_by_id(handle, id);
+    connection* conn = get_conn_by_id(handle, id);
     if (conn == NULL) {
         pthread_rwlock_unlock(&handle->conn_list_lock);
         LOG(LL_NOTICE, log_id, "The conn %ld is not found when close", id);
@@ -139,7 +139,7 @@ static msg_header* read_message(msg_handle_t *handle, conn_id_t conn_id, int fd,
 
     return message;
 }
-static int write_message(msg_handle_t* handle, conn_t* conn, msg_header* msg, int64_t log_id) {
+static int write_message(msg_handle_t* handle, connection* conn, msg_header* msg, int64_t log_id) {
     return 0;
 }
 
@@ -159,7 +159,7 @@ static void* start_epoll(void* arg) {
         int fd = event.data.fd;
 
         pthread_rwlock_rdlock(&handle->conn_list_lock);
-        conn_t* conn = get_conn_by_fd(handle, fd);
+        connection* conn = get_conn_by_fd(handle, fd);
         conn_id_t conn_id = conn->id;
         if (conn == NULL) {
             LOG(LL_ERROR, log_id, "epoll_wait return fd %d, but conn is not found", fd);
@@ -278,7 +278,7 @@ extern msg_handle_t* start_messager(msg_handler_t msg_handler, int64_t log_id) {
 
 extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, int64_t log_id) {
     //New connection from params
-    conn_t* conn = (conn_t*)malloc(sizeof(conn_t));
+    connection* conn = (connection*)malloc(sizeof(connection));
     conn->id = atomic_add64(&handle->next_conn_id, 1);
     conn->fd = fd;
     conn->port = port;
@@ -312,7 +312,7 @@ extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, in
     assert(log_id, handle != NULL);
 
     pthread_rwlock_rdlock(&handle->conn_list_lock);
-    conn_t* conn = get_conn_by_id(handle, conn_id);
+    connection* conn = get_conn_by_id(handle, conn_id);
     if (conn == NULL) {
         pthread_rwlock_unlock(&handle->conn_list_lock);
         LOG(LL_ERROR, log_id, "send_msg can't find conn_id %ld.", conn_id);
@@ -347,12 +347,12 @@ extern msg_handle_t* TEST_new_msg_handle(msg_handler_t msg_handler, int64_t log_
     return new_msg_handle(msg_handler, log_id);
 }
 
-extern conn_t* TEST_get_conn_by_id(msg_handle_t* handle, int id) {
+extern connection* TEST_get_conn_by_id(msg_handle_t* handle, int id) {
     return get_conn_by_id(handle, id);
 }
-extern conn_t* TEST_get_conn_by_fd(msg_handle_t* handle, int fd) {
+extern connection* TEST_get_conn_by_fd(msg_handle_t* handle, int fd) {
     return get_conn_by_fd(handle, fd);
 }
-extern conn_t* TEST_get_conn_by_host_and_port(msg_handle_t* handle, char* host, int port) {
+extern connection* TEST_get_conn_by_host_and_port(msg_handle_t* handle, char* host, int port) {
     return get_conn_by_host_and_port(handle, host, port);
 }

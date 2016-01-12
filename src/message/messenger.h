@@ -26,7 +26,7 @@ typedef struct {
     pthread_mutex_t lock;
 
     struct list_head list_node;
-} conn_t;
+} connection;
 
 
 typedef struct msg_handle_t_ msg_handle_t_;
@@ -39,7 +39,7 @@ struct msg_handle_t_ {
     pthread_t *thread_ids;
 
     atomic64_t next_conn_id;
-    conn_t conn_list;
+    connection conn_list;
     pthread_rwlock_t conn_list_lock;
 
     int wake_thread_pipe_fd[2]; //used to wake up thread to send msg
@@ -63,7 +63,7 @@ extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, in
 
 //for test
 extern msg_handle_t* TEST_new_msg_handle(msg_handler_t msg_handler, int64_t log_id);
-extern conn_t* TEST_get_conn_by_id(msg_handle_t* handle, int id);
-extern conn_t* TEST_get_conn_by_fd(msg_handle_t* handle, int fd);
-extern conn_t* TEST_get_conn_by_host_and_port(msg_handle_t* handle, char* host, int port);
+extern connection* TEST_get_conn_by_id(msg_handle_t* handle, int id);
+extern connection* TEST_get_conn_by_fd(msg_handle_t* handle, int fd);
+extern connection* TEST_get_conn_by_host_and_port(msg_handle_t* handle, char* host, int port);
 #endif
