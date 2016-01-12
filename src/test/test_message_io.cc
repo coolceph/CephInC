@@ -112,7 +112,7 @@ TEST(message_io, recv_int8) {
     detach_func(lib_func_name_recv_from_conn);
 }
 
-int MOCK_recv_string_recv_from_conn_sucess(int data_fd, void* buf, size_t size, int64_t log_id) {
+int MOCK_recv_string_recv_from_conn_success(int data_fd, void* buf, size_t size, int64_t log_id) {
     static int call_time = -1;
     call_time++;
 
@@ -168,7 +168,7 @@ TEST(message_io, recv_string) {
     char* buf = NULL;
 
     //Case: normal
-    attach_and_enable_func_lib(lib_func_name_recv_from_conn, (void*)&MOCK_recv_string_recv_from_conn_sucess);
+    attach_and_enable_func_lib(lib_func_name_recv_from_conn, (void*)&MOCK_recv_string_recv_from_conn_success);
     int ret = recv_string(1, &length, &buf, 122);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(5, length);
@@ -226,6 +226,76 @@ TEST(message_io, send_int8) {
     //Case: failed when send
     attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_int8_send_fail2);
     ret = send_int8(1, 37, 122);
+    EXPECT_EQ(-1, ret);
+    detach_func(sys_func_name_send);
+}
+
+ssize_t MOCK_send_string_send_succ(int socket, const void *buffer, size_t length, int flags) {
+    static int call_time = -1;
+    call_time++;
+
+    EXPECT_EQ(1, socket);
+    EXPECT_TRUE(buffer != NULL);
+    EXPECT_EQ(0, flags);
+
+    if (call_time == 0) {
+        EXPECT_EQ(sizeof(int16_t), length);
+        EXPECT_EQ(5, (*(int16_t*)buffer));
+        return length;
+    } else if (call_time == 1) {
+        EXPECT_EQ(5, length);
+        EXPECT_STREQ((char*)"cceph", (char*)buffer);
+        return length;
+    }
+
+    EXPECT_TRUE(0 == 1);
+    return -1;
+}
+ssize_t MOCK_send_string_send_fail1(int socket, const void *buffer, size_t length, int flags) {
+    EXPECT_EQ(1, socket);
+    EXPECT_TRUE(buffer != NULL);
+    EXPECT_EQ(0, flags);
+    EXPECT_EQ(sizeof(int16_t), length);
+    EXPECT_EQ(5, (*(int16_t*)buffer));
+    return length - 1;
+}
+ssize_t MOCK_send_string_send_fail2(int socket, const void *buffer, size_t length, int flags) {
+    static int call_time = -1;
+    call_time++;
+
+    EXPECT_EQ(1, socket);
+    EXPECT_TRUE(buffer != NULL);
+    EXPECT_EQ(0, flags);
+
+    if (call_time == 0) {
+        EXPECT_EQ(sizeof(int16_t), length);
+        EXPECT_EQ(5, (*(int16_t*)buffer));
+        return length;
+    } else if (call_time == 1) {
+        EXPECT_EQ(5, length);
+        EXPECT_STREQ((char*)"cceph", (char*)buffer);
+        return length - 1;
+    }
+
+    EXPECT_TRUE(0 == 1);
+    return -1;
+}
+TEST(message_io, send_string) {
+    //Case: normal
+    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_string_send_succ);
+    int ret = send_string(1, (char*)"cceph", 122);
+    EXPECT_EQ(0, ret);
+    detach_func(sys_func_name_send);
+
+    //Case: failed when read length;
+    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_string_send_fail1);
+    ret = send_string(1, (char*)"cceph", 122);
+    EXPECT_EQ(-1, ret);
+    detach_func(sys_func_name_send);
+
+    //Case: failed when read string;
+    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_string_send_fail2);
+    ret = send_string(1, (char*)"cceph", 122);
     EXPECT_EQ(-1, ret);
     detach_func(sys_func_name_send);
 }

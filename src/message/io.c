@@ -54,13 +54,13 @@ int send_string(int fd, char* string, int64_t log_id) {
     if (ret != sizeof(int16_t)) {
         int err_no = ret < 0 ? ret : errno;
         LOG(LL_ERROR, log_id, "send string %s error: %d", string, err_no);
-        return err_no;
+        return err_no < 0 ? err_no : -1;
     }
     ret = send(fd, string, size, 0);
     if (ret != size) {
         int err_no = ret < 0 ? ret : errno;
         LOG(LL_ERROR, log_id, "send string %s error: %d", string, err_no);
-        return err_no;
+        return err_no < 0 ? err_no : -1;
     }
     return 0;
 }
@@ -69,13 +69,13 @@ int send_data(int fd, int64_t length, char* data, int64_t log_id) {
     if (ret != sizeof(int64_t)) {
         int err_no = ret < 0 ? ret : errno;
         LOG(LL_ERROR, log_id, "send data error: %d, length: %ld", err_no, length);
-        return err_no;
+        return err_no < 0 ? err_no : -1;
     }
     ret = send(fd, data, length, 0);
     if (ret != length) {
         int err_no = ret < 0 ? ret : errno;
         LOG(LL_ERROR, log_id, "send data error: %d, length: %ld", err_no, length);
-        return err_no;
+        return err_no < 0 ? err_no : -1;
     }
 
     return 0;
