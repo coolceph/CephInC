@@ -99,7 +99,7 @@ static msg_header* read_message(msg_handle_t *handle, conn_id_t conn_id, int fd,
 
     //Read msg_hedaer
     msg_header header;
-    int ret = msg_header_read(fd, &header, log_id);
+    int ret = recv_msg_header(fd, &header, log_id);
     if (ret == CCEPH_ERR_CONN_CLOSED) {
         LOG(LL_NOTICE, log_id, "Read msg_header from conn_id %ld error, conn closed", conn_id);
         close_conn(handle, conn_id, log_id);

@@ -9,7 +9,7 @@
 #include "common/log.h"
 #include "message/io.h"
 
-int send_msg_write_req(char* host, int port, msg_write_obj_req* req, int64_t log_id) {
+extern int send_msg_write_req(char* host, int port, msg_write_obj_req* req, int64_t log_id) {
 
     struct sockaddr_in server_addr_in;
     bzero(&server_addr_in, sizeof(server_addr_in) );
@@ -37,5 +37,14 @@ int send_msg_write_req(char* host, int port, msg_write_obj_req* req, int64_t log
     if (ret < 0) return ret;
 
     close(fd);
+    return 0;
+}
+extern int recv_meg_write_obj() {
+    //msg_write_obj_req* msg = malloc(sizeof(msg_write_obj_req));
+    //msg->header.op = op;
+
+    //if(read_string(fd, &(msg->oid_size), &(msg->oid), log_id) != 0) return NULL;
+    //if(read_int64(fd, &(msg->offset), log_id) != 0) return NULL;
+    //if(read_data(fd, &(msg->length), &(msg->data), log_id) != 0) return NULL;
     return 0;
 }
