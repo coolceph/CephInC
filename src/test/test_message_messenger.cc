@@ -14,7 +14,7 @@ char* sys_func_name_epoll_ctl = (char*)"epoll_ctl";
 char* lib_func_name_close_conn = (char*)"close_conn";
 char* lib_func_name_write_message = (char*)"write_message";
 
-connection* add_conn(msg_handle_t* handle, char* host, int port, int fd) {
+connection* add_conn(msg_handle* handle, char* host, int port, int fd) {
     connection* conn = (connection*)malloc(sizeof(connection));
     conn->port = port;
     conn->fd   = fd;
@@ -27,7 +27,7 @@ connection* add_conn(msg_handle_t* handle, char* host, int port, int fd) {
     list_add(&conn->list_node, &handle->conn_list.list_node);
     return conn;
 }
-int MOCK_process_message(msg_handle_t* msg_handle, conn_id_t conn_id, msg_header* message) {
+int MOCK_process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message) {
     EXPECT_TRUE(msg_handle != NULL);
     EXPECT_TRUE(conn_id > 0);
     EXPECT_TRUE(message != NULL);
@@ -35,8 +35,8 @@ int MOCK_process_message(msg_handle_t* msg_handle, conn_id_t conn_id, msg_header
 }
 
 TEST(message_messenger, new_msg_handle) {
-    msg_handle_t* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
-    EXPECT_NE(handle, (msg_handle_t*)NULL);
+    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
+    EXPECT_NE(handle, (msg_handle*)NULL);
 
     EXPECT_TRUE(handle->epoll_fd > 0);
     EXPECT_TRUE(handle->wake_thread_pipe_fd[0] > 0);
@@ -54,7 +54,7 @@ TEST(message_messenger, new_msg_handle) {
 }
 
 TEST(message_messenger, find_conn_by_id) {
-    msg_handle_t* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
+    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
     connection* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
     connection* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
 
@@ -64,7 +64,7 @@ TEST(message_messenger, find_conn_by_id) {
 }
 
 TEST(message_messenger, find_conn_by_fd) {
-    msg_handle_t* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
+    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
     connection* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
     connection* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
 
@@ -74,7 +74,7 @@ TEST(message_messenger, find_conn_by_fd) {
 }
 
 TEST(message_messenger, find_conn_by_port_and_ip) {
-    msg_handle_t* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
+    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
     connection* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
     connection* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
 
@@ -91,7 +91,7 @@ int MOCK_new_conn_epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)
     return 0;
 }
 TEST(message_messenger, new_conn) {
-    msg_handle_t* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
+    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
 
     attach_and_enable_func(sys_func_name_epoll_ctl, (void*)&MOCK_new_conn_epoll_ctl);
 
@@ -112,7 +112,7 @@ int MOCK_close_conn_close(int fd) {
     return 0;
 }
 TEST(message_messenger, close_conn) {
-    msg_handle_t* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
+    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
     add_conn(handle, (char*)"host1", 9001, 1);
     add_conn(handle, (char*)"host2", 9002, 2);
 
@@ -130,7 +130,7 @@ TEST(message_messenger, close_conn) {
     detach_func(close_func_name);
 }
 
-int MOCK_send_msg_write_message_success(msg_handle_t* handle, connection* conn, msg_header* msg, int64_t log_id) {
+int MOCK_send_msg_write_message_success(msg_handle* handle, connection* conn, msg_header* msg, int64_t log_id) {
     EXPECT_TRUE(handle != NULL);
     EXPECT_TRUE(conn != NULL);
     EXPECT_TRUE(msg != NULL);
@@ -138,7 +138,7 @@ int MOCK_send_msg_write_message_success(msg_handle_t* handle, connection* conn, 
     EXPECT_EQ(1, log_id);
     return 0;
 }
-int MOCK_send_msg_write_message_failed(msg_handle_t* handle, connection* conn, msg_header* msg, int64_t log_id) {
+int MOCK_send_msg_write_message_failed(msg_handle* handle, connection* conn, msg_header* msg, int64_t log_id) {
     EXPECT_TRUE(handle != NULL);
     EXPECT_TRUE(conn != NULL);
     EXPECT_TRUE(msg != NULL);
@@ -146,7 +146,7 @@ int MOCK_send_msg_write_message_failed(msg_handle_t* handle, connection* conn, m
     EXPECT_EQ(1, log_id);
     return -1;
 }
-int MOCK_send_msg_close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id) {
+int MOCK_send_msg_close_conn(msg_handle* handle, conn_id_t id, int64_t log_id) {
     EXPECT_TRUE(handle != NULL);
     EXPECT_EQ(9004, id);
     EXPECT_EQ(1, log_id);
@@ -157,7 +157,7 @@ int MOCK_send_msg_close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id)
 }
 TEST(message_messenger, send_msg) {
     msg_header msg;
-    msg_handle_t* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
+    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
     connection* conn = add_conn(handle, (char*)"host1", 9001, 1);
     add_conn(handle, (char*)"host2", 9002, 2);
 

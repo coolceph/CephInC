@@ -73,7 +73,7 @@ static int create_and_bind(char *port, int64_t log_id) {
     return socket_fd;
 }
 
-static int new_connection(int socket_fd, msg_handle_t* msg_handle, int64_t log_id) {
+static int new_connection(int socket_fd, msg_handle* msg_handle, int64_t log_id) {
     int ret;
     
     struct sockaddr in_addr;
@@ -119,7 +119,7 @@ static void do_req_write(msg_write_obj_req* req) {
     free(req);
 }
 
-static int process_message(msg_handle_t* msg_handle, conn_id_t conn_id, msg_header* message) {
+static int process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message) {
     int64_t log_id = message->log_id;
     assert(log_id, msg_handle != NULL); //to avoid unused param warning, will removed later
     LOG(LL_NOTICE, log_id, "Begin to process msg from conn %ld", conn_id);
@@ -139,7 +139,7 @@ static int is_conn_err(struct epoll_event event) {
            || !(event.events & EPOLLIN);
 }
 
-static int start_server(char* port, msg_handle_t* msg_handle, int64_t log_id) {
+static int start_server(char* port, msg_handle* msg_handle, int64_t log_id) {
     int ret;
 
     int socket_fd = create_and_bind(port, log_id);
@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
     int32_t log_prefix = 201;
     initial_log_id(log_prefix);
 
-    msg_handle_t* msg_handle = start_messager(&process_message, new_log_id());
+    msg_handle* msg_handle = start_messager(&process_message, new_log_id());
     start_server(port, msg_handle, new_log_id());
     return 0;
 }

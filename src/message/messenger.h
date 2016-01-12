@@ -29,10 +29,10 @@ typedef struct {
 } connection;
 
 
-typedef struct msg_handle_t_ msg_handle_t_;
-struct msg_handle_t_ {
+typedef struct msg_handle_ msg_handle_;
+struct msg_handle_ {
     int log_id;
-    int (*msg_process)(struct msg_handle_t_*, conn_id_t, msg_header*);
+    int (*msg_process)(struct msg_handle_*, conn_id_t, msg_header*);
 
     int epoll_fd;
     int thread_count;
@@ -45,25 +45,25 @@ struct msg_handle_t_ {
     int wake_thread_pipe_fd[2]; //used to wake up thread to send msg
 };
 
-typedef msg_handle_t_ msg_handle_t;
-typedef int (*msg_handler_t)(msg_handle_t*, conn_id_t, msg_header*);
+typedef msg_handle_ msg_handle;
+typedef int (*msg_handler)(msg_handle*, conn_id_t, msg_header*);
 
-extern msg_handle_t* start_messager(msg_handler_t msg_handler, int64_t log_id);
-extern int stop_messager(msg_handle_t* msg_handle, int64_t log_id);
+extern msg_handle* start_messager(msg_handler msg_handler, int64_t log_id);
+extern int stop_messager(msg_handle* handle, int64_t log_id);
 
-extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, int64_t log_id);
-extern conn_id_t get_conn(msg_handle_t* handle, char* host, int port, int64_t log_id);
+extern conn_id_t new_conn(msg_handle* handle, char* host, int port, int fd, int64_t log_id);
+extern conn_id_t get_conn(msg_handle* handle, char* host, int port, int64_t log_id);
 
-extern int close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id);
+extern int close_conn(msg_handle* handle, conn_id_t id, int64_t log_id);
 
 //Send msg to conn_id
 //  if success return 0, else -1 and close the conn
 //  this function will not free the msg
-extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, int64_t log_id);
+extern int send_msg(msg_handle* handle, conn_id_t conn_id, msg_header* msg, int64_t log_id);
 
 //for test
-extern msg_handle_t* TEST_new_msg_handle(msg_handler_t msg_handler, int64_t log_id);
-extern connection* TEST_get_conn_by_id(msg_handle_t* handle, int id);
-extern connection* TEST_get_conn_by_fd(msg_handle_t* handle, int fd);
-extern connection* TEST_get_conn_by_host_and_port(msg_handle_t* handle, char* host, int port);
+extern msg_handle* TEST_new_msg_handle(msg_handler msg_handler, int64_t log_id);
+extern connection* TEST_get_conn_by_id(msg_handle* handle, int id);
+extern connection* TEST_get_conn_by_fd(msg_handle* handle, int fd);
+extern connection* TEST_get_conn_by_host_and_port(msg_handle* handle, char* host, int port);
 #endif

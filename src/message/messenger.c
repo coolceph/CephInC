@@ -19,7 +19,7 @@
 #include "message/msg_write_obj.h"
 
 //caller must has handle->conn_list_lock
-static connection* get_conn_by_id(msg_handle_t* handle, int id) {
+static connection* get_conn_by_id(msg_handle* handle, int id) {
     struct list_head *pos;
     connection *conn = NULL;
     connection *result = NULL;
@@ -34,7 +34,7 @@ static connection* get_conn_by_id(msg_handle_t* handle, int id) {
     return result;
 }
 //caller must has handle->conn_list_lock
-static connection* get_conn_by_fd(msg_handle_t* handle, int fd) {
+static connection* get_conn_by_fd(msg_handle* handle, int fd) {
     struct list_head *pos;
     connection *conn = NULL;
     connection *result = NULL;
@@ -49,7 +49,7 @@ static connection* get_conn_by_fd(msg_handle_t* handle, int fd) {
     return result;
 }
 //caller must has handle->conn_list_lock
-static connection* get_conn_by_host_and_port(msg_handle_t* handle, char* host, int port) {
+static connection* get_conn_by_host_and_port(msg_handle* handle, char* host, int port) {
     struct list_head *pos;
     connection *conn = NULL;
     connection *result = NULL;
@@ -64,7 +64,7 @@ static connection* get_conn_by_host_and_port(msg_handle_t* handle, char* host, i
     return result;
 }
 
-extern int close_conn(msg_handle_t* handle, conn_id_t id, int64_t log_id) {
+extern int close_conn(msg_handle* handle, conn_id_t id, int64_t log_id) {
     pthread_rwlock_wrlock(&handle->conn_list_lock);
     connection* conn = get_conn_by_id(handle, id);
     if (conn == NULL) {
@@ -94,7 +94,7 @@ static int is_conn_err(struct epoll_event event) {
            || !(event.events & EPOLLIN);
 }
 
-static msg_header* read_message(msg_handle_t *handle, conn_id_t conn_id, int fd, int64_t log_id) {
+static msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int fd, int64_t log_id) {
     LOG(LL_INFO, log_id, "Read Message from conn_id %ld, fd %d.", conn_id, fd);
 
     //Read msg_hedaer
@@ -139,12 +139,12 @@ static msg_header* read_message(msg_handle_t *handle, conn_id_t conn_id, int fd,
 
     return message;
 }
-static int write_message(msg_handle_t* handle, connection* conn, msg_header* msg, int64_t log_id) {
+static int write_message(msg_handle* handle, connection* conn, msg_header* msg, int64_t log_id) {
     return 0;
 }
 
 static void* start_epoll(void* arg) {
-    msg_handle_t* handle = (msg_handle_t*)arg;
+    msg_handle* handle = (msg_handle*)arg;
     int64_t log_id = handle->log_id;
     assert(log_id, handle->epoll_fd != -1);
 
@@ -214,8 +214,8 @@ static void* start_epoll(void* arg) {
     return NULL;
 }
 
-static msg_handle_t* new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
-    msg_handle_t* handle = (msg_handle_t*)malloc(sizeof(msg_handle_t));
+static msg_handle* new_msg_handle(msg_handler msg_handler, int64_t log_id) {
+    msg_handle* handle = (msg_handle*)malloc(sizeof(msg_handle));
     handle->epoll_fd = -1;
     handle->log_id = log_id;
     handle->msg_process = msg_handler;
@@ -251,9 +251,9 @@ static msg_handle_t* new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
     return handle;
 }
 
-extern msg_handle_t* start_messager(msg_handler_t msg_handler, int64_t log_id) {
+extern msg_handle* start_messager(msg_handler msg_handler, int64_t log_id) {
 
-    msg_handle_t* handle = new_msg_handle(msg_handler, log_id);
+    msg_handle* handle = new_msg_handle(msg_handler, log_id);
     if (handle == NULL) {
         LOG(LL_FATAL, log_id, "new_msg_handle failed");
         return NULL;
@@ -276,7 +276,7 @@ extern msg_handle_t* start_messager(msg_handler_t msg_handler, int64_t log_id) {
     return handle;
 }
 
-extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, int64_t log_id) {
+extern conn_id_t new_conn(msg_handle* handle, char* host, int port, int fd, int64_t log_id) {
     //New connection from params
     connection* conn = (connection*)malloc(sizeof(connection));
     conn->id = atomic_add64(&handle->next_conn_id, 1);
@@ -307,7 +307,7 @@ extern conn_id_t new_conn(msg_handle_t* handle, char* host, int port, int fd, in
     return conn->id;
 }
 
-extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, int64_t log_id) {
+extern int send_msg(msg_handle* handle, conn_id_t conn_id, msg_header* msg, int64_t log_id) {
     assert(log_id, msg != NULL);
     assert(log_id, handle != NULL);
 
@@ -343,16 +343,16 @@ extern int send_msg(msg_handle_t* handle, conn_id_t conn_id, msg_header* msg, in
     return 0;
 }
 
-extern msg_handle_t* TEST_new_msg_handle(msg_handler_t msg_handler, int64_t log_id) {
+extern msg_handle* TEST_new_msg_handle(msg_handler msg_handler, int64_t log_id) {
     return new_msg_handle(msg_handler, log_id);
 }
 
-extern connection* TEST_get_conn_by_id(msg_handle_t* handle, int id) {
+extern connection* TEST_get_conn_by_id(msg_handle* handle, int id) {
     return get_conn_by_id(handle, id);
 }
-extern connection* TEST_get_conn_by_fd(msg_handle_t* handle, int fd) {
+extern connection* TEST_get_conn_by_fd(msg_handle* handle, int fd) {
     return get_conn_by_fd(handle, fd);
 }
-extern connection* TEST_get_conn_by_host_and_port(msg_handle_t* handle, char* host, int port) {
+extern connection* TEST_get_conn_by_host_and_port(msg_handle* handle, char* host, int port) {
     return get_conn_by_host_and_port(handle, host, port);
 }
