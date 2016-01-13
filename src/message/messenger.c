@@ -16,6 +16,7 @@
 #include "common/log.h"
 
 #include "message/io.h"
+#include "message/msg_header.h"
 #include "message/msg_write_obj.h"
 
 //caller must has handle->conn_list_lock
