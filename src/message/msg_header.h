@@ -17,8 +17,10 @@ typedef struct {
     int64_t log_id;
 } msg_header;
 
+extern msg_header* malloc_msg_header(int64_t log_id);
+extern int free_msg_header(msg_header** header, int64_t log_id);
+
 extern int recv_msg_header(int fd, msg_header* header, int64_t log_id);
 extern int send_msg_header(int fd, msg_header* header, int64_t log_id);
-extern int free_msg_header(msg_header** header, int64_t log_id);
 
 #endif

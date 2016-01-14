@@ -30,11 +30,14 @@ int client_write_obj(osdmap* osdmap, int64_t log_id,
         char *host = osdmap->osds[i].host;
         int   port = osdmap->osds[i].port;
         
-        int ret = send_msg_write_req(host, port, &req, log_id);
-        if (ret != 0) {
-            LOG(LL_ERROR, log_id, "send write msg to %s:%d error: %d", host, port, ret);
-            return ret;
-        }
+        //TODO: client should send msg by messenger
+        /*
+         *int ret = send_msg_write_req(host, port, &req, log_id);
+         *if (ret != 0) {
+         *    LOG(LL_ERROR, log_id, "send write msg to %s:%d error: %d", host, port, ret);
+         *    return ret;
+         *}
+         */
 
         LOG(LL_INFO, log_id, 
             "send req_write oid: %s, offset: %ld, length: %ld " \
