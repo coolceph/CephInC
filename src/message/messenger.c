@@ -307,6 +307,23 @@ extern conn_id_t new_conn(msg_handle* handle, char* host, int port, int fd, int6
     LOG(LL_NOTICE, log_id, "New conn %s:%d, fd %d", host, port, fd);
     return conn->id;
 }
+extern conn_id_t get_conn(msg_handle* handle, char* host, int port, int64_t log_id) {
+/*
+ *    struct sockaddr_in server_addr_in;
+ *    bzero(&server_addr_in, sizeof(server_addr_in) );
+ *    server_addr_in.sin_family = AF_INET;
+ *    server_addr_in.sin_port = htons(port);
+ *    inet_pton(AF_INET, host, &server_addr_in.sin_addr);
+ *
+ *    int fd = socket(AF_INET, SOCK_STREAM, 0);
+ *    int ret = connect(fd, (struct sockaddr *)&server_addr_in, sizeof(server_addr_in));
+ *    if (ret < 0) {
+ *        LOG(LL_ERROR, log_id, "connect to %s:%d error: %d", host, port, ret);
+ *        return ret;
+ *    }
+ */
+    return 0;
+}
 
 extern int send_msg(msg_handle* handle, conn_id_t conn_id, msg_header* msg, int64_t log_id) {
     assert(log_id, msg != NULL);
