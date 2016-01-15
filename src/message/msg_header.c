@@ -6,7 +6,6 @@
 #include "message/io.h"
 
 extern msg_header* malloc_msg_header(int64_t log_id) {
-    //TODO: test
     msg_header* msg = malloc(sizeof(msg_header));
     assert(log_id, msg != NULL);
 
