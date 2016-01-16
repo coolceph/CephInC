@@ -2,14 +2,14 @@
 unittests:: $(check_PROGRAMS)
 
 UNITTEST_CXXFLAGS = \
-        $(AM_CXXFLAGS) \
-        -I$(top_builddir)/module/googletest/googletest/include \
-        -I$(top_builddir)/module/bhook/include
+    $(AM_CXXFLAGS) \
+    -I$(top_builddir)/module/googletest/googletest/include \
+    -I$(top_builddir)/module/bhook/include
 UNITTEST_LDADD = \
-        $(top_builddir)/module/googletest/googletest/lib/libgtest.la \
-        $(top_builddir)/module/googletest/googletest/lib/libgtest_main.la \
-        $(top_builddir)/module/bhook/libbhook.a \
-	-lbfd -ldl -lopcodes -lpthread
+    $(top_builddir)/module/googletest/googletest/lib/libgtest.la \
+    $(top_builddir)/module/googletest/googletest/lib/libgtest_main.la \
+    $(top_builddir)/module/bhook/libbhook.a \
+    -lbfd -ldl -lopcodes -lpthread
 
 unittest_common_log_SOURCES = test/test_common_log.cc
 unittest_common_log_LDADD = $(LIBCOMMON) -lm $(UNITTEST_LDADD)
