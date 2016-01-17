@@ -13,10 +13,24 @@
 
 extern msg_write_obj_req* malloc_msg_write_obj_req() {
     //TODO: impl & test
-    return NULL;
+    msg_write_obj_req* req = malloc(sizeof(msg_write_obj_req));
+    bzero(req, sizeof(msg_write_obj_req));
+    return req;
 }
-extern int free_msg_write_obj_req(msg_write_obj_req** req) {
+extern int free_msg_write_obj_req(msg_write_obj_req** req, int64_t log_id) {
     //TODO: impl & test
+    assert(log_id, *req != NULL);
+
+    msg_write_obj_req* msg = *req;
+    if (msg->oid != NULL) {
+        free(msg->oid);
+    }
+    if (msg->data != NULL) {
+        free(msg->oid);
+    }
+    free(msg);
+
+    *req = NULL;
     return 0;
 }
 
