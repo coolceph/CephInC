@@ -9,10 +9,9 @@ extern "C" {
 #include "bhook.h"
 #include "gtest/gtest.h"
 
-char* sys_func_name_epoll_ctl = (char*)"epoll_ctl";
-
-char* lib_func_name_close_conn = (char*)"close_conn";
-char* lib_func_name_write_message = (char*)"write_message";
+char* fname_epoll_ctl = (char*)"epoll_ctl";
+char* fname_close_conn = (char*)"close_conn";
+char* fname_write_message = (char*)"write_message";
 
 connection* add_conn(msg_handle* handle, char* host, int port, int fd) {
     connection* conn = (connection*)malloc(sizeof(connection));
@@ -93,12 +92,12 @@ int MOCK_new_conn_epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)
 TEST(message_messenger, new_conn) {
     msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
 
-    attach_and_enable_func(sys_func_name_epoll_ctl, (void*)&MOCK_new_conn_epoll_ctl);
+    attach_and_enable_func(fname_epoll_ctl, (void*)&MOCK_new_conn_epoll_ctl);
 
     conn_id_t conn_id = new_conn(handle, (char*)"host1", 9001, 1, 1);
     EXPECT_TRUE(conn_id > 0);
 
-    detach_func(sys_func_name_epoll_ctl);
+    detach_func(fname_epoll_ctl);
 
 	connection* conn = TEST_get_conn_by_id(handle, conn_id);
 	EXPECT_TRUE(conn != NULL);
@@ -169,14 +168,14 @@ TEST(message_messenger, send_msg) {
     EXPECT_EQ(CCEPH_ERR_CONN_CLOSED, send_msg(handle, 9002, &msg, 1));
 
     //Case: Normal
-    attach_and_enable_func_lib(lib_func_name_write_message, (void*)&MOCK_send_msg_write_message_success);
+    attach_and_enable_func_lib(fname_write_message, (void*)&MOCK_send_msg_write_message_success);
     EXPECT_EQ(0, send_msg(handle, 9004, &msg, 1));
-    detach_func_lib(lib_func_name_write_message);
+    detach_func_lib(fname_write_message);
 
     //Case: Write failed
-    attach_and_enable_func_lib(lib_func_name_write_message, (void*)&MOCK_send_msg_write_message_failed);
-    attach_and_enable_func_lib(lib_func_name_close_conn, (void*)&MOCK_send_msg_close_conn);
+    attach_and_enable_func_lib(fname_write_message, (void*)&MOCK_send_msg_write_message_failed);
+    attach_and_enable_func_lib(fname_close_conn, (void*)&MOCK_send_msg_close_conn);
     EXPECT_EQ(CCEPH_ERR_WRITE_CONN_ERR, send_msg(handle, 9004, &msg, 1));
-    detach_func_lib(lib_func_name_write_message);
-    detach_func_lib(lib_func_name_close_conn);
+    detach_func_lib(fname_write_message);
+    detach_func_lib(fname_close_conn);
 }

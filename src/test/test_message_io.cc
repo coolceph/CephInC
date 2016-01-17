@@ -8,9 +8,9 @@ extern "C" {
 #include "bhook.h"
 #include "gtest/gtest.h"
 
-char* sys_func_name_recv = (char*)"recv";
-char* sys_func_name_send = (char*)"send";
-char* lib_func_name_recv_from_conn = (char*)"recv_from_conn";
+char* fname_recv = (char*)"recv";
+char* fname_send = (char*)"send";
+char* fname_recv_from_conn = (char*)"recv_from_conn";
 
 ssize_t MOCK_recv_from_conn_recv_normal(int sockfd, void *buf, size_t len, int flags) {
     EXPECT_EQ(1, sockfd);
@@ -60,19 +60,19 @@ TEST(message_io, recv_from_conn) {
     int64_t log_id = 1;
 
     //Case: conn normal
-    attach_and_enable_func(sys_func_name_recv, (void*)&MOCK_recv_from_conn_recv_normal);
+    attach_and_enable_func(fname_recv, (void*)&MOCK_recv_from_conn_recv_normal);
     EXPECT_EQ(size, TEST_recv_from_conn(data_fd, buf, size, log_id));
-    detach_func(sys_func_name_recv);
+    detach_func(fname_recv);
 
     //Case: conn closed
-    attach_and_enable_func(sys_func_name_recv, (void*)&MOCK_recv_from_conn_recv_closed);
+    attach_and_enable_func(fname_recv, (void*)&MOCK_recv_from_conn_recv_closed);
     EXPECT_EQ(CCEPH_ERR_CONN_CLOSED, TEST_recv_from_conn(data_fd, buf, size, log_id));
-    detach_func(sys_func_name_recv);
+    detach_func(fname_recv);
 
     //Case: conn again
-    attach_and_enable_func(sys_func_name_recv, (void*)&MOCK_recv_from_conn_recv_again);
+    attach_and_enable_func(fname_recv, (void*)&MOCK_recv_from_conn_recv_again);
     EXPECT_EQ(size, TEST_recv_from_conn(data_fd, buf, size, log_id));
-    detach_func(sys_func_name_recv);
+    detach_func(fname_recv);
 }
 
 int MOCK_recv_int8_recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id) {
@@ -91,7 +91,7 @@ int MOCK_recv_int8_recv_from_conn(int data_fd, void* buf, size_t size, int64_t l
     return 0;
 }
 TEST(message_io, recv_int8) {
-    attach_and_enable_func_lib(lib_func_name_recv_from_conn, (void*)&MOCK_recv_int8_recv_from_conn);
+    attach_and_enable_func_lib(fname_recv_from_conn, (void*)&MOCK_recv_int8_recv_from_conn);
 
     //Case: normal
     int8_t value   = 0;
@@ -109,7 +109,7 @@ TEST(message_io, recv_int8) {
     ret = recv_int8(3, &value, 122);
     EXPECT_EQ(-2, ret);
 
-    detach_func(lib_func_name_recv_from_conn);
+    detach_func(fname_recv_from_conn);
 }
 
 int MOCK_recv_string_recv_from_conn_success(int data_fd, void* buf, size_t size, int64_t log_id) {
@@ -168,24 +168,24 @@ TEST(message_io, recv_string) {
     char* buf = NULL;
 
     //Case: normal
-    attach_and_enable_func_lib(lib_func_name_recv_from_conn, (void*)&MOCK_recv_string_recv_from_conn_success);
+    attach_and_enable_func_lib(fname_recv_from_conn, (void*)&MOCK_recv_string_recv_from_conn_success);
     int ret = recv_string(1, &length, &buf, 122);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(5, length);
     EXPECT_STREQ("cceph", buf);
-    detach_func(lib_func_name_recv_from_conn);
+    detach_func(fname_recv_from_conn);
 
     //Case: failed when read length;
-    attach_and_enable_func_lib(lib_func_name_recv_from_conn, (void*)&MOCK_recv_string_recv_from_conn_fail1);
+    attach_and_enable_func_lib(fname_recv_from_conn, (void*)&MOCK_recv_string_recv_from_conn_fail1);
     ret = recv_string(1, &length, &buf, 122);
     EXPECT_EQ(-1, ret);
-    detach_func(lib_func_name_recv_from_conn);
+    detach_func(fname_recv_from_conn);
 
     //Case: failed when read string;
-    attach_and_enable_func_lib(lib_func_name_recv_from_conn, (void*)&MOCK_recv_string_recv_from_conn_fail2);
+    attach_and_enable_func_lib(fname_recv_from_conn, (void*)&MOCK_recv_string_recv_from_conn_fail2);
     ret = recv_string(1, &length, &buf, 122);
     EXPECT_EQ(-1, ret);
-    detach_func(lib_func_name_recv_from_conn);
+    detach_func(fname_recv_from_conn);
 }
 
 //int send_int8(int fd, int8_t value, int64_t log_id);
@@ -212,22 +212,22 @@ ssize_t MOCK_send_int8_send_fail2(int socket, const void *buffer, size_t length,
 }
 TEST(message_io, send_int8) {
     //Case: normal
-    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_int8_send_succ);
+    attach_and_enable_func(fname_send, (void*)&MOCK_send_int8_send_succ);
     int ret = send_int8(1, 37, 122);
     EXPECT_EQ(0, ret);
-    detach_func(sys_func_name_send);
+    detach_func(fname_send);
 
     //Case: incomplete send
-    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_int8_send_fail1);
+    attach_and_enable_func(fname_send, (void*)&MOCK_send_int8_send_fail1);
     ret = send_int8(1, 37, 122);
     EXPECT_EQ(-1, ret);
-    detach_func(sys_func_name_send);
+    detach_func(fname_send);
 
     //Case: failed when send
-    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_int8_send_fail2);
+    attach_and_enable_func(fname_send, (void*)&MOCK_send_int8_send_fail2);
     ret = send_int8(1, 37, 122);
     EXPECT_EQ(-1, ret);
-    detach_func(sys_func_name_send);
+    detach_func(fname_send);
 }
 
 ssize_t MOCK_send_string_send_succ(int socket, const void *buffer, size_t length, int flags) {
@@ -282,20 +282,20 @@ ssize_t MOCK_send_string_send_fail2(int socket, const void *buffer, size_t lengt
 }
 TEST(message_io, send_string) {
     //Case: normal
-    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_string_send_succ);
+    attach_and_enable_func(fname_send, (void*)&MOCK_send_string_send_succ);
     int ret = send_string(1, (char*)"cceph", 122);
     EXPECT_EQ(0, ret);
-    detach_func(sys_func_name_send);
+    detach_func(fname_send);
 
     //Case: failed when read length;
-    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_string_send_fail1);
+    attach_and_enable_func(fname_send, (void*)&MOCK_send_string_send_fail1);
     ret = send_string(1, (char*)"cceph", 122);
     EXPECT_EQ(-1, ret);
-    detach_func(sys_func_name_send);
+    detach_func(fname_send);
 
     //Case: failed when read string;
-    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_string_send_fail2);
+    attach_and_enable_func(fname_send, (void*)&MOCK_send_string_send_fail2);
     ret = send_string(1, (char*)"cceph", 122);
     EXPECT_EQ(-1, ret);
-    detach_func(sys_func_name_send);
+    detach_func(fname_send);
 }
