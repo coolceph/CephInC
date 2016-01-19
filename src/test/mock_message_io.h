@@ -5,6 +5,9 @@
 
 #include "gtest/gtest.h"
 
+char* cceph_string = (char*)"cceph_string";
+char* cceph_data = (char*)"cceph_data";
+
 char* fname_recv_int8 = (char*)"recv_int8";
 char* fname_recv_int16 = (char*)"recv_int16";
 char* fname_recv_int32 = (char*)"recv_int32";
@@ -46,15 +49,15 @@ int MOCK_recv_int64(int data_fd, int64_t* value, int64_t log_id) {
 int MOCK_recv_string(int data_fd, int16_t* length, char** value, int64_t log_id) {
     EXPECT_EQ(1, data_fd);
     EXPECT_EQ(122, log_id);
-    *value = (char*)"cceph_string";
-    *length = strlen("cceph_string");
+    *value = cceph_string;
+    *length = strlen(cceph_string);
     return 0;
 }
 int MOCK_recv_data(int data_fd, int64_t* length, char** value, int64_t log_id) {
     EXPECT_EQ(1, data_fd);
     EXPECT_EQ(122, log_id);
-    *value = (char*)"cceph_data";
-    *length = strlen("cceph_data");
+    *value = cceph_data;
+    *length = strlen(cceph_data);
     return 0;
 }
 
@@ -84,14 +87,14 @@ int MOCK_send_int64(int fd, int64_t value, int64_t log_id) {
 }
 int MOCK_send_string(int fd, char* value, int64_t log_id) {
     EXPECT_EQ(1, fd);
-    EXPECT_STREQ(value, "cceph_string");
+    EXPECT_STREQ(value, cceph_string);
     EXPECT_EQ(122, log_id);
     return 0;
 }
 int MOCK_send_data(int fd, int64_t length, char* value, int64_t log_id) {
     EXPECT_EQ(1, fd);
-    EXPECT_EQ(strlen("cceph_data"), length);
-    EXPECT_EQ(0, strncmp(value, "cceph_data", strlen("cceph_data")));
+    EXPECT_EQ(strlen(cceph_data), length);
+    EXPECT_EQ(0, strncmp(value, cceph_data, strlen(cceph_data)));
     EXPECT_EQ(122, log_id);
     return 0;
 }

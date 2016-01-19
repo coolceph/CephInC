@@ -11,7 +11,7 @@
 
 #include "message/io.h"
 
-extern msg_write_obj_req* malloc_msg_write_obj_req() {
+extern msg_write_obj_req* malloc_msg_write_obj_req(int64_t log_id) {
     //TODO: impl & test
     msg_write_obj_req* req = malloc(sizeof(msg_write_obj_req));
     bzero(req, sizeof(msg_write_obj_req));
@@ -48,7 +48,7 @@ extern int send_msg_write_obj_req(int fd, msg_write_obj_req* req, int64_t log_id
     CCEPH_SEND_DATA_FIELD(data, req->length, req->data);
     return 0;
 }
-extern int recv_meg_write_obj_req(int fd, msg_write_obj_req* req, int64_t log_id) {
+extern int recv_msg_write_obj_req(int fd, msg_write_obj_req* req, int64_t log_id) {
     //TODO: impl & test
     assert(log_id, req != NULL);
     assert(log_id, req->oid == NULL);
