@@ -53,3 +53,43 @@ TEST(message_msg_write_obj_req, send_msg_write_obj_req) {
     detach_message_io_funcs();
 }
 
+TEST(message_msg_write_obj_ack, malloc_msg_write_obj_ack) {
+    msg_write_obj_ack *msg = malloc_msg_write_obj_ack(122);
+    EXPECT_NE((msg_write_obj_ack*)NULL, msg);
+    EXPECT_EQ(CCEPH_MSG_OP_UNKNOWN, msg->header.op);
+    EXPECT_EQ(0, msg->header.log_id);
+    EXPECT_EQ(0, msg->client_id);
+    EXPECT_EQ(0, msg->req_id);
+    EXPECT_EQ(CCEPH_WRITE_OBJ_ACK_UNKNOWN, msg->result);
+}
+TEST(message_msg_write_obj_ack, free_msg_write_obj_ack) {
+    msg_write_obj_ack *msg = malloc_msg_write_obj_ack(122);
+    free_msg_write_obj_ack(&msg, 122);
+    EXPECT_EQ((msg_write_obj_ack*)NULL, msg);
+}
+TEST(message_msg_write_obj_ack, recv_msg_write_obj_ack) {
+    attach_message_io_funcs();
+
+    msg_write_obj_ack *msg = malloc_msg_write_obj_ack(122);
+    int ret = recv_msg_write_obj_ack(1, msg, 122);
+    EXPECT_EQ(0, ret);
+    EXPECT_EQ(32, msg->client_id);
+    EXPECT_EQ(32, msg->req_id);
+    EXPECT_EQ(8, msg->result);
+
+    detach_message_io_funcs();
+}
+
+TEST(message_msg_write_obj_ack, send_msg_write_obj_ack) {
+    attach_message_io_funcs();
+
+    msg_write_obj_ack msg;
+    msg.client_id = 32;
+    msg.req_id = 32;
+    msg.result = 8;
+    int ret = send_msg_write_obj_ack(1, &msg, 122);
+    EXPECT_EQ(0, ret);
+
+    detach_message_io_funcs();
+}
+
