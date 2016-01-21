@@ -116,13 +116,27 @@ static msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int fd, i
     msg_header *message = NULL;
     switch (header.op) {
         case CCEPH_MSG_OP_WRITE:
-            assert(log_id, "Not Impl" != 0);
+            {
+                msg_write_obj_req *msg = malloc_msg_write_obj_req(log_id);
+                ret = recv_msg_write_obj_req(fd, msg, log_id);
+                if (ret != 0) free_msg_write_obj_req(&msg, log_id);
+                message = (msg_header*)msg;
+                break;
+            }
         case CCEPH_MSG_OP_WRITE_ACK:
-            assert(log_id, "Not Impl" != 0);
+            {
+                msg_write_obj_ack *msg =  malloc_msg_write_obj_ack(log_id);
+                ret = recv_msg_write_obj_ack(fd, msg, log_id);
+                if (ret != 0) free_msg_write_obj_ack(&msg, log_id);
+                message = (msg_header*)msg;
+                break;
+            }
         case CCEPH_MSG_OP_READ:
             assert(log_id, "Not Impl" != 0);
+            break;
         case CCEPH_MSG_OP_READ_ACK:
             assert(log_id, "Not Impl" != 0);
+            break;
         default:
             ret = CCEPH_ERR_UNKNOWN_OP;
     }
@@ -138,6 +152,8 @@ static msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int fd, i
         LOG(LL_INFO, log_id, "Read message form conn_id %ld, op %d, log_id %ld", conn_id, header.op, header.log_id);
     }
 
+    message->op = header.op;
+    message->log_id = header.log_id;
     return message;
 }
 static int write_message(msg_handle* handle, connection* conn, msg_header* msg, int64_t log_id) {
@@ -229,10 +245,10 @@ static msg_handle* new_msg_handle(msg_handler msg_handler, int64_t log_id) {
     pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
     pthread_rwlock_init(&handle->conn_list_lock, &attr);
 
-    //initial send_msg_pipe;
+    //initial wake_thread_pipe;
     int ret = pipe(handle->wake_thread_pipe_fd);
     if (ret < 0) {
-        LOG(LL_FATAL, log_id, "can't initial msg_handle->send_msg_pipe, error: %d", ret);
+        LOG(LL_FATAL, log_id, "can't initial msg_handle->wake_thread_pipe, error: %d", ret);
         free(handle->thread_ids); handle->thread_ids = NULL;
         free(handle); handle = NULL;
         return NULL;
@@ -271,7 +287,7 @@ extern msg_handle* start_messager(msg_handler msg_handler, int64_t log_id) {
         }
     }
 
-    //add the send_msg_pipe_fd to epoll set
+    //add the wake_thread_pipe_fd to epoll set
     new_conn(handle, "wake_thread_pipe", 0, handle->wake_thread_pipe_fd[1], log_id);
     
     return handle;
