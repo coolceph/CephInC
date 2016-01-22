@@ -11,9 +11,10 @@
 
 #include "message/io.h"
 
-extern msg_write_obj_req* malloc_msg_write_obj_req(int64_t log_id) {
+extern msg_write_obj_req* malloc_msg_write_obj_req() {
     msg_write_obj_req* req = malloc(sizeof(msg_write_obj_req));
     bzero(req, sizeof(msg_write_obj_req));
+    req->header.op = CCEPH_MSG_OP_WRITE;
     return req;
 }
 extern int free_msg_write_obj_req(msg_write_obj_req** req, int64_t log_id) {
@@ -59,9 +60,10 @@ extern int recv_msg_write_obj_req(int fd, msg_write_obj_req* req, int64_t log_id
     return ret;
 }
 
-extern msg_write_obj_ack* malloc_msg_write_obj_ack(int64_t log_id) {
+extern msg_write_obj_ack* malloc_msg_write_obj_ack() {
     msg_write_obj_ack* msg = malloc(sizeof(msg_write_obj_ack));
     bzero(msg, sizeof(msg_write_obj_ack));
+    msg->header.op = CCEPH_MSG_OP_WRITE_ACK;
     return msg;
 }
 extern int free_msg_write_obj_ack(msg_write_obj_ack** msg, int64_t log_id) {

@@ -17,7 +17,7 @@ typedef struct {
     char* data;
 } msg_write_obj_req;
 
-extern msg_write_obj_req* malloc_msg_write_obj_req(int64_t log_id);
+extern msg_write_obj_req* malloc_msg_write_obj_req();
 extern int free_msg_write_obj_req(msg_write_obj_req** req, int64_t log_id);
 
 extern int recv_msg_write_obj_req(int fd, msg_write_obj_req* req, int64_t log_id);
@@ -35,7 +35,7 @@ typedef struct {
     int8_t result;
 } msg_write_obj_ack;
 
-extern msg_write_obj_ack* malloc_msg_write_obj_ack(int64_t log_id);
+extern msg_write_obj_ack* malloc_msg_write_obj_ack();
 extern int free_msg_write_obj_ack(msg_write_obj_ack** msg, int64_t log_id);
 
 extern int recv_msg_write_obj_ack(int fd, msg_write_obj_ack* msg, int64_t log_id);

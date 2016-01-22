@@ -1,10 +1,17 @@
 extern "C" {
 #include "include/errno.h"
 #include "message/messenger.h"
+#include "message/msg_write_obj.h"
 }
 
-#include <pthread.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/epoll.h>
+#include <sys/socket.h>
+#include <pthread.h>
 
 #include "bhook.h"
 #include "gtest/gtest.h"
@@ -178,4 +185,118 @@ TEST(message_messenger, send_msg) {
     EXPECT_EQ(CCEPH_ERR_WRITE_CONN_ERR, send_msg(handle, 9004, &msg, 1));
     detach_func_lib(fname_write_message);
     detach_func_lib(fname_close_conn);
+}
+
+int MOCK_process_message_return_write_ack(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message) {
+    EXPECT_EQ(CCEPH_MSG_OP_WRITE, message->op);
+    EXPECT_EQ(1000, message->log_id);
+
+    msg_write_obj_req *req = (msg_write_obj_req*)message;
+    EXPECT_EQ(1001, req->client_id);
+    EXPECT_EQ(1002, req->req_id);
+    EXPECT_EQ(strlen((char*)"cceph_oid"), req->oid_size);
+    EXPECT_STREQ((char*)"cceph_oid", req->oid);
+    EXPECT_EQ(0, req->offset);
+    EXPECT_EQ(1024, req->length);
+    EXPECT_NE((char*)NULL, req->data);
+
+    msg_write_obj_ack *ack = malloc_msg_write_obj_ack();
+    ack->header.log_id = message->log_id;
+    ack->client_id     = req->client_id;
+    ack->req_id        = req->req_id;
+    ack->result        = CCEPH_WRITE_OBJ_ACK_OK;
+
+    send_msg(msg_handle, conn_id, (msg_header*)ack, message->log_id);
+
+    //TODO: free msg;
+
+    return 0;
+}
+void* TEST_listen_thread_func(void* arg){
+    int64_t log_id = 122;
+    msg_handle* handle = start_messager(&MOCK_process_message_return_write_ack, log_id);
+    EXPECT_NE((msg_handle*)NULL, handle);
+
+    int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
+    EXPECT_NE(-1, listen_fd);
+    
+    //set server addr_param
+    struct sockaddr_in my_addr;
+    bzero(&my_addr, sizeof(my_addr));
+    my_addr.sin_family = AF_INET;
+    my_addr.sin_port = htons(9000);
+    my_addr.sin_addr.s_addr = INADDR_ANY;
+    bzero(&(my_addr.sin_zero), 8);
+
+    //bind sockfd & addr
+    int ret = bind(listen_fd, (struct sockaddr*)&my_addr, sizeof(struct sockaddr_in));
+    EXPECT_NE(-1, ret);
+
+    //listen sockfd 
+    ret = listen(listen_fd, 5);
+    EXPECT_NE(-1, ret);
+
+    //have connect request use accept
+    struct sockaddr_in their_addr;
+    socklen_t len = sizeof(their_addr);
+    while(true) {
+        int com_fd = accept(listen_fd, (struct sockaddr*)&their_addr, &len);
+        EXPECT_TRUE(com_fd > 0);
+
+        new_conn(handle, (char*)"TestSocket", 9001, com_fd, 122);
+    }
+}
+void TEST_send_msg_write_obj_req(int fd, int64_t log_id) {
+    msg_write_obj_req *req = malloc_msg_write_obj_req();
+    EXPECT_NE((msg_write_obj_req*)NULL, req);
+
+    req->header.log_id = 1000;
+    req->client_id     = 1001;
+    req->req_id        = 1002;
+    req->oid_size      = strlen("cceph_oid");
+    req->oid           = (char*)"cceph_oid";
+    req->offset        = 0;
+    req->length        = 1024;
+    req->data          = (char*)malloc(sizeof(char) * 1024);
+
+    int ret = send_msg_write_obj_req(fd, req, log_id);
+    EXPECT_EQ(0, ret);
+
+    //TODO: free req;
+}
+void TEST_recv_msg_write_obj_ack(int fd, int64_t log_id) {
+    msg_write_obj_ack *ack = malloc_msg_write_obj_ack();
+    int ret = recv_msg_write_obj_ack(fd, ack, log_id);
+    EXPECT_EQ(0, ret);
+
+    //TODO: more expect
+    //TODO: free ack;
+}
+TEST(message_messenger, one_send_and_recv) {
+    int64_t log_id = 122;
+
+    //Start Listen Thread
+    pthread_attr_t thread_attr;
+    pthread_attr_init(&thread_attr);
+    pthread_t server_thread_id;
+    int ret = pthread_create(&server_thread_id, &thread_attr, &TEST_listen_thread_func, NULL);
+    EXPECT_EQ(0, ret);
+    sleep(3); //for listen thread;
+
+    //Connect to Server
+    int fd = socket(AF_INET,SOCK_STREAM,0);
+    EXPECT_NE(0, fd);
+
+    struct sockaddr_in their_addr;
+    their_addr.sin_family = AF_INET;
+    their_addr.sin_port = htons(9000);
+    inet_aton( "127.0.0.1", &their_addr.sin_addr);
+    bzero(&(their_addr.sin_zero),8);
+
+    ret = connect(fd, (struct sockaddr *)&their_addr, sizeof(struct sockaddr));
+    EXPECT_NE(-1, ret);
+
+    //Send and recv msg
+    TEST_send_msg_write_obj_req(fd, log_id);
+    TEST_recv_msg_write_obj_ack(fd, log_id);
 }

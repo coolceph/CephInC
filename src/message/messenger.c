@@ -169,6 +169,7 @@ static void* start_epoll(void* arg) {
     while (1) {
         int fd_count = epoll_wait(handle->epoll_fd, &event, 1, -1);
         if (fd_count <= 0) {
+            perror("epoll_wait");
             LOG(LL_ERROR, log_id, "epoll_wait return: %d", fd_count);
             continue;
         }
@@ -236,7 +237,7 @@ static msg_handle* new_msg_handle(msg_handler msg_handler, int64_t log_id) {
     handle->epoll_fd = -1;
     handle->log_id = log_id;
     handle->msg_process = msg_handler;
-    handle->thread_count = 2; //TODO: we need a opinion
+    handle->thread_count = 1; //TODO: we need a opinion
     handle->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * handle->thread_count);
     atomic_set64(&handle->next_conn_id, 1);
 
@@ -276,6 +277,9 @@ extern msg_handle* start_messager(msg_handler msg_handler, int64_t log_id) {
         return NULL;
     }
 
+    //add the wake_thread_pipe_fd to epoll set
+    new_conn(handle, "wake_thread_pipe", 0, handle->wake_thread_pipe_fd[1], log_id);
+
     //run start_epoll by thread pool
     pthread_attr_t thread_attr;
     pthread_attr_init(&thread_attr);
@@ -286,9 +290,6 @@ extern msg_handle* start_messager(msg_handler msg_handler, int64_t log_id) {
             abort();
         }
     }
-
-    //add the wake_thread_pipe_fd to epoll set
-    new_conn(handle, "wake_thread_pipe", 0, handle->wake_thread_pipe_fd[1], log_id);
     
     return handle;
 }

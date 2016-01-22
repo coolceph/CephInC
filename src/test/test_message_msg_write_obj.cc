@@ -8,22 +8,22 @@ extern "C" {
 #include "test/mock_message_io.h"
 
 TEST(message_msg_write_obj_req, malloc_msg_write_obj_req) {
-    msg_write_obj_req *msg = malloc_msg_write_obj_req(122);
+    msg_write_obj_req *msg = malloc_msg_write_obj_req();
     EXPECT_NE((msg_write_obj_req*)NULL, msg);
-    EXPECT_EQ(CCEPH_MSG_OP_UNKNOWN, msg->header.op);
+    EXPECT_EQ(CCEPH_MSG_OP_WRITE, msg->header.op);
     EXPECT_EQ(0, msg->header.log_id);
     EXPECT_EQ((char*)NULL, msg->oid);
     EXPECT_EQ((char*)NULL, msg->data);
 }
 TEST(message_msg_write_obj_req, free_msg_write_obj_req) {
-    msg_write_obj_req *msg = malloc_msg_write_obj_req(122);
+    msg_write_obj_req *msg = malloc_msg_write_obj_req();
     free_msg_write_obj_req(&msg, 122);
     EXPECT_EQ((msg_write_obj_req*)NULL, msg);
 }
 TEST(message_msg_write_obj_req, recv_msg_write_obj_req) {
     attach_message_io_funcs();
 
-    msg_write_obj_req *msg = malloc_msg_write_obj_req(122);
+    msg_write_obj_req *msg = malloc_msg_write_obj_req();
     int ret = recv_msg_write_obj_req(1, msg, 122);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(32, msg->client_id);
@@ -54,23 +54,23 @@ TEST(message_msg_write_obj_req, send_msg_write_obj_req) {
 }
 
 TEST(message_msg_write_obj_ack, malloc_msg_write_obj_ack) {
-    msg_write_obj_ack *msg = malloc_msg_write_obj_ack(122);
+    msg_write_obj_ack *msg = malloc_msg_write_obj_ack();
     EXPECT_NE((msg_write_obj_ack*)NULL, msg);
-    EXPECT_EQ(CCEPH_MSG_OP_UNKNOWN, msg->header.op);
+    EXPECT_EQ(CCEPH_MSG_OP_WRITE_ACK, msg->header.op);
     EXPECT_EQ(0, msg->header.log_id);
     EXPECT_EQ(0, msg->client_id);
     EXPECT_EQ(0, msg->req_id);
     EXPECT_EQ(CCEPH_WRITE_OBJ_ACK_UNKNOWN, msg->result);
 }
 TEST(message_msg_write_obj_ack, free_msg_write_obj_ack) {
-    msg_write_obj_ack *msg = malloc_msg_write_obj_ack(122);
+    msg_write_obj_ack *msg = malloc_msg_write_obj_ack();
     free_msg_write_obj_ack(&msg, 122);
     EXPECT_EQ((msg_write_obj_ack*)NULL, msg);
 }
 TEST(message_msg_write_obj_ack, recv_msg_write_obj_ack) {
     attach_message_io_funcs();
 
-    msg_write_obj_ack *msg = malloc_msg_write_obj_ack(122);
+    msg_write_obj_ack *msg = malloc_msg_write_obj_ack();
     int ret = recv_msg_write_obj_ack(1, msg, 122);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(32, msg->client_id);
