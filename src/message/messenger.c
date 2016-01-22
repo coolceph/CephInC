@@ -166,29 +166,34 @@ static void* start_epoll(void* arg) {
     assert(log_id, handle->epoll_fd != -1);
 
     struct epoll_event event;
+    bzero(&event, sizeof(event));
     while (1) {
         int fd_count = epoll_wait(handle->epoll_fd, &event, 1, -1);
         if (fd_count <= 0) {
-            perror("epoll_wait");
-            LOG(LL_ERROR, log_id, "epoll_wait return: %d", fd_count);
-            continue;
+            if (errno  == EINTR) {
+                continue;
+            } else {
+                perror("epoll_wait");
+                LOG(LL_ERROR, log_id, "epoll_wait return: %d", fd_count);
+                continue;
+            }
         }
 
         int fd = event.data.fd;
 
         pthread_rwlock_rdlock(&handle->conn_list_lock);
         connection* conn = get_conn_by_fd(handle, fd);
-        conn_id_t conn_id = conn->id;
         if (conn == NULL) {
             LOG(LL_ERROR, log_id, "epoll_wait return fd %d, but conn is not found", fd);
             pthread_rwlock_unlock(&handle->conn_list_lock);
             continue;
         } else {
-            LOG(LL_INFO, log_id, "Data received from conn %s:%d, conn_id %ld, fd %d", conn->host, conn->port, conn_id, fd);
+            LOG(LL_INFO, log_id, "Data received from conn %s:%d, conn_id %ld, fd %d", conn->host, conn->port, conn->id, fd);
             conn = NULL; //conn can NOT be used with conn_list_lock or conn->lock, it may be freed.
             pthread_rwlock_unlock(&handle->conn_list_lock);
         }
 
+        conn_id_t conn_id = conn->id;
         if (is_conn_err(event)) {
             LOG(LL_INFO, log_id, "Network closed for conn %ld, fd %d.", conn_id, fd);
             close_conn(handle, conn_id, log_id);
