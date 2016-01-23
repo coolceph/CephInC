@@ -21,7 +21,7 @@ int send_int8(int fd, int8_t value, int64_t log_id) {
     return 0;
 }
 int send_int16(int fd, int16_t value, int64_t log_id) {
-    int ret = send(fd, &value, sizeof(int8_t), 0);
+    int ret = send(fd, &value, sizeof(int16_t), 0);
     if (ret != sizeof(int16_t)) {
         int err_no = ret < 0 ? ret : errno;
         LOG(LL_ERROR, log_id, "send int16_t %d error: %d", value, err_no);
@@ -30,7 +30,7 @@ int send_int16(int fd, int16_t value, int64_t log_id) {
     return 0;
 }
 int send_int32(int fd, int32_t value, int64_t log_id) {
-    int ret = send(fd, &value, sizeof(int8_t), 0);
+    int ret = send(fd, &value, sizeof(int32_t), 0);
     if (ret != sizeof(int32_t)) {
         int err_no = ret < 0 ? ret : errno;
         LOG(LL_ERROR, log_id, "send int32_t %d error: %d", value, err_no);

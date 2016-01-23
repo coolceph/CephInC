@@ -54,8 +54,8 @@ extern int recv_msg_write_obj_req(int fd, msg_write_obj_req* req, int64_t log_id
     int ret = 0;
     CCEPH_RECV_FIELD(client_id, int32, &req->client_id);
     CCEPH_RECV_FIELD(req_id, int32, &req->req_id);
-    CCEPH_RECV_FIELD(offset, int64, &req->offset);
     CCEPH_RECV_STRING_FIELD(oid, &req->oid_size, &req->oid);
+    CCEPH_RECV_FIELD(offset, int64, &req->offset);
     CCEPH_RECV_DATA_FIELD(data, &req->length, &req->data);
     return ret;
 }

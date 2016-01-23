@@ -180,6 +180,7 @@ static void* start_epoll(void* arg) {
         }
 
         int fd = event.data.fd;
+        conn_id_t conn_id = -1;
 
         pthread_rwlock_rdlock(&handle->conn_list_lock);
         connection* conn = get_conn_by_fd(handle, fd);
@@ -189,11 +190,11 @@ static void* start_epoll(void* arg) {
             continue;
         } else {
             LOG(LL_INFO, log_id, "Data received from conn %s:%d, conn_id %ld, fd %d", conn->host, conn->port, conn->id, fd);
+            conn_id = conn->id;
             conn = NULL; //conn can NOT be used with conn_list_lock or conn->lock, it may be freed.
             pthread_rwlock_unlock(&handle->conn_list_lock);
         }
 
-        conn_id_t conn_id = conn->id;
         if (is_conn_err(event)) {
             LOG(LL_INFO, log_id, "Network closed for conn %ld, fd %d.", conn_id, fd);
             close_conn(handle, conn_id, log_id);
@@ -217,7 +218,6 @@ static void* start_epoll(void* arg) {
         //Wait for the next msg
         struct epoll_event ctl_event;
         ctl_event.data.fd = fd;
-        ctl_event.data.ptr = conn;
         ctl_event.events = EPOLLIN | EPOLLONESHOT;
         int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &ctl_event);
         if (ret < -1) {
@@ -242,7 +242,7 @@ static msg_handle* new_msg_handle(msg_handler msg_handler, int64_t log_id) {
     handle->epoll_fd = -1;
     handle->log_id = log_id;
     handle->msg_process = msg_handler;
-    handle->thread_count = 1; //TODO: we need a opinion
+    handle->thread_count = 2; //TODO: we need a opinion
     handle->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * handle->thread_count);
     atomic_set64(&handle->next_conn_id, 1);
 
@@ -317,7 +317,6 @@ extern conn_id_t new_conn(msg_handle* handle, char* host, int port, int fd, int6
     //Add fd to epoll set
     struct epoll_event event;
     event.data.fd = fd;
-    event.data.ptr = conn;
     event.events = EPOLLIN | EPOLLONESHOT;
     int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &event);
     if (ret < -1) {

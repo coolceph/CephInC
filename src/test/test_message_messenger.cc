@@ -259,7 +259,9 @@ void TEST_send_msg_write_obj_req(int fd, int64_t log_id) {
     req->length        = 1024;
     req->data          = (char*)malloc(sizeof(char) * 1024);
 
-    int ret = send_msg_write_obj_req(fd, req, log_id);
+    int ret = send_msg_header(fd, &(req->header), log_id);
+    EXPECT_EQ(0, ret);
+    ret = send_msg_write_obj_req(fd, req, log_id);
     EXPECT_EQ(0, ret);
 
     //TODO: free req;
