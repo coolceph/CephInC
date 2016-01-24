@@ -28,6 +28,9 @@ typedef struct {
     struct list_head list_node;
 } connection;
 
+typedef int8_t messenger_op_t;
+#define CCEPH_MESSENGER_OP_UNKOWN  0
+#define CCEPH_MESSENGER_OP_STOP    1
 
 typedef struct msg_handle_ msg_handle_;
 struct msg_handle_ {

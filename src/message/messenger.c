@@ -298,6 +298,9 @@ extern msg_handle* start_messager(msg_handler msg_handler, int64_t log_id) {
     
     return handle;
 }
+extern int stop_messager(msg_handle* handle, int64_t log_id) {
+    return 0;
+}
 
 extern conn_id_t new_conn(msg_handle* handle, char* host, int port, int fd, int64_t log_id) {
     //New connection from params
