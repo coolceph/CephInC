@@ -299,6 +299,12 @@ extern msg_handle* start_messager(msg_handler msg_handler, int64_t log_id) {
     return handle;
 }
 extern int stop_messager(msg_handle* handle, int64_t log_id) {
+    int i = 0, ret = 0;
+    messenger_op_t op = CCEPH_MESSENGER_OP_STOP;
+    for (i = 0; i < handle->thread_count; i++) {
+        ret = write(handle->wake_thread_pipe_fd[1], &op, sizeof(op));
+        assert(log_id, ret == 0);
+    }
     return 0;
 }
 
