@@ -86,6 +86,6 @@ extern int send_msg_write_obj_ack(int fd, msg_write_obj_ack* msg, int64_t log_id
     int ret = 0;
     CCEPH_SEND_FIELD(client_id, int32, msg->client_id);
     CCEPH_SEND_FIELD(req_id, int32, msg->req_id);
-    CCEPH_RECV_FIELD(result, int8, &msg->result);
+    CCEPH_SEND_FIELD(result, int8, msg->result);
     return 0;
 }
