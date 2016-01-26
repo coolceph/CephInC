@@ -25,7 +25,7 @@ extern int free_msg_write_obj_req(msg_write_obj_req** req, int64_t log_id) {
         free(msg->oid);
     }
     if (msg->data != NULL) {
-        free(msg->oid);
+        free(msg->data);
     }
     free(msg);
 

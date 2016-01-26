@@ -211,6 +211,7 @@ int MOCK_process_message_return_write_ack(msg_handle* msg_handle, conn_id_t conn
     return 0;
 }
 void* TEST_listen_thread_func(void* arg){
+    int log_id = 123;
     msg_handle* handle = (msg_handle*)arg;
 
     int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -227,10 +228,18 @@ void* TEST_listen_thread_func(void* arg){
     //bind sockfd & addr
     int ret = bind(listen_fd, (struct sockaddr*)&my_addr, sizeof(struct sockaddr_in));
     EXPECT_NE(-1, ret);
+    if (ret == -1) {
+        ret = stop_messager(handle, log_id);
+        return NULL;
+    }
 
     //listen sockfd 
     ret = listen(listen_fd, 5);
     EXPECT_NE(-1, ret);
+    if (ret == -1) {
+        ret = stop_messager(handle, log_id);
+        return NULL;
+    }
 
     //have connect request use accept
     struct sockaddr_in their_addr;
@@ -238,6 +247,9 @@ void* TEST_listen_thread_func(void* arg){
     while(true) {
         int com_fd = accept(listen_fd, (struct sockaddr*)&their_addr, &len);
         EXPECT_TRUE(com_fd > 0);
+        if (com_fd <= 0) {
+            break;
+        }
 
         new_conn(handle, (char*)"TestSocket", 9001, com_fd, 122);
     }
@@ -250,17 +262,19 @@ void TEST_send_msg_write_obj_req(int fd, int64_t log_id) {
     req->client_id     = 1001;
     req->req_id        = 1002;
     req->oid_size      = strlen("cceph_oid");
-    req->oid           = (char*)"cceph_oid";
+    req->oid           = (char*)malloc(sizeof(char) * (req->oid_size + 1)); 
     req->offset        = 0;
     req->length        = 1024;
     req->data          = (char*)malloc(sizeof(char) * 1024);
+    bzero(req->oid, req->oid_size);
+    strcpy(req->oid, (char*)"cceph_oid");
 
     int ret = send_msg_header(fd, &(req->header), log_id);
     EXPECT_EQ(0, ret);
     ret = send_msg_write_obj_req(fd, req, log_id);
     EXPECT_EQ(0, ret);
 
-    //TODO: free req;
+    EXPECT_EQ(0, free_msg_write_obj_req(&req, log_id));
 }
 void TEST_recv_msg_write_obj_ack(int fd, int64_t log_id) {
     msg_write_obj_ack *ack = malloc_msg_write_obj_ack();
@@ -300,7 +314,6 @@ TEST(message_messenger, one_send_and_recv) {
     TEST_send_msg_write_obj_req(fd, log_id);
     TEST_recv_msg_write_obj_ack(fd, log_id);
 
-    sleep(3);
     ret = stop_messager(handle, log_id);
     EXPECT_EQ(0, ret);
 }
