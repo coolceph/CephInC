@@ -136,16 +136,14 @@ TEST(message_messenger, close_conn) {
     detach_func(close_func_name);
 }
 
-int MOCK_send_msg_write_message_success(msg_handle* handle, connection* conn, msg_header* msg, int64_t log_id) {
-    EXPECT_TRUE(handle != NULL);
+int MOCK_send_msg_write_message_success(connection* conn, msg_header* msg, int64_t log_id) {
     EXPECT_TRUE(conn != NULL);
     EXPECT_TRUE(msg != NULL);
     EXPECT_EQ(2, conn->fd);
     EXPECT_EQ(1, log_id);
     return 0;
 }
-int MOCK_send_msg_write_message_failed(msg_handle* handle, connection* conn, msg_header* msg, int64_t log_id) {
-    EXPECT_TRUE(handle != NULL);
+int MOCK_send_msg_write_message_failed(connection* conn, msg_header* msg, int64_t log_id) {
     EXPECT_TRUE(conn != NULL);
     EXPECT_TRUE(msg != NULL);
     EXPECT_EQ(2, conn->fd);
