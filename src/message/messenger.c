@@ -156,8 +156,58 @@ static msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int fd, i
     message->log_id = header.log_id;
     return message;
 }
-static int write_message(msg_handle* handle, connection* conn, msg_header* msg, int64_t log_id) {
+static int write_message(connection* conn, msg_header* msg, int64_t log_id) {
+    int fd = conn->fd;
+    conn_id_t conn_id = conn->id;
+
+    LOG(LL_INFO, log_id, "Write Message to conn_id %ld, fd %d, op: %d.", 
+                         conn_id, fd, msg->op);
+
+    //Write msg_hedaer
+    int ret = send_msg_header(fd, msg, log_id);
+    if (ret != 0) {
+        LOG(LL_ERROR, log_id, "Write msg_header to conn_id %ld error %d.", conn_id, ret);
+        return ret;
+    } else {
+        LOG(LL_INFO, log_id, "Write msg_header to conn_id %ld.", conn_id);
+    }
+
+    //Read message
+    switch (msg->op) {
+        case CCEPH_MSG_OP_WRITE:
+            {
+                ret = send_msg_write_obj_req(fd, (msg_write_obj_req*)msg, log_id);
+                break;
+            }
+        case CCEPH_MSG_OP_WRITE_ACK:
+            {
+                ret = send_msg_write_obj_ack(fd, (msg_write_obj_ack*)msg, log_id);
+                break;
+            }
+        case CCEPH_MSG_OP_READ:
+            assert(log_id, "Not Impl" != 0);
+            break;
+        case CCEPH_MSG_OP_READ_ACK:
+            assert(log_id, "Not Impl" != 0);
+            break;
+        default:
+            ret = CCEPH_ERR_UNKNOWN_OP;
+    }
+
+    if (ret != 0) {
+        LOG(LL_ERROR, log_id, "Write message to conn_id %ld error %d.", conn_id, ret);
+        return ret;
+    } else {
+        LOG(LL_INFO, log_id, "Write message to conn_id %ld success.", conn_id);
+    }
+
     return 0;
+}
+static int wait_for_msg(msg_handle* handle, int fd, int64_t log_id) {
+    struct epoll_event ctl_event;
+    ctl_event.data.fd = fd;
+    ctl_event.events = EPOLLIN | EPOLLONESHOT;
+    return epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &ctl_event);
 }
 
 static void* start_epoll(void* arg) {
@@ -203,7 +253,14 @@ static void* start_epoll(void* arg) {
 
         if (fd == handle->wake_thread_pipe_fd[1]) {
             LOG(LL_INFO, log_id, "thread is wake up by wake_up_pipe, thread_id: %lu", pthread_self());
-            //TODO: stop messenger
+            messenger_op_t op;
+            int ret = read(fd, &op, sizeof(op));
+            assert(log_id, ret == sizeof(op));
+            assert(log_id, op == CCEPH_MESSENGER_OP_STOP); //TODO: there maybe other op in the feature
+
+            ret = wait_for_msg(handle, fd, log_id);
+            assert(log_id, ret == 0);
+            break;
         }
 
         log_id = new_log_id(); //new message, new log_id, just for read process
@@ -216,10 +273,7 @@ static void* start_epoll(void* arg) {
         }
 
         //Wait for the next msg
-        struct epoll_event ctl_event;
-        ctl_event.data.fd = fd;
-        ctl_event.events = EPOLLIN | EPOLLONESHOT;
-        int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &ctl_event);
+        int ret = wait_for_msg(handle, fd, log_id);
         if (ret < -1) {
             LOG(LL_ERROR, log_id, "epoll_ctl for conn %ld, fd %d, error: %d", conn_id, fd, ret);
             close_conn(handle, conn_id, log_id);
@@ -378,7 +432,7 @@ extern int send_msg(msg_handle* handle, conn_id_t conn_id, msg_header* msg, int6
 
     LOG(LL_INFO, log_id, "Send msg to %s:%d, conn_id %ld, fd %d, op %d.",
                          conn->host, conn->port, conn->id, conn->fd, msg->op);
-    if (write_message(handle, conn, msg, log_id) != 0) {
+    if (write_message(conn, msg, log_id) != 0) {
         conn->state = CCEPH_CONN_STATE_CLOSED;
         pthread_mutex_unlock(&conn->lock);
 

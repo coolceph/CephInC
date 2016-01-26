@@ -213,9 +213,7 @@ int MOCK_process_message_return_write_ack(msg_handle* msg_handle, conn_id_t conn
     return 0;
 }
 void* TEST_listen_thread_func(void* arg){
-    int64_t log_id = 122;
-    msg_handle* handle = start_messager(&MOCK_process_message_return_write_ack, log_id);
-    EXPECT_NE((msg_handle*)NULL, handle);
+    msg_handle* handle = (msg_handle*)arg;
 
     int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
     EXPECT_NE(-1, listen_fd);
@@ -276,12 +274,14 @@ void TEST_recv_msg_write_obj_ack(int fd, int64_t log_id) {
 }
 TEST(message_messenger, one_send_and_recv) {
     int64_t log_id = 122;
+    msg_handle* handle = start_messager(&MOCK_process_message_return_write_ack, log_id);
+    EXPECT_NE((msg_handle*)NULL, handle);
 
     //Start Listen Thread
     pthread_attr_t thread_attr;
     pthread_attr_init(&thread_attr);
     pthread_t server_thread_id;
-    int ret = pthread_create(&server_thread_id, &thread_attr, &TEST_listen_thread_func, NULL);
+    int ret = pthread_create(&server_thread_id, &thread_attr, &TEST_listen_thread_func, handle);
     EXPECT_EQ(0, ret);
     sleep(3); //for listen thread;
 
@@ -301,4 +301,8 @@ TEST(message_messenger, one_send_and_recv) {
     //Send and recv msg
     TEST_send_msg_write_obj_req(fd, log_id);
     TEST_recv_msg_write_obj_ack(fd, log_id);
+
+    sleep(3);
+    ret = stop_messager(handle, log_id);
+    EXPECT_EQ(0, ret);
 }
