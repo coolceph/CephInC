@@ -203,11 +203,11 @@ static int write_message(connection* conn, msg_header* msg, int64_t log_id) {
 
     return 0;
 }
-static int wait_for_msg(msg_handle* handle, int fd, int64_t log_id) {
+static int wait_for_next_msg(msg_handle* handle, int fd, int64_t log_id) {
     struct epoll_event ctl_event;
     ctl_event.data.fd = fd;
     ctl_event.events = EPOLLIN | EPOLLONESHOT;
-    return epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &ctl_event);
+    return epoll_ctl(handle->epoll_fd, EPOLL_CTL_MOD, fd, &ctl_event);
 }
 
 static void* start_epoll(void* arg) {
@@ -258,7 +258,7 @@ static void* start_epoll(void* arg) {
             assert(log_id, ret == sizeof(op));
             assert(log_id, op == CCEPH_MESSENGER_OP_STOP); //TODO: there maybe other op in the feature
 
-            ret = wait_for_msg(handle, fd, log_id);
+            ret = wait_for_next_msg(handle, fd, log_id);
             assert(log_id, ret == 0);
             break;
         }
@@ -273,7 +273,7 @@ static void* start_epoll(void* arg) {
         }
 
         //Wait for the next msg
-        int ret = wait_for_msg(handle, fd, log_id);
+        int ret = wait_for_next_msg(handle, fd, log_id);
         if (ret < -1) {
             LOG(LL_ERROR, log_id, "epoll_ctl for conn %ld, fd %d, error: %d", conn_id, fd, ret);
             close_conn(handle, conn_id, log_id);

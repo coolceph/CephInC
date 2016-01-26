@@ -324,8 +324,10 @@ TEST(message_messenger, one_send_and_one_recv) {
     EXPECT_NE(-1, ret);
 
     //Send and recv msg
-    TEST_send_msg_write_obj_req(fd, log_id);
-    TEST_recv_msg_write_obj_ack(fd, log_id);
+    for(int i = 0; i < 2; i++) {
+        TEST_send_msg_write_obj_req(fd, log_id);
+        TEST_recv_msg_write_obj_ack(fd, log_id);
+    }
 
     ret = stop_messager(handle, log_id);
     EXPECT_EQ(0, ret);
