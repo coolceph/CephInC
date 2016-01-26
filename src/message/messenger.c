@@ -357,7 +357,7 @@ extern int stop_messager(msg_handle* handle, int64_t log_id) {
     messenger_op_t op = CCEPH_MESSENGER_OP_STOP;
     for (i = 0; i < handle->thread_count; i++) {
         ret = write(handle->wake_thread_pipe_fd[1], &op, sizeof(op));
-        assert(log_id, ret == 0);
+        assert(log_id, ret == sizeof(op));
     }
     return 0;
 }
