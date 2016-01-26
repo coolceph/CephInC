@@ -186,8 +186,10 @@ TEST(message_messenger, send_msg) {
 }
 
 int MOCK_process_message_return_write_ack(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message) {
+    int64_t log_id = message->log_id;
+
     EXPECT_EQ(CCEPH_MSG_OP_WRITE, message->op);
-    EXPECT_EQ(1000, message->log_id);
+    EXPECT_EQ(1000, log_id);
 
     msg_write_obj_req *req = (msg_write_obj_req*)message;
     EXPECT_EQ(1001, req->client_id);
@@ -204,9 +206,11 @@ int MOCK_process_message_return_write_ack(msg_handle* msg_handle, conn_id_t conn
     ack->req_id        = req->req_id;
     ack->result        = CCEPH_WRITE_OBJ_ACK_OK;
 
-    send_msg(msg_handle, conn_id, (msg_header*)ack, message->log_id);
+    int ret = send_msg(msg_handle, conn_id, (msg_header*)ack, message->log_id);
+    EXPECT_EQ(0, ret);
 
-    //TODO: free msg;
+    EXPECT_EQ(0, free_msg_write_obj_req(&req, log_id));
+    EXPECT_EQ(0, free_msg_write_obj_ack(&ack, log_id));
 
     return 0;
 }
@@ -278,13 +282,22 @@ void TEST_send_msg_write_obj_req(int fd, int64_t log_id) {
 }
 void TEST_recv_msg_write_obj_ack(int fd, int64_t log_id) {
     msg_write_obj_ack *ack = malloc_msg_write_obj_ack();
-    int ret = recv_msg_write_obj_ack(fd, ack, log_id);
-    EXPECT_EQ(0, ret);
 
-    //TODO: more expect
-    //TODO: free ack;
+    int ret = recv_msg_header(fd, &ack->header, log_id);
+    EXPECT_EQ(0, ret);
+    EXPECT_EQ(CCEPH_MSG_OP_WRITE_ACK, ack->header.op);
+    EXPECT_EQ(1000, ack->header.log_id);
+
+    ret = recv_msg_write_obj_ack(fd, ack, log_id);
+    EXPECT_EQ(0, ret);
+    EXPECT_EQ(1001, ack->client_id);
+    EXPECT_EQ(1002, ack->req_id);
+    EXPECT_EQ(CCEPH_WRITE_OBJ_ACK_OK, ack->result);
+
+    ret = free_msg_write_obj_ack(&ack, log_id);
+    EXPECT_EQ(0, ret);
 }
-TEST(message_messenger, one_send_and_recv) {
+TEST(message_messenger, one_send_and_one_recv) {
     int64_t log_id = 122;
     msg_handle* handle = start_messager(&MOCK_process_message_return_write_ack, log_id);
     EXPECT_NE((msg_handle*)NULL, handle);
@@ -295,7 +308,7 @@ TEST(message_messenger, one_send_and_recv) {
     pthread_t server_thread_id;
     int ret = pthread_create(&server_thread_id, &thread_attr, &TEST_listen_thread_func, handle);
     EXPECT_EQ(0, ret);
-    sleep(3); //for listen thread;
+    //sleep(1); //for listen thread;
 
     //Connect to Server
     int fd = socket(AF_INET,SOCK_STREAM,0);
