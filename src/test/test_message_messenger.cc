@@ -257,8 +257,12 @@ void* TEST_listen_thread_func(void* arg){
 
         new_conn(handle, (char*)"TestSocket", 9001, com_fd, 122);
     }
+    return NULL;
 }
+
+pthread_mutex_t client_io_lock;
 void TEST_send_msg_write_obj_req(int fd, int64_t log_id) {
+    pthread_mutex_lock(&client_io_lock);
     msg_write_obj_req *req = malloc_msg_write_obj_req();
     EXPECT_NE((msg_write_obj_req*)NULL, req);
 
@@ -279,8 +283,11 @@ void TEST_send_msg_write_obj_req(int fd, int64_t log_id) {
     EXPECT_EQ(0, ret);
 
     EXPECT_EQ(0, free_msg_write_obj_req(&req, log_id));
+    pthread_mutex_unlock(&client_io_lock);
 }
+
 void TEST_recv_msg_write_obj_ack(int fd, int64_t log_id) {
+    pthread_mutex_lock(&client_io_lock);
     msg_write_obj_ack *ack = malloc_msg_write_obj_ack();
 
     int ret = recv_msg_header(fd, &ack->header, log_id);
@@ -296,7 +303,27 @@ void TEST_recv_msg_write_obj_ack(int fd, int64_t log_id) {
 
     ret = free_msg_write_obj_ack(&ack, log_id);
     EXPECT_EQ(0, ret);
+    pthread_mutex_unlock(&client_io_lock);
 }
+void* TEST_send_and_recv_msg(void* arg) {
+    int *arg_ptr = (int*)arg;
+    int fd = *arg_ptr;
+    int count = *(arg_ptr + 1);
+    int64_t log_id = 124;
+
+    for(int i = 0; i < count; i++) {
+        TEST_send_msg_write_obj_req(fd, log_id);
+        TEST_recv_msg_write_obj_ack(fd, log_id);
+    }
+    for(int i = 0; i < count; i++) {
+        TEST_send_msg_write_obj_req(fd, log_id);
+        TEST_send_msg_write_obj_req(fd, log_id);
+        TEST_recv_msg_write_obj_ack(fd, log_id);
+        TEST_recv_msg_write_obj_ack(fd, log_id);
+    }
+    return NULL;
+}
+
 TEST(message_messenger, one_send_and_one_recv) {
     int64_t log_id = 122;
     msg_handle* handle = start_messager(&MOCK_process_message_return_write_ack, log_id);
@@ -324,9 +351,22 @@ TEST(message_messenger, one_send_and_one_recv) {
     EXPECT_NE(-1, ret);
 
     //Send and recv msg
-    for(int i = 0; i < 2; i++) {
-        TEST_send_msg_write_obj_req(fd, log_id);
-        TEST_recv_msg_write_obj_ack(fd, log_id);
+    int arg[2];
+    arg[0] = fd;
+    arg[1] = 10;
+
+    //Single Thread
+    TEST_send_and_recv_msg(arg);
+
+    //Multi Thread
+    pthread_mutex_init(&client_io_lock, NULL);
+    pthread_t client_thread_ids[16];
+    for (int i = 0; i < 16; i++) {
+        ret = pthread_create(client_thread_ids + i, &thread_attr, &TEST_send_and_recv_msg, arg);
+        EXPECT_EQ(0, ret);
+    }
+    for (int i = 0; i < 16; i++) {
+        pthread_join(*(client_thread_ids + i), NULL);
     }
 
     ret = stop_messager(handle, log_id);
