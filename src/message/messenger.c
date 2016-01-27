@@ -361,6 +361,17 @@ extern int stop_messager(msg_handle* handle, int64_t log_id) {
     }
     return 0;
 }
+extern int destory_msg_handle(msg_handle** handle, int64_t log_id) {
+    assert(log_id, *handle != NULL);
+    assert(log_id, (*handle)->thread_ids != NULL);
+
+    free((*handle)->thread_ids);
+    (*handle)->thread_ids = NULL;
+
+    free(*handle);
+    *handle = NULL;
+    return 0;
+}
 
 extern conn_id_t new_conn(msg_handle* handle, char* host, int port, int fd, int64_t log_id) {
     //New connection from params
