@@ -12,6 +12,8 @@
 #define CCEPH_MSG_OP_READ      3
 #define CCEPH_MSG_OP_READ_ACK  4
 
+const char* str_msg_op(int op);
+
 typedef struct {
     int8_t  op;
     int64_t log_id;

@@ -109,7 +109,8 @@ static msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int fd, i
         LOG(LL_ERROR, log_id, "Read msg_header from conn_id %ld error %d.", conn_id, ret);
         return NULL;
     } else {
-        LOG(LL_INFO, log_id, "read msg_header form conn_id %ld, op %d, log_id %ld", conn_id, header.op, header.log_id);
+        LOG(LL_INFO, log_id, "read msg_header form conn_id %ld, op %s(%d), log_id %ld", 
+            conn_id, str_msg_op(header.op), header.op, header.log_id);
     }
 
     //Read message
@@ -149,7 +150,8 @@ static msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int fd, i
         LOG(LL_ERROR, log_id, "Read message from conn_id %ld error %d.", conn_id, ret);
         return NULL;
     } else {
-        LOG(LL_INFO, log_id, "Read message form conn_id %ld, op %d, log_id %ld", conn_id, header.op, header.log_id);
+        LOG(LL_INFO, log_id, "Read message form conn_id %ld, op %s(%d), log_id %ld", 
+            conn_id, str_msg_op(header.op), header.op, header.log_id);
     }
 
     message->op = header.op;
@@ -160,8 +162,8 @@ static int write_message(connection* conn, msg_header* msg, int64_t log_id) {
     int fd = conn->fd;
     conn_id_t conn_id = conn->id;
 
-    LOG(LL_INFO, log_id, "Write Message to conn_id %ld, fd %d, op: %d.", 
-                         conn_id, fd, msg->op);
+    LOG(LL_INFO, log_id, "Write Message to conn_id %ld, fd %d, op %s(%d).", 
+        conn_id, fd, str_msg_op(msg->op), msg->op);
 
     //Write msg_hedaer
     int ret = send_msg_header(fd, msg, log_id);
@@ -269,7 +271,8 @@ static void* start_epoll(void* arg) {
             LOG(LL_ERROR, log_id, "Read message from conn %ld, fd %d error.", conn_id, fd);
             continue;
         } else {
-            LOG(LL_INFO, log_id, "Msg read from conn %ld, fd %d, op %d, log_id %ld", conn_id, fd, msg->op, msg->log_id);
+            LOG(LL_INFO, log_id, "Msg read from conn %ld, fd %d, op %s(%d), log_id %ld", 
+                conn_id, fd, str_msg_op(msg->op), msg->op, msg->log_id);
         }
 
         //Wait for the next msg
@@ -441,8 +444,8 @@ extern int send_msg(msg_handle* handle, conn_id_t conn_id, msg_header* msg, int6
         return CCEPH_ERR_CONN_CLOSED;
     }
 
-    LOG(LL_INFO, log_id, "Send msg to %s:%d, conn_id %ld, fd %d, op %d.",
-                         conn->host, conn->port, conn->id, conn->fd, msg->op);
+    LOG(LL_INFO, log_id, "Send msg to %s:%d, conn_id %ld, fd %d, op %s(%d).",
+        conn->host, conn->port, conn->id, conn->fd, str_msg_op(msg->op), msg->op);
     if (write_message(conn, msg, log_id) != 0) {
         conn->state = CCEPH_CONN_STATE_CLOSED;
         pthread_mutex_unlock(&conn->lock);

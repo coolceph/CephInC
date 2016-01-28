@@ -5,6 +5,21 @@
 #include "common/assert.h"
 #include "message/io.h"
 
+const char* str_msg_op(int op) {
+    switch (op) {
+        case CCEPH_MSG_OP_WRITE:
+            return "Write";
+        case CCEPH_MSG_OP_WRITE_ACK:
+            return "WriteAck";
+        case CCEPH_MSG_OP_READ:
+            return "Read";
+        case CCEPH_MSG_OP_READ_ACK:
+            return "ReadAck";
+        default:
+            return "Unknown";
+    }
+}
+
 extern msg_header* malloc_msg_header(int64_t log_id) {
     msg_header* msg = malloc(sizeof(msg_header));
     assert(log_id, msg != NULL);
