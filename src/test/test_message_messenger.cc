@@ -324,7 +324,7 @@ void* TEST_send_and_recv_msg(void* arg) {
     return NULL;
 }
 
-TEST(message_messenger, one_send_and_one_recv) {
+TEST(message_messenger, send_and_recv) {
     int64_t log_id = 122;
     msg_handle* handle = start_messager(&MOCK_process_message_return_write_ack, log_id);
     EXPECT_NE((msg_handle*)NULL, handle);
@@ -371,4 +371,8 @@ TEST(message_messenger, one_send_and_one_recv) {
 
     ret = stop_messager(handle, log_id);
     EXPECT_EQ(0, ret);
+
+    ret = destory_msg_handle(&handle, log_id);
+    EXPECT_EQ(0, ret);
+    EXPECT_EQ(NULL, handle);
 }
