@@ -8,6 +8,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 #include <sys/epoll.h>
 
 #include "include/errno.h"
@@ -205,7 +206,7 @@ static int write_message(connection* conn, msg_header* msg, int64_t log_id) {
 
     return 0;
 }
-static int wait_for_next_msg(msg_handle* handle, int fd, int64_t log_id) {
+static int wait_for_next_msg(msg_handle* handle, int fd) {
     struct epoll_event ctl_event;
     ctl_event.data.fd = fd;
     ctl_event.events = EPOLLIN | EPOLLONESHOT;
@@ -260,7 +261,7 @@ static void* start_epoll(void* arg) {
             assert(log_id, ret == sizeof(op));
             assert(log_id, op == CCEPH_MESSENGER_OP_STOP); //TODO: there maybe other op in the feature
 
-            ret = wait_for_next_msg(handle, fd, log_id);
+            ret = wait_for_next_msg(handle, fd);
             assert(log_id, ret == 0);
             break;
         }
@@ -276,7 +277,7 @@ static void* start_epoll(void* arg) {
         }
 
         //Wait for the next msg
-        int ret = wait_for_next_msg(handle, fd, log_id);
+        int ret = wait_for_next_msg(handle, fd);
         if (ret < -1) {
             LOG(LL_ERROR, log_id, "epoll_ctl for conn %ld, fd %d, error: %d", conn_id, fd, ret);
             close_conn(handle, conn_id, log_id);
@@ -406,21 +407,45 @@ extern conn_id_t new_conn(msg_handle* handle, char* host, int port, int fd, int6
     return conn->id;
 }
 extern conn_id_t get_conn(msg_handle* handle, char* host, int port, int64_t log_id) {
-/*
- *    struct sockaddr_in server_addr_in;
- *    bzero(&server_addr_in, sizeof(server_addr_in) );
- *    server_addr_in.sin_family = AF_INET;
- *    server_addr_in.sin_port = htons(port);
- *    inet_pton(AF_INET, host, &server_addr_in.sin_addr);
- *
- *    int fd = socket(AF_INET, SOCK_STREAM, 0);
- *    int ret = connect(fd, (struct sockaddr *)&server_addr_in, sizeof(server_addr_in));
- *    if (ret < 0) {
- *        LOG(LL_ERROR, log_id, "connect to %s:%d error: %d", host, port, ret);
- *        return ret;
- *    }
- */
-    return 0;
+    assert(log_id, handle != NULL);
+    assert(log_id, host != NULL);
+    assert(log_id, port > 0);
+
+    conn_id_t conn_id = -1;
+
+    //try to find conn from list first;
+    pthread_rwlock_rdlock(&handle->conn_list_lock);
+    connection* conn = get_conn_by_host_and_port(handle, host, port);
+    if (conn != NULL) {
+        conn_id = conn->id;
+    }
+    conn = NULL;
+    pthread_rwlock_unlock(&handle->conn_list_lock);
+
+    if (conn_id != -1) {
+        LOG(LL_DEBUG, log_id, "Conn for %s:%d found in current conn_list, return conn_id.", host, port);
+        return conn_id;
+    }
+    LOG(LL_DEBUG, log_id, "Conn for %s:%d is not found in current conn_list, try to connect.", host, port);
+
+    struct sockaddr_in server_addr_in;
+    bzero(&server_addr_in, sizeof(server_addr_in) );
+    server_addr_in.sin_family = AF_INET;
+    server_addr_in.sin_port = htons(port);
+    inet_pton(AF_INET, host, &server_addr_in.sin_addr);
+
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    int ret = connect(fd, (struct sockaddr *)&server_addr_in, sizeof(server_addr_in));
+    if (ret < 0) {
+        LOG(LL_ERROR, log_id, "Connect to %s:%d error: %d", host, port, ret);
+        return ret;
+    }
+    LOG(LL_DEBUG, log_id, "Connect to %s:%d success", host, port);
+
+    conn_id = new_conn(handle, host, port, fd, log_id);
+    assert(log_id, conn_id > 0);
+
+    return conn_id;
 }
 
 extern int send_msg(msg_handle* handle, conn_id_t conn_id, msg_header* msg, int64_t log_id) {
