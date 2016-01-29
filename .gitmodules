@@ -1,12 +1,6 @@
-[submodule "src/gtest"]
-	path = src/gtest
-	url = git@github.com:coolceph/gtest.git
-[submodule "module/gtest"]
-	path = module/gtest
-	url = git@github.com:coolceph/gtest.git
 [submodule "module/bhook"]
 	path = module/bhook
-	url = git@github.com:coolceph/bhook.git
+	url = https://github.com/coolceph/bhook.git
 [submodule "module/googletest"]
 	path = module/googletest
-	url = git@github.com:coolceph/googletest.git
+	url = https://github.com/coolceph/googletest.git
