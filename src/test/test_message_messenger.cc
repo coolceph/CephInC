@@ -335,7 +335,7 @@ TEST(message_messenger, send_and_recv) {
     pthread_t server_thread_id;
     int ret = pthread_create(&server_thread_id, &thread_attr, &TEST_listen_thread_func, handle);
     EXPECT_EQ(0, ret);
-    //sleep(1); //for listen thread;
+    sleep(1); //for listen thread;
 
     //Connect to Server
     int fd = socket(AF_INET,SOCK_STREAM,0);
