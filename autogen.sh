@@ -1,5 +1,8 @@
 #!/bin/sh -x
 
+git submodule init
+git submodule update
+
 touch AUTHORS
 touch ChangeLog
 touch INSTALL
