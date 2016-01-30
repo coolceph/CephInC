@@ -214,9 +214,15 @@ int MOCK_process_message_return_write_ack(msg_handle* msg_handle, conn_id_t conn
 
     return 0;
 }
-void* TEST_listen_thread_func(void* arg){
+typedef struct {
+    msg_handle* handle;
+    int port;
+} listen_thread_arg;
+void* TEST_listen_thread_func(void* arg_ptr){
     int log_id = 123;
-    msg_handle* handle = (msg_handle*)arg;
+    listen_thread_arg* arg = (listen_thread_arg*)arg_ptr;
+    msg_handle* handle = arg->handle;
+    int port = arg->port;
 
     int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
     EXPECT_NE(-1, listen_fd);
@@ -225,7 +231,7 @@ void* TEST_listen_thread_func(void* arg){
     struct sockaddr_in my_addr;
     bzero(&my_addr, sizeof(my_addr));
     my_addr.sin_family = AF_INET;
-    my_addr.sin_port = htons(9000);
+    my_addr.sin_port = htons(port);
     my_addr.sin_addr.s_addr = INADDR_ANY;
     bzero(&(my_addr.sin_zero), 8);
 
@@ -305,10 +311,14 @@ void TEST_recv_msg_write_obj_ack(int fd, int64_t log_id) {
     EXPECT_EQ(0, ret);
     pthread_mutex_unlock(&client_io_lock);
 }
-void* TEST_send_and_recv_msg(void* arg) {
-    int *arg_ptr = (int*)arg;
-    int fd = *arg_ptr;
-    int count = *(arg_ptr + 1);
+typedef struct {
+    int fd;
+    int count;
+} send_and_recv_msg_arg;
+void* TEST_send_and_recv_msg(void* arg_ptr) {
+    send_and_recv_msg_arg *arg = (send_and_recv_msg_arg*)arg_ptr;
+    int fd = arg->fd;
+    int count = arg->count;;
     int64_t log_id = 124;
 
     for(int i = 0; i < count; i++) {
@@ -330,10 +340,13 @@ TEST(message_messenger, send_and_recv) {
     EXPECT_NE((msg_handle*)NULL, handle);
 
     //Start Listen Thread
+    listen_thread_arg listen_thread_arg;
+    listen_thread_arg.handle = handle;
+    listen_thread_arg.port = 9000;
     pthread_attr_t thread_attr;
     pthread_attr_init(&thread_attr);
     pthread_t server_thread_id;
-    int ret = pthread_create(&server_thread_id, &thread_attr, &TEST_listen_thread_func, handle);
+    int ret = pthread_create(&server_thread_id, &thread_attr, &TEST_listen_thread_func, &listen_thread_arg);
     EXPECT_EQ(0, ret);
     sleep(1); //for listen thread;
 
@@ -343,7 +356,7 @@ TEST(message_messenger, send_and_recv) {
 
     struct sockaddr_in their_addr;
     their_addr.sin_family = AF_INET;
-    their_addr.sin_port = htons(9000);
+    their_addr.sin_port = htons(listen_thread_arg.port);
     inet_aton( "127.0.0.1", &their_addr.sin_addr);
     bzero(&(their_addr.sin_zero),8);
 
@@ -351,21 +364,67 @@ TEST(message_messenger, send_and_recv) {
     EXPECT_NE(-1, ret);
 
     //Send and recv msg
-    int arg[2];
-    arg[0] = fd;
-    arg[1] = 10;
+    send_and_recv_msg_arg send_and_recv_msg_arg;
+    send_and_recv_msg_arg.fd = fd;
+    send_and_recv_msg_arg.count = 10;
 
     //Single Thread
-    TEST_send_and_recv_msg(arg);
+    TEST_send_and_recv_msg(&send_and_recv_msg_arg);
 
     //Multi Thread
+    int thread_count = 16;
     pthread_mutex_init(&client_io_lock, NULL);
-    pthread_t client_thread_ids[16];
-    for (int i = 0; i < 16; i++) {
-        ret = pthread_create(client_thread_ids + i, &thread_attr, &TEST_send_and_recv_msg, arg);
+    pthread_t client_thread_ids[thread_count];
+    for (int i = 0; i < thread_count; i++) {
+        ret = pthread_create(client_thread_ids + i, &thread_attr, &TEST_send_and_recv_msg, &send_and_recv_msg_arg);
         EXPECT_EQ(0, ret);
     }
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < thread_count; i++) {
+        pthread_join(*(client_thread_ids + i), NULL);
+    }
+
+    ret = stop_messager(handle, log_id);
+    EXPECT_EQ(0, ret);
+
+    ret = destory_msg_handle(&handle, log_id);
+    EXPECT_EQ(0, ret);
+    EXPECT_EQ(NULL, handle);
+}
+int MOCK_client_thread_msg_handler(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message) {
+}
+void* TEST_client_thread_func(void* arg) {
+    int64_t log_id = pthread_self();
+    msg_handle* handle = start_messager(&MOCK_client_thread_msg_handler, log_id);
+    EXPECT_NE((msg_handle*)NULL, handle);
+
+    conn_id_t conn_id = get_conn(handle, "127.0.0.1", 9001, log_id);
+    EXPECT_TRUE(conn_id > 0);
+}
+TEST(message_messenger, send_and_recv_with_messenger_client) {
+    int64_t log_id = 122;
+    msg_handle* handle = start_messager(&MOCK_process_message_return_write_ack, log_id);
+    EXPECT_NE((msg_handle*)NULL, handle);
+
+    //Start Listen Thread
+    listen_thread_arg listen_thread_arg;
+    listen_thread_arg.handle = handle;
+    listen_thread_arg.port = 9001;
+    pthread_attr_t thread_attr;
+    pthread_attr_init(&thread_attr);
+    pthread_t server_thread_id;
+    int ret = pthread_create(&server_thread_id, &thread_attr, &TEST_listen_thread_func, &listen_thread_arg);
+    EXPECT_EQ(0, ret);
+    sleep(1); //for listen thread;
+
+    //Strat Client Thread
+    int thread_count = 16;
+    pthread_mutex_init(&client_io_lock, NULL);
+    pthread_t client_thread_ids[thread_count];
+    for (int i = 0; i < thread_count; i++) {
+        ret = pthread_create(client_thread_ids + i, &thread_attr, &TEST_client_thread_func, NULL);
+        EXPECT_EQ(0, ret);
+    }
+    for (int i = 0; i < thread_count; i++) {
         pthread_join(*(client_thread_ids + i), NULL);
     }
 
