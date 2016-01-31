@@ -55,8 +55,8 @@ extern msg_handle* start_messager(msg_handler msg_handler, int64_t log_id);
 extern int stop_messager(msg_handle* handle, int64_t log_id);
 extern int destory_msg_handle(msg_handle** handle, int64_t log_id);
 
-extern conn_id_t new_conn(msg_handle* handle, char* host, int port, int fd, int64_t log_id);
-extern conn_id_t get_conn(msg_handle* handle, char* host, int port, int64_t log_id);
+extern conn_id_t new_conn(msg_handle* handle, const char* host, int port, int fd, int64_t log_id);
+extern conn_id_t get_conn(msg_handle* handle, const char* host, int port, int64_t log_id);
 
 extern int close_conn(msg_handle* handle, conn_id_t id, int64_t log_id);
 

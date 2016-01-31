@@ -377,7 +377,7 @@ extern int destory_msg_handle(msg_handle** handle, int64_t log_id) {
     return 0;
 }
 
-extern conn_id_t new_conn(msg_handle* handle, char* host, int port, int fd, int64_t log_id) {
+extern conn_id_t new_conn(msg_handle* handle, const char* host, int port, int fd, int64_t log_id) {
     //New connection from params
     connection* conn = (connection*)malloc(sizeof(connection));
     conn->id = atomic_add64(&handle->next_conn_id, 1);
@@ -406,7 +406,7 @@ extern conn_id_t new_conn(msg_handle* handle, char* host, int port, int fd, int6
     LOG(LL_NOTICE, log_id, "New conn %s:%d, fd %d", host, port, fd);
     return conn->id;
 }
-extern conn_id_t get_conn(msg_handle* handle, char* host, int port, int64_t log_id) {
+extern conn_id_t get_conn(msg_handle* handle, const char* host, int port, int64_t log_id) {
     assert(log_id, handle != NULL);
     assert(log_id, host != NULL);
     assert(log_id, port > 0);

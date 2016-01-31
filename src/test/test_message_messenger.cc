@@ -276,7 +276,7 @@ void TEST_send_msg_write_obj_req(int fd, int64_t log_id) {
     req->client_id     = 1001;
     req->req_id        = 1002;
     req->oid_size      = strlen("cceph_oid");
-    req->oid           = (char*)malloc(sizeof(char) * (req->oid_size + 1)); 
+    req->oid           = (char*)malloc(sizeof(char) * (req->oid_size + 1));
     req->offset        = 0;
     req->length        = 1024;
     req->data          = (char*)malloc(sizeof(char) * 1024);
@@ -390,15 +390,88 @@ TEST(message_messenger, send_and_recv) {
     EXPECT_EQ(0, ret);
     EXPECT_EQ(NULL, handle);
 }
-int MOCK_client_thread_msg_handler(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message) {
+
+
+int MOCK_client_thread_msg_handler_call_count = 0;
+int MOCK_client_thread_msg_handler(msg_handle* msg_handle, conn_id_t conn_id, msg_header* header) {
+    MOCK_client_thread_msg_handler_call_count++;
+
+    EXPECT_EQ(CCEPH_MSG_OP_WRITE_ACK, header->op);
+    EXPECT_EQ(1000, header->log_id);
+
+    msg_write_obj_ack *ack = (msg_write_obj_ack*)header;
+    EXPECT_EQ(1001, ack->client_id);
+    EXPECT_EQ(1002, ack->req_id);
+    EXPECT_EQ(CCEPH_WRITE_OBJ_ACK_OK, ack->result);
+
+    int ret = free_msg_write_obj_ack(&ack, header->log_id);
+    EXPECT_EQ(0, ret);
+    return 0;
 }
 void* TEST_client_thread_func(void* arg) {
     int64_t log_id = pthread_self();
     msg_handle* handle = start_messager(&MOCK_client_thread_msg_handler, log_id);
     EXPECT_NE((msg_handle*)NULL, handle);
 
-    conn_id_t conn_id = get_conn(handle, "127.0.0.1", 9001, log_id);
-    EXPECT_TRUE(conn_id > 0);
+    msg_write_obj_req *req = malloc_msg_write_obj_req();
+    EXPECT_NE((msg_write_obj_req*)NULL, req);
+
+    req->header.log_id = 1000;
+    req->client_id     = 1001;
+    req->req_id        = 1002;
+    req->oid_size      = strlen("cceph_oid");
+    req->oid           = (char*)malloc(sizeof(char) * (req->oid_size + 1));
+    req->offset        = 0;
+    req->length        = 1024;
+    req->data          = (char*)malloc(sizeof(char) * 1024);
+    bzero(req->oid, req->oid_size);
+    strcpy(req->oid, (char*)"cceph_oid");
+
+    //Send msg by one conn;
+    conn_id_t conn_id1 = get_conn(handle, "127.0.0.1", 9001, log_id);
+    EXPECT_TRUE(conn_id1 > 0);
+    int count = 10;
+    int ret = 0;
+    for (int i = 0; i < count; i++) {
+        ret = send_msg(handle, conn_id1, (msg_header*)req, log_id);
+        EXPECT_EQ(0, ret);
+    }
+    while (MOCK_client_thread_msg_handler_call_count < count) ;
+
+    //Send msg from the same conn
+    MOCK_client_thread_msg_handler_call_count = 0;
+    conn_id_t conn_id2 = get_conn(handle, "127.0.0.1", 9001, log_id);
+    EXPECT_TRUE(conn_id2 > 0);
+    EXPECT_EQ(conn_id1, conn_id2);
+    for (int i = 0; i < count; i++) {
+        ret = send_msg(handle, conn_id2, (msg_header*)req, log_id);
+        EXPECT_EQ(0, ret);
+    }
+    while (MOCK_client_thread_msg_handler_call_count < count) ;
+
+    ret = close_conn(handle, conn_id1, log_id);
+    EXPECT_EQ(0, ret);
+    ret = close_conn(handle, conn_id2, log_id);
+    EXPECT_EQ(CCEPH_ERR_CONN_NOT_FOUND, ret);
+
+    //Send msg by many conn
+    count = 10;
+    for (int i = 0; i < count; i++) {
+        MOCK_client_thread_msg_handler_call_count = 0;
+
+        conn_id_t conn_id = get_conn(handle, "127.0.0.1", 9001, log_id);
+        EXPECT_TRUE(conn_id > 0);
+
+        ret = send_msg(handle, conn_id, (msg_header*)req, log_id);
+        EXPECT_EQ(0, ret);
+
+        while (MOCK_client_thread_msg_handler_call_count < 1) ;
+        ret = close_conn(handle, conn_id, log_id);
+        EXPECT_EQ(0, ret);
+    }
+
+    EXPECT_EQ(0, free_msg_write_obj_req(&req, log_id));
+    return NULL;
 }
 TEST(message_messenger, send_and_recv_with_messenger_client) {
     int64_t log_id = 122;
@@ -417,8 +490,7 @@ TEST(message_messenger, send_and_recv_with_messenger_client) {
     sleep(1); //for listen thread;
 
     //Strat Client Thread
-    int thread_count = 16;
-    pthread_mutex_init(&client_io_lock, NULL);
+    int thread_count = 1;
     pthread_t client_thread_ids[thread_count];
     for (int i = 0; i < thread_count; i++) {
         ret = pthread_create(client_thread_ids + i, &thread_attr, &TEST_client_thread_func, NULL);
