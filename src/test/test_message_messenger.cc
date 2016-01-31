@@ -185,13 +185,27 @@ TEST(message_messenger, send_msg) {
     detach_func_lib(fname_close_conn);
 }
 
-int MOCK_process_message_return_write_ack(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message) {
-    int64_t log_id = message->log_id;
+//This is used by the TEST_listen_thread_func
+//The TEST_listen_thread_func is used both by send_and_recv & send_and_recv_with_messenger_client tests
+msg_write_obj_req* get_msg_write_obj_req() {
+    msg_write_obj_req *req = malloc_msg_write_obj_req();
+    EXPECT_NE((msg_write_obj_req*)NULL, req);
 
-    EXPECT_EQ(CCEPH_MSG_OP_WRITE, message->op);
-    EXPECT_EQ(1000, log_id);
-
-    msg_write_obj_req *req = (msg_write_obj_req*)message;
+    req->header.log_id = 1000;
+    req->client_id     = 1001;
+    req->req_id        = 1002;
+    req->oid_size      = strlen("cceph_oid");
+    req->oid           = (char*)malloc(sizeof(char) * (req->oid_size + 1));
+    req->offset        = 0;
+    req->length        = 1024;
+    req->data          = (char*)malloc(sizeof(char) * 1024);
+    bzero(req->oid, req->oid_size);
+    strcpy(req->oid, (char*)"cceph_oid");
+    return req;
+}
+void expect_msg_write_obj_req(msg_write_obj_req* req) {
+    EXPECT_EQ(CCEPH_MSG_OP_WRITE, req->header.op);
+    EXPECT_EQ(1000, req->header.log_id);
     EXPECT_EQ(1001, req->client_id);
     EXPECT_EQ(1002, req->req_id);
     EXPECT_EQ(strlen((char*)"cceph_oid"), req->oid_size);
@@ -199,14 +213,26 @@ int MOCK_process_message_return_write_ack(msg_handle* msg_handle, conn_id_t conn
     EXPECT_EQ(0, req->offset);
     EXPECT_EQ(1024, req->length);
     EXPECT_NE((char*)NULL, req->data);
+}
+void expect_msg_write_obj_ack(msg_write_obj_ack* ack) {
+    EXPECT_EQ(CCEPH_MSG_OP_WRITE_ACK, ack->header.op);
+    EXPECT_EQ(1000, ack->header.log_id);
+    EXPECT_EQ(1001, ack->client_id);
+    EXPECT_EQ(1002, ack->req_id);
+    EXPECT_EQ(CCEPH_WRITE_OBJ_ACK_OK, ack->result);
+}
+int msg_handler_server(msg_handle* msg_handle, conn_id_t conn_id, msg_header* header) {
+    msg_write_obj_req* req = (msg_write_obj_req*)header;
+    expect_msg_write_obj_req(req);
 
     msg_write_obj_ack *ack = malloc_msg_write_obj_ack();
-    ack->header.log_id = message->log_id;
+    ack->header.log_id = req->header.log_id;
     ack->client_id     = req->client_id;
     ack->req_id        = req->req_id;
     ack->result        = CCEPH_WRITE_OBJ_ACK_OK;
 
-    int ret = send_msg(msg_handle, conn_id, (msg_header*)ack, message->log_id);
+    int64_t log_id = header->log_id;
+    int ret = send_msg(msg_handle, conn_id, (msg_header*)ack, log_id);
     EXPECT_EQ(0, ret);
 
     EXPECT_EQ(0, free_msg_write_obj_req(&req, log_id));
@@ -218,7 +244,7 @@ typedef struct {
     msg_handle* handle;
     int port;
 } listen_thread_arg;
-void* TEST_listen_thread_func(void* arg_ptr){
+void* listen_thread_func(void* arg_ptr){
     int log_id = 123;
     listen_thread_arg* arg = (listen_thread_arg*)arg_ptr;
     msg_handle* handle = arg->handle;
@@ -261,27 +287,33 @@ void* TEST_listen_thread_func(void* arg_ptr){
             break;
         }
 
-        new_conn(handle, (char*)"TestSocket", 9001, com_fd, 122);
+        new_conn(handle, (char*)"TestSocket", port, com_fd, 122);
     }
     return NULL;
 }
+msg_handle* start_listen_thread(int port, int log_id) {
+    msg_handle* handle = start_messager(&msg_handler_server, log_id);
+    EXPECT_NE((msg_handle*)NULL, handle);
 
+    listen_thread_arg listen_thread_arg;
+    listen_thread_arg.handle = handle;
+    listen_thread_arg.port = port;
+    pthread_attr_t thread_attr;
+    pthread_attr_init(&thread_attr);
+    pthread_t server_thread_id;
+    int ret = pthread_create(&server_thread_id, &thread_attr, &listen_thread_func, &listen_thread_arg);
+    EXPECT_EQ(0, ret);
+    sleep(1); //for listen thread;
+
+    return handle;
+}
+
+//TEST: send_and_recv
 pthread_mutex_t client_io_lock;
 void TEST_send_msg_write_obj_req(int fd, int64_t log_id) {
     pthread_mutex_lock(&client_io_lock);
-    msg_write_obj_req *req = malloc_msg_write_obj_req();
-    EXPECT_NE((msg_write_obj_req*)NULL, req);
-
-    req->header.log_id = 1000;
-    req->client_id     = 1001;
-    req->req_id        = 1002;
-    req->oid_size      = strlen("cceph_oid");
-    req->oid           = (char*)malloc(sizeof(char) * (req->oid_size + 1));
-    req->offset        = 0;
-    req->length        = 1024;
-    req->data          = (char*)malloc(sizeof(char) * 1024);
-    bzero(req->oid, req->oid_size);
-    strcpy(req->oid, (char*)"cceph_oid");
+    
+    msg_write_obj_req *req = get_msg_write_obj_req();
 
     int ret = send_msg_header(fd, &(req->header), log_id);
     EXPECT_EQ(0, ret);
@@ -298,19 +330,16 @@ void TEST_recv_msg_write_obj_ack(int fd, int64_t log_id) {
 
     int ret = recv_msg_header(fd, &ack->header, log_id);
     EXPECT_EQ(0, ret);
-    EXPECT_EQ(CCEPH_MSG_OP_WRITE_ACK, ack->header.op);
-    EXPECT_EQ(1000, ack->header.log_id);
-
     ret = recv_msg_write_obj_ack(fd, ack, log_id);
     EXPECT_EQ(0, ret);
-    EXPECT_EQ(1001, ack->client_id);
-    EXPECT_EQ(1002, ack->req_id);
-    EXPECT_EQ(CCEPH_WRITE_OBJ_ACK_OK, ack->result);
+
+    expect_msg_write_obj_ack(ack);
 
     ret = free_msg_write_obj_ack(&ack, log_id);
     EXPECT_EQ(0, ret);
     pthread_mutex_unlock(&client_io_lock);
 }
+
 typedef struct {
     int fd;
     int count;
@@ -333,22 +362,10 @@ void* TEST_send_and_recv_msg(void* arg_ptr) {
     }
     return NULL;
 }
-
 TEST(message_messenger, send_and_recv) {
     int64_t log_id = 122;
-    msg_handle* handle = start_messager(&MOCK_process_message_return_write_ack, log_id);
-    EXPECT_NE((msg_handle*)NULL, handle);
-
-    //Start Listen Thread
-    listen_thread_arg listen_thread_arg;
-    listen_thread_arg.handle = handle;
-    listen_thread_arg.port = 9000;
-    pthread_attr_t thread_attr;
-    pthread_attr_init(&thread_attr);
-    pthread_t server_thread_id;
-    int ret = pthread_create(&server_thread_id, &thread_attr, &TEST_listen_thread_func, &listen_thread_arg);
-    EXPECT_EQ(0, ret);
-    sleep(1); //for listen thread;
+    int port = 9000;
+    msg_handle* handle = start_listen_thread(port, log_id);
 
     //Connect to Server
     int fd = socket(AF_INET,SOCK_STREAM,0);
@@ -356,11 +373,11 @@ TEST(message_messenger, send_and_recv) {
 
     struct sockaddr_in their_addr;
     their_addr.sin_family = AF_INET;
-    their_addr.sin_port = htons(listen_thread_arg.port);
+    their_addr.sin_port = htons(port);
     inet_aton( "127.0.0.1", &their_addr.sin_addr);
     bzero(&(their_addr.sin_zero),8);
 
-    ret = connect(fd, (struct sockaddr *)&their_addr, sizeof(struct sockaddr));
+    int ret = connect(fd, (struct sockaddr *)&their_addr, sizeof(struct sockaddr));
     EXPECT_NE(-1, ret);
 
     //Send and recv msg
@@ -375,6 +392,8 @@ TEST(message_messenger, send_and_recv) {
     int thread_count = 16;
     pthread_mutex_init(&client_io_lock, NULL);
     pthread_t client_thread_ids[thread_count];
+    pthread_attr_t thread_attr;
+    pthread_attr_init(&thread_attr);
     for (int i = 0; i < thread_count; i++) {
         ret = pthread_create(client_thread_ids + i, &thread_attr, &TEST_send_and_recv_msg, &send_and_recv_msg_arg);
         EXPECT_EQ(0, ret);
@@ -392,40 +411,24 @@ TEST(message_messenger, send_and_recv) {
 }
 
 
+//TEST: send_and_recv_with_messenger_client
 int MOCK_client_thread_msg_handler_call_count = 0;
-int MOCK_client_thread_msg_handler(msg_handle* msg_handle, conn_id_t conn_id, msg_header* header) {
+int msg_handler_client(msg_handle* msg_handle, conn_id_t conn_id, msg_header* header) {
     MOCK_client_thread_msg_handler_call_count++;
 
-    EXPECT_EQ(CCEPH_MSG_OP_WRITE_ACK, header->op);
-    EXPECT_EQ(1000, header->log_id);
-
     msg_write_obj_ack *ack = (msg_write_obj_ack*)header;
-    EXPECT_EQ(1001, ack->client_id);
-    EXPECT_EQ(1002, ack->req_id);
-    EXPECT_EQ(CCEPH_WRITE_OBJ_ACK_OK, ack->result);
+    expect_msg_write_obj_ack(ack);
 
     int ret = free_msg_write_obj_ack(&ack, header->log_id);
     EXPECT_EQ(0, ret);
     return 0;
 }
-void* TEST_client_thread_func(void* arg) {
+void* client_thread_func(void* arg) {
     int64_t log_id = pthread_self();
-    msg_handle* handle = start_messager(&MOCK_client_thread_msg_handler, log_id);
+    msg_handle* handle = start_messager(&msg_handler_client, log_id);
     EXPECT_NE((msg_handle*)NULL, handle);
-
-    msg_write_obj_req *req = malloc_msg_write_obj_req();
-    EXPECT_NE((msg_write_obj_req*)NULL, req);
-
-    req->header.log_id = 1000;
-    req->client_id     = 1001;
-    req->req_id        = 1002;
-    req->oid_size      = strlen("cceph_oid");
-    req->oid           = (char*)malloc(sizeof(char) * (req->oid_size + 1));
-    req->offset        = 0;
-    req->length        = 1024;
-    req->data          = (char*)malloc(sizeof(char) * 1024);
-    bzero(req->oid, req->oid_size);
-    strcpy(req->oid, (char*)"cceph_oid");
+    
+    msg_write_obj_req *req = get_msg_write_obj_req();
 
     //Send msg by one conn;
     conn_id_t conn_id1 = get_conn(handle, "127.0.0.1", 9001, log_id);
@@ -475,32 +478,22 @@ void* TEST_client_thread_func(void* arg) {
 }
 TEST(message_messenger, send_and_recv_with_messenger_client) {
     int64_t log_id = 122;
-    msg_handle* handle = start_messager(&MOCK_process_message_return_write_ack, log_id);
-    EXPECT_NE((msg_handle*)NULL, handle);
-
-    //Start Listen Thread
-    listen_thread_arg listen_thread_arg;
-    listen_thread_arg.handle = handle;
-    listen_thread_arg.port = 9001;
-    pthread_attr_t thread_attr;
-    pthread_attr_init(&thread_attr);
-    pthread_t server_thread_id;
-    int ret = pthread_create(&server_thread_id, &thread_attr, &TEST_listen_thread_func, &listen_thread_arg);
-    EXPECT_EQ(0, ret);
-    sleep(1); //for listen thread;
+    msg_handle* handle = start_listen_thread(9001, log_id);
 
     //Strat Client Thread
     int thread_count = 1;
+    pthread_attr_t thread_attr;
+    pthread_attr_init(&thread_attr);
     pthread_t client_thread_ids[thread_count];
     for (int i = 0; i < thread_count; i++) {
-        ret = pthread_create(client_thread_ids + i, &thread_attr, &TEST_client_thread_func, NULL);
+        int ret = pthread_create(client_thread_ids + i, &thread_attr, &client_thread_func, NULL);
         EXPECT_EQ(0, ret);
     }
     for (int i = 0; i < thread_count; i++) {
         pthread_join(*(client_thread_ids + i), NULL);
     }
 
-    ret = stop_messager(handle, log_id);
+    int ret = stop_messager(handle, log_id);
     EXPECT_EQ(0, ret);
 
     ret = destory_msg_handle(&handle, log_id);
