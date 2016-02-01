@@ -21,22 +21,15 @@
 #define MSG_INFO                 LL_INFO, __FILE__, __LINE__, __FUNCTION__
 #define MSG_DEBUG                LL_DEBUG, __FILE__, __LINE__, __FUNCTION__
 
-#define LOG(level, log_id, fmt, args...)  {     \
-    if (level <= LL_ERROR) {                    \
-        fprintf(stderr, "[logid %ld]", log_id); \
-        fprintf(stderr, fmt, ##args);           \
-        fprintf(stderr, "\n");                  \
-        fflush(stderr);                         \
-    } else {                                    \
-        fprintf(stdout, "[logid %ld]", log_id); \
-        fprintf(stdout, fmt, ##args);           \
-        fprintf(stdout, "\n");                  \
-        fflush(stdout);                         \
-    }                                           \
-}
+#define MAX_LOG_ENTRY_LENGTH 1024
+#define LOG(level, log_id, fmt, args...)  { \
+    _log(level, log_id, fmt, ##args);       \
+}                                           \
 
 //#define LOG(level, fmt, args...)  { if (level <= LL_ERROR) { fprintf(stderr, fmt, ##args); fprintf(stderr, "\n"); } else { fprintf(stdout, fmt, ##args); fprintf(stdout, "\n"); } }
 //#define LOGV(level, fmt, args...) if (level <= LOGGER.log_level()) LOGGER.Write(level, __FILE__, __LINE__, __FUNCTION__, fmt, ##args)L
+
+void _log(int level, int64_t log_id, const char* fmt, ...);
 
 extern void initial_log_id(int seed);
 extern int64_t new_log_id();
