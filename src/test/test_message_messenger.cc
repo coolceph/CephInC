@@ -33,15 +33,16 @@ connection* add_conn(msg_handle* handle, char* host, int port, int fd) {
     list_add(&conn->list_node, &handle->conn_list.list_node);
     return conn;
 }
-int MOCK_process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message) {
+int MOCK_process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message, void* context) {
     EXPECT_TRUE(msg_handle != NULL);
     EXPECT_TRUE(conn_id > 0);
     EXPECT_TRUE(message != NULL);
+    EXPECT_TRUE(context == NULL);
     return 0;
 }
 
 TEST(message_messenger, new_msg_handle) {
-    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
+    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, NULL, 1);
     EXPECT_NE(handle, (msg_handle*)NULL);
 
     EXPECT_TRUE(handle->epoll_fd > 0);
@@ -60,7 +61,7 @@ TEST(message_messenger, new_msg_handle) {
 }
 
 TEST(message_messenger, find_conn_by_id) {
-    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
+    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, NULL, 1);
     connection* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
     connection* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
 
@@ -70,7 +71,7 @@ TEST(message_messenger, find_conn_by_id) {
 }
 
 TEST(message_messenger, find_conn_by_fd) {
-    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
+    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, NULL, 1);
     connection* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
     connection* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
 
@@ -80,7 +81,7 @@ TEST(message_messenger, find_conn_by_fd) {
 }
 
 TEST(message_messenger, find_conn_by_port_and_ip) {
-    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
+    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, NULL, 1);
     connection* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
     connection* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
 
@@ -97,7 +98,7 @@ int MOCK_new_conn_epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)
     return 0;
 }
 TEST(message_messenger, new_conn) {
-    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
+    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, NULL, 1);
 
     attach_and_enable_func(fname_epoll_ctl, (void*)&MOCK_new_conn_epoll_ctl);
 
@@ -118,7 +119,7 @@ int MOCK_close_conn_close(int fd) {
     return 0;
 }
 TEST(message_messenger, close_conn) {
-    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
+    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, NULL, 1);
     add_conn(handle, (char*)"host1", 9001, 1);
     add_conn(handle, (char*)"host2", 9002, 2);
 
@@ -161,7 +162,7 @@ int MOCK_send_msg_close_conn(msg_handle* handle, conn_id_t id, int64_t log_id) {
 }
 TEST(message_messenger, send_msg) {
     msg_header msg;
-    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, 1);
+    msg_handle* handle = TEST_new_msg_handle(&MOCK_process_message, NULL, 1);
     connection* conn = add_conn(handle, (char*)"host1", 9001, 1);
     add_conn(handle, (char*)"host2", 9002, 2);
 
@@ -221,7 +222,9 @@ void expect_msg_write_obj_ack(msg_write_obj_ack* ack) {
     EXPECT_EQ(1002, ack->req_id);
     EXPECT_EQ(CCEPH_WRITE_OBJ_ACK_OK, ack->result);
 }
-int msg_handler_server(msg_handle* msg_handle, conn_id_t conn_id, msg_header* header) {
+int msg_handler_server(msg_handle* msg_handle, conn_id_t conn_id, msg_header* header, void* context) {
+    EXPECT_EQ(NULL, context);
+
     msg_write_obj_req* req = (msg_write_obj_req*)header;
     expect_msg_write_obj_req(req);
 
@@ -292,7 +295,7 @@ void* listen_thread_func(void* arg_ptr){
     return NULL;
 }
 msg_handle* start_listen_thread(int port, int log_id) {
-    msg_handle* handle = start_messager(&msg_handler_server, log_id);
+    msg_handle* handle = start_messager(&msg_handler_server, NULL, log_id);
     EXPECT_NE((msg_handle*)NULL, handle);
 
     listen_thread_arg listen_thread_arg;
@@ -413,8 +416,12 @@ TEST(message_messenger, send_and_recv) {
 
 //TEST: send_and_recv_with_messenger_client
 int MOCK_client_thread_msg_handler_call_count = 0;
-int msg_handler_client(msg_handle* msg_handle, conn_id_t conn_id, msg_header* header) {
+int msg_handler_client(msg_handle* handle, conn_id_t conn_id, msg_header* header, void* context) {
     MOCK_client_thread_msg_handler_call_count++;
+
+    EXPECT_EQ(NULL, context);
+    EXPECT_NE((msg_handle*)NULL, handle);
+    EXPECT_TRUE(conn_id > 0);
 
     msg_write_obj_ack *ack = (msg_write_obj_ack*)header;
     expect_msg_write_obj_ack(ack);
@@ -424,8 +431,10 @@ int msg_handler_client(msg_handle* msg_handle, conn_id_t conn_id, msg_header* he
     return 0;
 }
 void* client_thread_func(void* arg) {
+    EXPECT_EQ(NULL, arg);
+
     int64_t log_id = pthread_self();
-    msg_handle* handle = start_messager(&msg_handler_client, log_id);
+    msg_handle* handle = start_messager(&msg_handler_client, NULL, log_id);
     EXPECT_NE((msg_handle*)NULL, handle);
     
     msg_write_obj_req *req = get_msg_write_obj_req();

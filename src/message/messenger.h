@@ -35,7 +35,8 @@ typedef int8_t messenger_op_t;
 typedef struct msg_handle_ msg_handle_;
 struct msg_handle_ {
     int log_id;
-    int (*msg_process)(struct msg_handle_*, conn_id_t, msg_header*);
+    int (*msg_process)(struct msg_handle_*, conn_id_t, msg_header*, void*);
+    int *context;
 
     int epoll_fd;
     int thread_count;
@@ -49,9 +50,9 @@ struct msg_handle_ {
 };
 
 typedef msg_handle_ msg_handle;
-typedef int (*msg_handler)(msg_handle*, conn_id_t, msg_header*);
+typedef int (*msg_handler)(msg_handle*, conn_id_t, msg_header*, void*);
 
-extern msg_handle* start_messager(msg_handler msg_handler, int64_t log_id);
+extern msg_handle* start_messager(msg_handler msg_handler, void* context, int64_t log_id);
 extern int stop_messager(msg_handle* handle, int64_t log_id);
 extern int destory_msg_handle(msg_handle** handle, int64_t log_id);
 
@@ -66,8 +67,8 @@ extern int close_conn(msg_handle* handle, conn_id_t id, int64_t log_id);
 extern int send_msg(msg_handle* handle, conn_id_t conn_id, msg_header* msg, int64_t log_id);
 
 //for test
-extern msg_handle* TEST_new_msg_handle(msg_handler msg_handler, int64_t log_id);
+extern msg_handle* TEST_new_msg_handle(msg_handler msg_handler, void* context, int64_t log_id);
 extern connection* TEST_get_conn_by_id(msg_handle* handle, int id);
 extern connection* TEST_get_conn_by_fd(msg_handle* handle, int fd);
-extern connection* TEST_get_conn_by_host_and_port(msg_handle* handle, char* host, int port);
+extern connection* TEST_get_conn_by_host_and_port(msg_handle* handle, const char* host, int port);
 #endif

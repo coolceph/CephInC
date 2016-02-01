@@ -51,7 +51,7 @@ static connection* get_conn_by_fd(msg_handle* handle, int fd) {
     return result;
 }
 //caller must has handle->conn_list_lock
-static connection* get_conn_by_host_and_port(msg_handle* handle, char* host, int port) {
+static connection* get_conn_by_host_and_port(msg_handle* handle, const char* host, int port) {
     struct list_head *pos;
     connection *conn = NULL;
     connection *result = NULL;
@@ -289,17 +289,18 @@ static void* start_epoll(void* arg) {
 
         //Process the msg
         //the log id will not be passed, while the msg->log_id will be used
-        handle->msg_process(handle, conn_id, msg);
+        handle->msg_process(handle, conn_id, msg, handle->context);
     }
 
     return NULL;
 }
 
-static msg_handle* new_msg_handle(msg_handler msg_handler, int64_t log_id) {
+static msg_handle* new_msg_handle(msg_handler msg_handler, void* context, int64_t log_id) {
     msg_handle* handle = (msg_handle*)malloc(sizeof(msg_handle));
     handle->epoll_fd = -1;
     handle->log_id = log_id;
     handle->msg_process = msg_handler;
+    handle->context = context;
     handle->thread_count = 2; //TODO: we need a opinion
     handle->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * handle->thread_count);
     atomic_set64(&handle->next_conn_id, 1);
@@ -332,9 +333,9 @@ static msg_handle* new_msg_handle(msg_handler msg_handler, int64_t log_id) {
     return handle;
 }
 
-extern msg_handle* start_messager(msg_handler msg_handler, int64_t log_id) {
+extern msg_handle* start_messager(msg_handler msg_handler, void* context,int64_t log_id) {
 
-    msg_handle* handle = new_msg_handle(msg_handler, log_id);
+    msg_handle* handle = new_msg_handle(msg_handler, context, log_id);
     if (handle == NULL) {
         LOG(LL_FATAL, log_id, "new_msg_handle failed");
         return NULL;
@@ -484,8 +485,8 @@ extern int send_msg(msg_handle* handle, conn_id_t conn_id, msg_header* msg, int6
     return 0;
 }
 
-extern msg_handle* TEST_new_msg_handle(msg_handler msg_handler, int64_t log_id) {
-    return new_msg_handle(msg_handler, log_id);
+extern msg_handle* TEST_new_msg_handle(msg_handler msg_handler, void* context, int64_t log_id) {
+    return new_msg_handle(msg_handler, context, log_id);
 }
 
 extern connection* TEST_get_conn_by_id(msg_handle* handle, int id) {
@@ -494,6 +495,6 @@ extern connection* TEST_get_conn_by_id(msg_handle* handle, int id) {
 extern connection* TEST_get_conn_by_fd(msg_handle* handle, int fd) {
     return get_conn_by_fd(handle, fd);
 }
-extern connection* TEST_get_conn_by_host_and_port(msg_handle* handle, char* host, int port) {
+extern connection* TEST_get_conn_by_host_and_port(msg_handle* handle, const char* host, int port) {
     return get_conn_by_host_and_port(handle, host, port);
 }

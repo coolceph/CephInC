@@ -119,9 +119,10 @@ static void do_req_write(msg_write_obj_req* req) {
     free(req);
 }
 
-static int process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message) {
+static int process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message, void* context) {
     int64_t log_id = message->log_id;
     assert(log_id, msg_handle != NULL); //to avoid unused param warning, will removed later
+    assert(log_id, context == NULL); //to avoid unused param warning, will removed later
     LOG(LL_NOTICE, log_id, "Begin to process msg from conn %ld", conn_id);
 
     assert(log_id, message->op == CCEPH_MSG_OP_WRITE);
@@ -201,7 +202,7 @@ int main(int argc, char *argv[]) {
     int32_t log_prefix = 201;
     initial_log_id(log_prefix);
 
-    msg_handle* msg_handle = start_messager(&process_message, new_log_id());
+    msg_handle* msg_handle = start_messager(&process_message, NULL, new_log_id());
     start_server(port, msg_handle, new_log_id());
     return 0;
 }
