@@ -416,13 +416,12 @@ TEST(message_messenger, send_and_recv) {
 
 
 //TEST: send_and_recv_with_messenger_client
-int MOCK_client_thread_msg_handler_call_count = 0;
 int msg_handler_client(msg_handle* handle, conn_id_t conn_id, msg_header* header, void* context) {
-    MOCK_client_thread_msg_handler_call_count++;
-
-    EXPECT_EQ(NULL, context);
+    EXPECT_NE((void*)NULL, context);
     EXPECT_NE((msg_handle*)NULL, handle);
     EXPECT_TRUE(conn_id > 0);
+
+    *((int*)context) += 1;
 
     msg_write_obj_ack *ack = (msg_write_obj_ack*)header;
     expect_msg_write_obj_ack(ack);
@@ -434,8 +433,9 @@ int msg_handler_client(msg_handle* handle, conn_id_t conn_id, msg_header* header
 void* client_thread_func(void* arg) {
     EXPECT_EQ(NULL, arg);
 
+    int called_count = 0;
     int64_t log_id = pthread_self();
-    msg_handle* handle = start_messager(&msg_handler_client, NULL, log_id);
+    msg_handle* handle = start_messager(&msg_handler_client, &called_count, log_id);
     EXPECT_NE((msg_handle*)NULL, handle);
     
     msg_write_obj_req *req = get_msg_write_obj_req();
@@ -449,10 +449,10 @@ void* client_thread_func(void* arg) {
         ret = send_msg(handle, conn_id1, (msg_header*)req, log_id);
         EXPECT_EQ(0, ret);
     }
-    while (MOCK_client_thread_msg_handler_call_count < count) ;
+    while (called_count < count) ;
 
     //Send msg from the same conn
-    MOCK_client_thread_msg_handler_call_count = 0;
+    called_count = 0;
     conn_id_t conn_id2 = get_conn(handle, "127.0.0.1", 9001, log_id);
     EXPECT_TRUE(conn_id2 > 0);
     EXPECT_EQ(conn_id1, conn_id2);
@@ -460,7 +460,7 @@ void* client_thread_func(void* arg) {
         ret = send_msg(handle, conn_id2, (msg_header*)req, log_id);
         EXPECT_EQ(0, ret);
     }
-    while (MOCK_client_thread_msg_handler_call_count < count) ;
+    while (called_count < count) ;
 
     ret = close_conn(handle, conn_id1, log_id);
     EXPECT_EQ(0, ret);
@@ -470,7 +470,7 @@ void* client_thread_func(void* arg) {
     //Send msg by many conn
     count = 10;
     for (int i = 0; i < count; i++) {
-        MOCK_client_thread_msg_handler_call_count = 0;
+        called_count = 0;
 
         conn_id_t conn_id = get_conn(handle, "127.0.0.1", 9001, log_id);
         EXPECT_TRUE(conn_id > 0);
@@ -478,7 +478,7 @@ void* client_thread_func(void* arg) {
         ret = send_msg(handle, conn_id, (msg_header*)req, log_id);
         EXPECT_EQ(0, ret);
 
-        while (MOCK_client_thread_msg_handler_call_count < 1) ;
+        while (called_count < 1) ;
         ret = close_conn(handle, conn_id, log_id);
         EXPECT_EQ(0, ret);
     }
@@ -491,7 +491,7 @@ TEST(message_messenger, send_and_recv_with_messenger_client) {
     msg_handle* handle = start_listen_thread(9001, log_id);
 
     //Strat Client Thread
-    int thread_count = 1;
+    int thread_count = 16;
     pthread_attr_t thread_attr;
     pthread_attr_init(&thread_attr);
     pthread_t client_thread_ids[thread_count];

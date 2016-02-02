@@ -103,7 +103,7 @@ static msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int fd, i
     msg_header header;
     int ret = recv_msg_header(fd, &header, log_id);
     if (ret == CCEPH_ERR_CONN_CLOSED) {
-        LOG(LL_NOTICE, log_id, "Read msg_header from conn_id %ld error, conn closed", conn_id);
+        LOG(LL_NOTICE, log_id, "Read msg_header from conn_id %ld failed, conn closed", conn_id);
         close_conn(handle, conn_id, log_id);
         return NULL;
     } else if (ret != 0) {
@@ -269,7 +269,7 @@ static void* start_epoll(void* arg) {
         log_id = new_log_id(); //new message, new log_id, just for read process
         msg_header* msg = read_message(handle, conn_id, fd, log_id);
         if (msg == NULL) {
-            LOG(LL_ERROR, log_id, "Read message from conn %ld, fd %d error.", conn_id, fd);
+            LOG(LL_NOTICE, log_id, "Read message from conn %ld, fd %d failed, conn may closed.", conn_id, fd);
             continue;
         } else {
             LOG(LL_INFO, log_id, "Msg read from conn %ld, fd %d, op %s(%d), log_id %ld", 
