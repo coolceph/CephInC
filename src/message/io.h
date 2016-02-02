@@ -20,19 +20,19 @@ if (ret < 0) {                                                              \
 #define CCEPH_RECV_FIELD(name, type, value)                                 \
 ret = recv_##type(fd, value, log_id);                                       \
 if (ret < 0) {                                                              \
-    LOG(LL_ERROR, log_id, "Recv #name error, fd %d, errno %d.", fd, ret);   \
+    LOG(LL_ERROR, log_id, "Recv "#name" error, fd %d, errno %d.", fd, ret);   \
     return ret;                                                             \
 }
 #define CCEPH_RECV_STRING_FIELD(name, length, value)                        \
 ret = recv_string(fd, length, value, log_id);                               \
 if (ret < 0) {                                                              \
-    LOG(LL_ERROR, log_id, "Recv #name error, fd %d, errno %d.", fd, ret);   \
+    LOG(LL_ERROR, log_id, "Recv "#name" error, fd %d, errno %d.", fd, ret);   \
     return ret;                                                             \
 }
 #define CCEPH_RECV_DATA_FIELD(name, length, value)                          \
 ret = recv_data(fd, length, value, log_id);                                 \
 if (ret < 0) {                                                              \
-    LOG(LL_ERROR, log_id, "Recv #name error, fd %d, errno %d.", fd, ret);   \
+    LOG(LL_ERROR, log_id, "Recv "#name" error, fd %d, errno %d.", fd, ret);   \
     return ret;                                                             \
 }
 
