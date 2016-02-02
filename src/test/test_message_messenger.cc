@@ -312,9 +312,8 @@ msg_handle* start_listen_thread(int port, int log_id) {
 }
 
 //TEST: send_and_recv
-pthread_mutex_t client_io_lock;
-void TEST_send_msg_write_obj_req(int fd, int64_t log_id) {
-    pthread_mutex_lock(&client_io_lock);
+void TEST_send_msg_write_obj_req(int fd, pthread_mutex_t *lock, int64_t log_id) {
+    pthread_mutex_lock(lock);
     
     msg_write_obj_req *req = get_msg_write_obj_req();
 
@@ -324,11 +323,11 @@ void TEST_send_msg_write_obj_req(int fd, int64_t log_id) {
     EXPECT_EQ(0, ret);
 
     EXPECT_EQ(0, free_msg_write_obj_req(&req, log_id));
-    pthread_mutex_unlock(&client_io_lock);
+    pthread_mutex_unlock(lock);
 }
 
-void TEST_recv_msg_write_obj_ack(int fd, int64_t log_id) {
-    pthread_mutex_lock(&client_io_lock);
+void TEST_recv_msg_write_obj_ack(int fd, pthread_mutex_t *lock, int64_t log_id) {
+    pthread_mutex_lock(lock);
     msg_write_obj_ack *ack = malloc_msg_write_obj_ack();
 
     int ret = recv_msg_header(fd, &ack->header, log_id);
@@ -340,28 +339,30 @@ void TEST_recv_msg_write_obj_ack(int fd, int64_t log_id) {
 
     ret = free_msg_write_obj_ack(&ack, log_id);
     EXPECT_EQ(0, ret);
-    pthread_mutex_unlock(&client_io_lock);
+    pthread_mutex_unlock(lock);
 }
 
 typedef struct {
     int fd;
     int count;
+    pthread_mutex_t lock;
 } send_and_recv_msg_arg;
-void* TEST_send_and_recv_msg(void* arg_ptr) {
+void* send_and_recv_msg(void* arg_ptr) {
     send_and_recv_msg_arg *arg = (send_and_recv_msg_arg*)arg_ptr;
     int fd = arg->fd;
     int count = arg->count;;
+    pthread_mutex_t *lock = &arg->lock;
     int64_t log_id = 124;
 
     for(int i = 0; i < count; i++) {
-        TEST_send_msg_write_obj_req(fd, log_id);
-        TEST_recv_msg_write_obj_ack(fd, log_id);
+        TEST_send_msg_write_obj_req(fd, lock, log_id);
+        TEST_recv_msg_write_obj_ack(fd, lock, log_id);
     }
     for(int i = 0; i < count; i++) {
-        TEST_send_msg_write_obj_req(fd, log_id);
-        TEST_send_msg_write_obj_req(fd, log_id);
-        TEST_recv_msg_write_obj_ack(fd, log_id);
-        TEST_recv_msg_write_obj_ack(fd, log_id);
+        TEST_send_msg_write_obj_req(fd, lock, log_id);
+        TEST_send_msg_write_obj_req(fd, lock, log_id);
+        TEST_recv_msg_write_obj_ack(fd, lock, log_id);
+        TEST_recv_msg_write_obj_ack(fd, lock, log_id);
     }
     return NULL;
 }
@@ -387,18 +388,18 @@ TEST(message_messenger, send_and_recv) {
     send_and_recv_msg_arg send_and_recv_msg_arg;
     send_and_recv_msg_arg.fd = fd;
     send_and_recv_msg_arg.count = 10;
+    pthread_mutex_init(&(send_and_recv_msg_arg.lock), NULL);
 
     //Single Thread
-    TEST_send_and_recv_msg(&send_and_recv_msg_arg);
+    send_and_recv_msg(&send_and_recv_msg_arg);
 
     //Multi Thread
     int thread_count = 16;
-    pthread_mutex_init(&client_io_lock, NULL);
     pthread_t client_thread_ids[thread_count];
     pthread_attr_t thread_attr;
     pthread_attr_init(&thread_attr);
     for (int i = 0; i < thread_count; i++) {
-        ret = pthread_create(client_thread_ids + i, &thread_attr, &TEST_send_and_recv_msg, &send_and_recv_msg_arg);
+        ret = pthread_create(client_thread_ids + i, &thread_attr, &send_and_recv_msg, &send_and_recv_msg_arg);
         EXPECT_EQ(0, ret);
     }
     for (int i = 0; i < thread_count; i++) {
