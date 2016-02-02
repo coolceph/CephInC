@@ -295,7 +295,7 @@ static void* start_epoll(void* arg) {
     return NULL;
 }
 
-static msg_handle* new_msg_handle(msg_handler msg_handler, void* context, int64_t log_id) {
+extern msg_handle* new_msg_handle(msg_handler msg_handler, void* context, int64_t log_id) {
     msg_handle* handle = (msg_handle*)malloc(sizeof(msg_handle));
     handle->epoll_fd = -1;
     handle->log_id = log_id;
@@ -333,29 +333,29 @@ static msg_handle* new_msg_handle(msg_handler msg_handler, void* context, int64_
     return handle;
 }
 
-extern msg_handle* start_messager(msg_handler msg_handler, void* context,int64_t log_id) {
-
-    msg_handle* handle = new_msg_handle(msg_handler, context, log_id);
-    if (handle == NULL) {
-        LOG(LL_FATAL, log_id, "new_msg_handle failed");
-        return NULL;
-    }
+extern int start_messager(msg_handle* handle, int64_t log_id) {
 
     //add the wake_thread_pipe_fd to epoll set
-    new_conn(handle, "wake_thread_pipe", 0, handle->wake_thread_pipe_fd[1], log_id);
+    int ret = new_conn(handle, "wake_thread_pipe", 0, handle->wake_thread_pipe_fd[1], log_id);
+    if (ret < 0) {
+        LOG(LL_FATAL, log_id, "Add wake_thread_pipe to msg_handle error %d", ret);
+        return ret;
+    }
+
 
     //run start_epoll by thread pool
     pthread_attr_t thread_attr;
     pthread_attr_init(&thread_attr);
-    int i = 0; for (i = 0; i < handle->thread_count; i++) {
-        int ret = pthread_create(handle->thread_ids + i, &thread_attr, &start_epoll, handle);
+    int i = 0; 
+    for (i = 0; i < handle->thread_count; i++) {
+        ret = pthread_create(handle->thread_ids + i, &thread_attr, &start_epoll, handle);
         if (ret < 0) {
             LOG(LL_FATAL, log_id, "create start_epoll thread error: %d", ret);
-            abort();
+            return ret;
         }
     }
     
-    return handle;
+    return 0;
 }
 extern int stop_messager(msg_handle* handle, int64_t log_id) {
     int i = 0, ret = 0;
@@ -483,10 +483,6 @@ extern int send_msg(msg_handle* handle, conn_id_t conn_id, msg_header* msg, int6
 
     pthread_mutex_unlock(&conn->lock);
     return 0;
-}
-
-extern msg_handle* TEST_new_msg_handle(msg_handler msg_handler, void* context, int64_t log_id) {
-    return new_msg_handle(msg_handler, context, log_id);
 }
 
 extern connection* TEST_get_conn_by_id(msg_handle* handle, int id) {

@@ -202,7 +202,11 @@ int main(int argc, char *argv[]) {
     int32_t log_prefix = 201;
     initial_log_id(log_prefix);
 
-    msg_handle* msg_handle = start_messager(&process_message, NULL, new_log_id());
+
+    int64_t log_id = new_log_id();
+    msg_handle* msg_handle = new_msg_handle(&process_message, NULL, log_id);
+    start_messager(msg_handle, log_id);
+
     start_server(port, msg_handle, new_log_id());
     return 0;
 }
