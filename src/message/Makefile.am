@@ -1,7 +1,8 @@
-libmessage_la_SOURCES =     \
-	message/io.c            \
-	message/messenger.c     \
-	message/msg_header.c    \
+libmessage_la_SOURCES =     	  \
+	message/io.c           		  \
+	message/messenger.c   		  \
+	message/server_messenger.c    \
+	message/msg_header.c    	  \
 	message/msg_write_obj.c
 
 libmessage_la_ADLDD = \
