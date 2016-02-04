@@ -2,25 +2,12 @@
 CCeph - a pure c version of ceph
 ============================================
 
-Architecture
-------------
-
-1.Pure C, No STL, No Boost.
-
-2.No complex dependency between components
-
-3.High Performance is the most important issue (for SATA/PCIe SSD)
-
-4.Better Balanced ALG Impl
-
-
 RADOS
 -----------
 
-1.EC
+1.NWR Supported
 
-2.NWR Supported (PG Log is best for NWR) -> Degerde WRITE
-
+2.EC
 
 
 FS
@@ -55,3 +42,13 @@ Operations
 ----------
 
 1.Intergreted with IT/Cloud System
+
+
+Implementation
+------------
+
+1.Pure C, No STL, No Boost.
+
+3.High Performance (Design for SATA/PCIe SSD)
+
+4.Better and Configable Balanced ALG Impl
