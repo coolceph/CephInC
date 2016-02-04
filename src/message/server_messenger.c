@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <strings.h>
 
+#include "common/assert.h"
 #include "common/log.h"
 
 extern server_msg_handle* new_server_msg_handle(
