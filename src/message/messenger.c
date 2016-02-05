@@ -254,7 +254,7 @@ static void* start_epoll(void* arg) {
             continue;
         }
 
-        if (fd == handle->wake_thread_pipe_fd[1]) {
+        if (fd == handle->wake_thread_pipe_fd[0]) {
             LOG(LL_INFO, log_id, "thread is wake up by wake_up_pipe, thread_id: %lu", pthread_self());
             messenger_op_t op;
             int ret = read(fd, &op, sizeof(op));
@@ -336,12 +336,11 @@ extern msg_handle* new_msg_handle(msg_handler msg_handler, void* context, int64_
 extern int start_messager(msg_handle* handle, int64_t log_id) {
 
     //add the wake_thread_pipe_fd to epoll set
-    int ret = new_conn(handle, "wake_thread_pipe", 0, handle->wake_thread_pipe_fd[1], log_id);
+    int ret = new_conn(handle, "wake_thread_pipe", 0, handle->wake_thread_pipe_fd[0], log_id);
     if (ret < 0) {
         LOG(LL_FATAL, log_id, "Add wake_thread_pipe to msg_handle error %d", ret);
         return ret;
     }
-
 
     //run start_epoll by thread pool
     pthread_attr_t thread_attr;
@@ -363,6 +362,10 @@ extern int stop_messager(msg_handle* handle, int64_t log_id) {
     for (i = 0; i < handle->thread_count; i++) {
         ret = write(handle->wake_thread_pipe_fd[1], &op, sizeof(op));
         assert(log_id, ret == sizeof(op));
+    }
+    for (i = 0; i < handle->thread_count; i++) {
+        ret = pthread_join(*(handle->thread_ids + i), NULL);
+        assert(log_id, ret == 0);
     }
     return 0;
 }
