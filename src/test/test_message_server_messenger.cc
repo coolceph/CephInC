@@ -16,4 +16,6 @@ TEST(server_messenger, new_server_msg_handle) {
     EXPECT_EQ(&msg_handle, handle->msg_handle);
     EXPECT_EQ(port, handle->port);
     EXPECT_EQ(log_id, handle->log_id);
+
+    EXPECT_EQ(&msg_handle, get_msg_handle(handle));
 }
