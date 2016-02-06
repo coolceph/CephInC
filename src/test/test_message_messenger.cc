@@ -1,16 +1,25 @@
 extern "C" {
 #include "include/errno.h"
+#include "common/log.h"
 #include "message/messenger.h"
 #include "message/msg_write_obj.h"
 }
 
 #include <arpa/inet.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/epoll.h>
+#include <errno.h>
+#include <inttypes.h>
 #include <pthread.h>
 
 #include "bhook.h"
@@ -281,16 +290,32 @@ void* listen_thread_func(void* arg_ptr){
     }
 
     //have connect request use accept
-    struct sockaddr_in their_addr;
+    struct sockaddr their_addr;
     socklen_t len = sizeof(their_addr);
+    char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
     while(true) {
-        int com_fd = accept(listen_fd, (struct sockaddr*)&their_addr, &len);
+        int com_fd = accept(listen_fd, &their_addr, &len);
         EXPECT_TRUE(com_fd > 0);
         if (com_fd <= 0) {
             break;
         }
 
-        new_conn(handle, (char*)"TestSocket", port, com_fd, 122);
+        ret = getnameinfo(&their_addr, len,
+                          hbuf, sizeof(hbuf), sbuf, sizeof(sbuf),
+                          NI_NUMERICHOST | NI_NUMERICSERV);
+        if (ret == 0) {
+            LOG(LL_INFO, log_id, "Accepted connection on descriptor %d "
+                                 "(host=%s, port=%s).", com_fd, hbuf, sbuf);
+        } else {
+            LOG(LL_ERROR, log_id, "Accepted connection on descriptor %d,"
+                                  "But getnameinfo failed %d", com_fd, ret);
+        }
+
+        conn_id_t conn_id = new_conn(handle, hbuf, atoi(sbuf), com_fd, log_id);
+        if (conn_id < 0) {
+            LOG(LL_ERROR, log_id, "Call new_conn failed, fd %d.", com_fd);
+            break;
+        }
     }
     return NULL;
 }
