@@ -2,6 +2,7 @@ extern "C" {
 #include "include/errno.h"
 #include "common/log.h"
 #include "message/messenger.h"
+#include "message/server_messenger.h"
 #include "message/msg_write_obj.h"
 }
 
@@ -459,8 +460,9 @@ int msg_handler_client(msg_handle* handle, conn_id_t conn_id, msg_header* header
     return 0;
 }
 void* client_thread_func(void* arg) {
-    EXPECT_EQ(NULL, arg);
+    EXPECT_NE((void*)NULL, arg);
 
+    int port = *((int*)arg);
     int called_count = 0;
     int64_t log_id = pthread_self();
 
@@ -473,7 +475,7 @@ void* client_thread_func(void* arg) {
     msg_write_obj_req *req = get_msg_write_obj_req();
 
     //Send msg by one conn;
-    conn_id_t conn_id1 = get_conn(handle, "127.0.0.1", 9001, log_id);
+    conn_id_t conn_id1 = get_conn(handle, "127.0.0.1", port, log_id);
     EXPECT_TRUE(conn_id1 > 0);
     int count = 10;
     for (int i = 0; i < count; i++) {
@@ -484,7 +486,7 @@ void* client_thread_func(void* arg) {
 
     //Send msg from the same conn
     called_count = 0;
-    conn_id_t conn_id2 = get_conn(handle, "127.0.0.1", 9001, log_id);
+    conn_id_t conn_id2 = get_conn(handle, "127.0.0.1", port, log_id);
     EXPECT_TRUE(conn_id2 > 0);
     EXPECT_EQ(conn_id1, conn_id2);
     for (int i = 0; i < count; i++) {
@@ -503,7 +505,7 @@ void* client_thread_func(void* arg) {
     for (int i = 0; i < count; i++) {
         called_count = 0;
 
-        conn_id_t conn_id = get_conn(handle, "127.0.0.1", 9001, log_id);
+        conn_id_t conn_id = get_conn(handle, "127.0.0.1", port, log_id);
         EXPECT_TRUE(conn_id > 0);
 
         ret = send_msg(handle, conn_id, (msg_header*)req, log_id);
@@ -519,7 +521,8 @@ void* client_thread_func(void* arg) {
 }
 TEST(message_messenger, send_and_recv_with_messenger_client) {
     int64_t log_id = 122;
-    msg_handle* handle = start_listen_thread(9001, log_id);
+    int port = 9001;
+    msg_handle* handle = start_listen_thread(port, log_id);
 
     //Strat Client Thread
     int thread_count = 16;
@@ -527,13 +530,70 @@ TEST(message_messenger, send_and_recv_with_messenger_client) {
     pthread_attr_init(&thread_attr);
     pthread_t client_thread_ids[thread_count];
     for (int i = 0; i < thread_count; i++) {
-        int ret = pthread_create(client_thread_ids + i, &thread_attr, &client_thread_func, NULL);
+        int ret = pthread_create(client_thread_ids + i, &thread_attr, &client_thread_func, &port);
         EXPECT_EQ(0, ret);
     }
     for (int i = 0; i < thread_count; i++) {
         pthread_join(*(client_thread_ids + i), NULL);
     }
 
+    int ret = stop_messager(handle, log_id);
+    EXPECT_EQ(0, ret);
+
+    ret = destory_msg_handle(&handle, log_id);
+    EXPECT_EQ(0, ret);
+    EXPECT_EQ(NULL, handle);
+}
+
+//TEST: use server_messenger as server
+void* server_messenger_thread_func(void* arg_ptr){
+    int log_id = 123;
+    listen_thread_arg* arg = (listen_thread_arg*)arg_ptr;
+    msg_handle* handle = arg->handle;
+    int port = arg->port;
+
+    server_msg_handle *server_msg_handle = new_server_msg_handle(handle, port, log_id);
+    int ret = start_server_messenger(server_msg_handle, log_id);
+    EXPECT_EQ(0, ret);
+
+    return NULL;
+}
+msg_handle* start_server_messager_thread(int port, int log_id) {
+    msg_handle* handle = new_msg_handle(&msg_handler_server, NULL, log_id);
+    EXPECT_NE((msg_handle*)NULL, handle);
+
+    listen_thread_arg listen_thread_arg;
+    listen_thread_arg.handle = handle;
+    listen_thread_arg.port = port;
+    pthread_attr_t thread_attr;
+    pthread_attr_init(&thread_attr);
+    pthread_t server_thread_id;
+
+    int ret = pthread_create(&server_thread_id, &thread_attr, &server_messenger_thread_func, &listen_thread_arg);
+    EXPECT_EQ(0, ret);
+    sleep(1); //for listen thread;
+
+    return handle;
+}
+TEST(server_messenger, start_server_messager) {
+    int64_t log_id = 122;
+    int port = 9002;
+    msg_handle* handle = start_listen_thread(port, log_id);
+
+    //Strat Client Thread
+    int thread_count = 16;
+    pthread_attr_t thread_attr;
+    pthread_attr_init(&thread_attr);
+    pthread_t client_thread_ids[thread_count];
+    for (int i = 0; i < thread_count; i++) {
+        int ret = pthread_create(client_thread_ids + i, &thread_attr, &client_thread_func, &port);
+        EXPECT_EQ(0, ret);
+    }
+    for (int i = 0; i < thread_count; i++) {
+        pthread_join(*(client_thread_ids + i), NULL);
+    }
+
+    //TODO: stop server_messenger not messenger
     int ret = stop_messager(handle, log_id);
     EXPECT_EQ(0, ret);
 

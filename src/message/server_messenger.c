@@ -108,7 +108,7 @@ extern int start_server_messenger(server_msg_handle *handle, int64_t log_id) {
         return ret;
     }
 
-    ret = bind_and_listen(handle->port, log_id);
+    ret = bind_and_listen(handle, log_id);
     ret = stop_messager(handle->msg_handle, log_id);
 
     return ret;
