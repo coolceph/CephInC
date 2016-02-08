@@ -369,7 +369,7 @@ extern int stop_messager(msg_handle* handle, int64_t log_id) {
     }
     return 0;
 }
-extern int destory_msg_handle(msg_handle** handle, int64_t log_id) {
+extern int free_msg_handle(msg_handle** handle, int64_t log_id) {
     assert(log_id, *handle != NULL);
     assert(log_id, (*handle)->thread_ids != NULL);
 

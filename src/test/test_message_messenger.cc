@@ -438,7 +438,7 @@ TEST(message_messenger, send_and_recv) {
     ret = stop_messager(handle, log_id);
     EXPECT_EQ(0, ret);
 
-    ret = destory_msg_handle(&handle, log_id);
+    ret = free_msg_handle(&handle, log_id);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(NULL, handle);
 }
@@ -540,7 +540,7 @@ TEST(message_messenger, send_and_recv_with_messenger_client) {
     int ret = stop_messager(handle, log_id);
     EXPECT_EQ(0, ret);
 
-    ret = destory_msg_handle(&handle, log_id);
+    ret = free_msg_handle(&handle, log_id);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(NULL, handle);
 }
@@ -578,7 +578,7 @@ msg_handle* start_server_messager_thread(int port, int log_id) {
 TEST(server_messenger, start_server_messager) {
     int64_t log_id = 122;
     int port = 9002;
-    msg_handle* handle = start_listen_thread(port, log_id);
+    msg_handle* handle = start_server_messager_thread(port, log_id);
 
     //Strat Client Thread
     int thread_count = 16;
@@ -597,7 +597,7 @@ TEST(server_messenger, start_server_messager) {
     int ret = stop_messager(handle, log_id);
     EXPECT_EQ(0, ret);
 
-    ret = destory_msg_handle(&handle, log_id);
+    ret = free_msg_handle(&handle, log_id);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(NULL, handle);
 }

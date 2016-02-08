@@ -53,7 +53,7 @@ typedef msg_handle_ msg_handle;
 typedef int (*msg_handler)(msg_handle*, conn_id_t, msg_header*, void*);
 
 extern msg_handle* new_msg_handle(msg_handler msg_handler, void* context, int64_t log_id);
-extern int destory_msg_handle(msg_handle** handle, int64_t log_id);
+extern int free_msg_handle(msg_handle** handle, int64_t log_id);
 
 extern int start_messager(msg_handle* msg_handle, int64_t log_id);
 extern int stop_messager(msg_handle* handle, int64_t log_id);

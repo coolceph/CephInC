@@ -34,6 +34,14 @@ extern server_msg_handle* new_server_msg_handle(
     handle->log_id = log_id;
     return handle;
 }
+extern int free_server_msg_handle(server_msg_handle** handle, int64_t log_id) {
+    assert(log_id, *handle != NULL);
+
+    free(*handle);
+    *handle = NULL;
+
+    return 0;
+}
 
 static int bind_and_listen(server_msg_handle *handle, int64_t log_id) {
     msg_handle* msg_handle = handle->msg_handle;
