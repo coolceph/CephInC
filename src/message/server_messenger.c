@@ -122,6 +122,8 @@ extern int start_server_messenger(server_msg_handle *handle, int64_t log_id) {
     return ret;
 }
 extern int stop_server_messenger(server_msg_handle *handle, int64_t log_id) {
+    //TODO: Do we actually need it?
+    assert(log_id, handle != NULL);
     return 0;
 }
 

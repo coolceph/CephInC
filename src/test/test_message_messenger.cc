@@ -558,32 +558,25 @@ void* server_messenger_thread_func(void* arg_ptr){
 
     return NULL;
 }
-msg_handle* start_server_messager_thread(int port, int log_id) {
+TEST(server_messenger, start_server_messager) {
+    int64_t log_id = 122;
+    int port = 9002;
     msg_handle* handle = new_msg_handle(&msg_handler_server, NULL, log_id);
     EXPECT_NE((msg_handle*)NULL, handle);
 
+    pthread_attr_t thread_attr;
+    pthread_attr_init(&thread_attr);
+    //Start Server Thread
+    pthread_t server_thread_id;
     listen_thread_arg listen_thread_arg;
     listen_thread_arg.handle = handle;
     listen_thread_arg.port = port;
-    pthread_attr_t thread_attr;
-    pthread_attr_init(&thread_attr);
-    pthread_t server_thread_id;
-
     int ret = pthread_create(&server_thread_id, &thread_attr, &server_messenger_thread_func, &listen_thread_arg);
     EXPECT_EQ(0, ret);
     sleep(1); //for listen thread;
 
-    return handle;
-}
-TEST(server_messenger, start_server_messager) {
-    int64_t log_id = 122;
-    int port = 9002;
-    msg_handle* handle = start_server_messager_thread(port, log_id);
-
     //Strat Client Thread
     int thread_count = 16;
-    pthread_attr_t thread_attr;
-    pthread_attr_init(&thread_attr);
     pthread_t client_thread_ids[thread_count];
     for (int i = 0; i < thread_count; i++) {
         int ret = pthread_create(client_thread_ids + i, &thread_attr, &client_thread_func, &port);
@@ -594,7 +587,7 @@ TEST(server_messenger, start_server_messager) {
     }
 
     //TODO: stop server_messenger not messenger
-    int ret = stop_messager(handle, log_id);
+    ret = stop_messager(handle, log_id);
     EXPECT_EQ(0, ret);
 
     ret = free_msg_handle(&handle, log_id);
