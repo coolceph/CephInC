@@ -9,8 +9,10 @@
 #include <errno.h>
 #include <inttypes.h>
 
-#include "common/log.h"
+#include "include/errno.h"
+
 #include "common/assert.h"
+#include "common/log.h"
 
 #include "message/io.h"
 #include "message/messenger.h"
@@ -18,7 +20,12 @@
 #include "message/msg_header.h"
 #include "message/msg_write_obj.h"
 
-static void do_req_write(msg_write_obj_req* req) {
+static int do_req_write(msg_write_obj_req* req) {
+    int64_t log_id = req->header.log_id;
+
+    LOG(LL_INFO, log_id, "req_write, oid: %s, offset: %lu, length: %lu",
+           req->oid, req->offset, req->length);
+
     char data_dir[] = "./data";
     int max_path_length = 4096;
 
@@ -33,24 +40,39 @@ static void do_req_write(msg_write_obj_req* req) {
     pwrite(oid_fd, req->data, req->length, req->offset);
     close(oid_fd);
 
+    //TODO: reply to the client
     free(req->oid);
     free(req->data);
     free(req);
+
+    return 0;
 }
 
 static int process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message, void* context) {
     int64_t log_id = message->log_id;
-    assert(log_id, msg_handle != NULL); //to avoid unused param warning, will removed later
-    assert(log_id, context == NULL); //to avoid unused param warning, will removed later
-    LOG(LL_NOTICE, log_id, "Begin to process msg from conn %ld", conn_id);
+    assert(log_id, msg_handle != NULL);
+    assert(log_id, message != NULL);
+    assert(log_id, context == NULL);
 
-    assert(log_id, message->op == CCEPH_MSG_OP_WRITE);
-    msg_write_obj_req *req = (msg_write_obj_req*)message;
-    LOG(LL_INFO, log_id, "req_write, oid: %s, offset: %lu, length: %lu",
-           req->oid, req->offset, req->length);
+    int8_t op = message->op;
+    LOG(LL_NOTICE, log_id, "Porcess message msg from conn %ld, op %d", conn_id, message->op);
 
-    do_req_write(req);
-    return 0;
+    int ret = 0;
+    switch (op) {
+        case CCEPH_MSG_OP_WRITE:
+            ret = do_req_write((msg_write_obj_req*)message);
+            break;
+        default:
+            ret = CCEPH_ERR_UNKNOWN_OP;
+    }
+
+    if (ret == 0) {
+        LOG(LL_NOTICE, log_id, "Porcess message msg from conn %ld, op %d success.", conn_id, op);
+    } else {
+        LOG(LL_INFO, log_id, "Porcess message msg from conn %ld, op %d failed, errno %d", conn_id, op, ret);
+    }
+
+    return ret;
 }
 
 
