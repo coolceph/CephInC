@@ -11,5 +11,4 @@ libmessage_la_ADLDD = \
 libmessage_la_LIBADD = \
 	-lpthread
 
-
 noinst_LTLIBRARIES += libmessage.la

@@ -31,5 +31,6 @@ check_SCRIPTS =
 ## library definitions and dependencies
 LIBCOMMON  = libcommon.la
 LIBMESSAGE = libmessage.la
+LIBOSD = libosd.la
 LIBCLIENT  = libclient.la
 
