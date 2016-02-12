@@ -13,30 +13,62 @@
 
 #include "message/msg_write_obj.h"
 
-static int do_req_write(msg_write_obj_req* req) {
-    int64_t log_id = req->header.log_id;
+static int io_write_object(const char* oid,
+        int64_t offset, int64_t length,
+        const char* data,
+        int64_t log_id) {
 
-    LOG(LL_INFO, log_id, "req_write, oid: %s, offset: %lu, length: %lu",
-           req->oid, req->offset, req->length);
-
+    //Get the path of obj
+    //TODO: Now we just use data dir for all objects
     char data_dir[] = "./data";
     int max_path_length = 4096;
 
     char path[max_path_length];
     memset(path, '\0', max_path_length);
-
     strcat(path, data_dir);
     strcat(path, "/");
-    strcat(path, req->oid);
+    strcat(path, oid);
 
     int oid_fd = open(path, O_RDWR | O_CREAT);
-    pwrite(oid_fd, req->data, req->length, req->offset);
-    close(oid_fd);
+    if (oid_fd < 0) {
+        LOG(LL_ERROR, log_id, "Open fd for oid %s failed, path %s, errno %d", oid, path, oid_fd);
+        return oid_fd;
+    }
+
+    int ret = pwrite(oid_fd, data, length, offset);
+    if (ret != length) {
+        LOG(LL_ERROR, log_id, "Write oid %s failed, path %s, errno %d", oid, path, ret);
+        close(oid_fd); //We don't ensure close success, just try to release the fd
+        return ret;
+    }
+
+    ret = close(oid_fd);
+    if (ret != 0) {
+        LOG(LL_ERROR, log_id, "Close fd %d for oid %s failed, path %s, errno %d", oid_fd, oid, path, ret);
+    }
+
+    return ret;
+}
+
+static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, msg_write_obj_req* req) {
+    int64_t log_id = req->header.log_id;
+
+    char* oid = req->oid;
+    char* data = req->data;
+    int64_t length = req->length;
+    int64_t offset = req->offset;
+
+    LOG(LL_INFO, log_id, "do_req_write, oid %s, offset %lu, length %lu.", oid, offset, length);
+    int ret = io_write_object(oid, offset, length, data, log_id);
+    if (ret != 0) {
+        LOG(LL_ERROR, log_id, "io_write_object failed for oid %s.", oid);
+    } else {
+        LOG(LL_INFO, log_id, "io_write_object success for oid %s.", oid);
+    }
 
     //TODO: reply to the client
-    free(req->oid);
-    free(req->data);
-    free(req);
+    ret = free_msg_write_obj_req(&req, log_id);
+    assert(log_id, ret == 0);
 
     return 0;
 }
@@ -53,7 +85,7 @@ extern int osd_process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_he
     int ret = 0;
     switch (op) {
         case CCEPH_MSG_OP_WRITE:
-            ret = do_req_write((msg_write_obj_req*)message);
+            ret = do_object_write_req(msg_handle, conn_id, (msg_write_obj_req*)message);
             break;
         default:
             ret = CCEPH_ERR_UNKNOWN_OP;
