@@ -50,6 +50,9 @@ static int io_write_object(const char* oid,
     return ret;
 }
 
+//TODO: The write process is not so simply by our design, this is just a demo
+//TODO: We should define/impl the object_store/transaction first before impl the write process
+//TODO: Aslo the client behavier should be consisent with the osd
 static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, msg_write_obj_req* req) {
     int64_t log_id = req->header.log_id;
 
@@ -57,6 +60,8 @@ static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, msg_wr
     char* data = req->data;
     int64_t length = req->length;
     int64_t offset = req->offset;
+    int32_t client_id = req->client_id;
+    int32_t req_id = req->req_id;
 
     LOG(LL_INFO, log_id, "do_req_write, oid %s, offset %lu, length %lu.", oid, offset, length);
     int ret = io_write_object(oid, offset, length, data, log_id);
@@ -66,8 +71,28 @@ static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, msg_wr
         LOG(LL_INFO, log_id, "io_write_object success for oid %s.", oid);
     }
 
-    //TODO: reply to the client
+    int result = ret == 0 ? CCEPH_WRITE_OBJ_ACK_OK : ret; //TODO: we need more CCEPH_WRITE_OBJ_ACK_*
+
+    msg_write_obj_ack* ack = malloc_msg_write_obj_ack();
+    assert(log_id, ack != NULL);
+
+    ack->header.op = CCEPH_MSG_OP_WRITE_ACK;
+    ack->header.log_id = log_id;
+    ack->client_id = client_id;
+    ack->req_id = req_id;
+    ack->result = result;
+
+    LOG(LL_INFO, log_id, "send_msg_write_obj_ack to client %d, req_id %d, result %d.", client_id, req_id, result);
+    ret = send_msg(msg_handle, conn_id, (msg_header*)ack, log_id);
+    if (ret != 0) {
+        LOG(LL_ERROR, log_id, "send_msg_write_obj_ack failed for client %d, req_id %d, errno %d.", client_id, req_id, ret);
+    } else {
+        LOG(LL_INFO, log_id, "send_msg_write_obj_ack success for client %d, req_id %d.", client_id, req_id);
+    }
+
     ret = free_msg_write_obj_req(&req, log_id);
+    assert(log_id, ret == 0);
+    ret = free_msg_write_obj_ack(&ack, log_id);
     assert(log_id, ret == 0);
 
     return 0;
