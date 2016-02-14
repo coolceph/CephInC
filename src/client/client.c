@@ -12,10 +12,35 @@
 #include "common/log.h"
 
 #include "message/io.h"
+#include "message/messenger.h"
 #include "message/msg_header.h"
 #include "message/msg_write_obj.h"
 
-int client_write_obj(osdmap* osdmap, int64_t log_id, 
+static int client_process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message, void* context) {
+    return 0;
+}
+
+extern client_handle *new_client_handle(osdmap* osdmap) {
+    int64_t log_id = 0;
+    client_handle *handle = (client_handle*)malloc(sizeof(client_handle));
+    if (handle == NULL) {
+        LOG(LL_ERROR, log_id, "Failed to malloc client_handle, maybe not enough memory.");
+        return NULL;
+    }
+
+    handle->osdmap = osdmap;
+    handle->msg_handle = new_msg_handle(&client_process_message, handle, log_id);
+    if (handle->msg_handle == NULL) {
+        LOG(LL_ERROR, log_id, "Failed to malloc client_handle->msg_handle, maybe not enough memory.");
+        free(handle);
+        handle = NULL;
+        return NULL;
+    }
+
+    return handle;
+}
+
+extern int client_write_obj(osdmap* osdmap, int64_t log_id,
                      char* oid, int64_t offset, int64_t length, char* data) {
     
     msg_write_obj_req req;
