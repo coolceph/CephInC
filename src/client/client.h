@@ -6,6 +6,10 @@
 
 #include "message/messenger.h"
 
+#define CCEPH_CLIENT_STATE_UNKNOWN  0
+#define CCEPH_CLIENT_STATE_NORMAL   1
+#define CCEPH_CLIENT_STATE_DESTORY  2
+
 typedef struct {
     char* host;
     int   port;
@@ -19,9 +23,12 @@ typedef struct {
 typedef struct {
     osdmap *osdmap;
     msg_handle *msg_handle;
+
+    int state;
 } client_handle;
 
 extern client_handle *new_client_handle(osdmap* osdmap);
+extern int init_client(client_handle *handle);
 
 extern int client_write_obj(osdmap* osdmap, int64_t log_id,
                      char* oid, int64_t offset, int64_t length, char* data);

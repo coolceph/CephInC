@@ -28,7 +28,6 @@ extern client_handle *new_client_handle(osdmap* osdmap) {
         return NULL;
     }
 
-    handle->osdmap = osdmap;
     handle->msg_handle = new_msg_handle(&client_process_message, handle, log_id);
     if (handle->msg_handle == NULL) {
         LOG(LL_ERROR, log_id, "Failed to malloc client_handle->msg_handle, maybe not enough memory.");
@@ -37,12 +36,19 @@ extern client_handle *new_client_handle(osdmap* osdmap) {
         return NULL;
     }
 
+    handle->osdmap = osdmap;
+    handle->state  = CCEPH_CLIENT_STATE_UNKNOWN;
+
     return handle;
+}
+
+extern int init_client(client_handle *handle) {
+    return 0;
 }
 
 extern int client_write_obj(osdmap* osdmap, int64_t log_id,
                      char* oid, int64_t offset, int64_t length, char* data) {
-    
+
     msg_write_obj_req req;
     req.header.op = CCEPH_MSG_OP_WRITE;
     req.oid = oid;
@@ -54,7 +60,7 @@ extern int client_write_obj(osdmap* osdmap, int64_t log_id,
     for (i = 0; i < osdmap->osd_count; i++) {
         char *host = osdmap->osds[i].host;
         int   port = osdmap->osds[i].port;
-        
+
         //TODO: client should send msg by messenger
         /*
          *int ret = send_msg_write_req(host, port, &req, log_id);
