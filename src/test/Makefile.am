@@ -41,6 +41,11 @@ unittest_message_msg_write_obj_LDADD = $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST
 unittest_message_msg_write_obj_CXXFLAGS = $(UNITTEST_CXXFLAGS)
 check_PROGRAMS += unittest_message_msg_write_obj
 
+unittest_client_SOURCES = test/test_client.cc
+unittest_client_LDADD = $(LIBCLIENT) $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
+unittest_client_CXXFLAGS = $(UNITTEST_CXXFLAGS)
+check_PROGRAMS += unittest_client
+
 #unittest_libclient_SOURCES = test/test_libclient.cc
 #unittest_libclient_LDADD = $(LIBCLIENT) $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 #unittest_libclient_CXXFLAGS = $(UNITTEST_CXXFLAGS)
