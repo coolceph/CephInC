@@ -6,7 +6,7 @@ extern "C" {
 
 TEST(client, new_client_handle) {
     osdmap osdmap;
-    client_handle *handle = new_client_handle(&osdmap);
+    client_handle *handle = cceph_new_client_handle(&osdmap);
     EXPECT_NE((client_handle*)NULL, handle);
     EXPECT_NE((msg_handle*)NULL, handle->msg_handle);
     EXPECT_EQ(&osdmap, handle->osdmap);

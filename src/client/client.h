@@ -27,16 +27,16 @@ typedef struct {
     int state;
 } client_handle;
 
-extern client_handle *new_client_handle(osdmap* osdmap);
-extern int init_client(client_handle *handle);
+extern client_handle *cceph_new_client_handle(osdmap* osdmap);
+extern int cceph_init_client(client_handle *handle);
 
-extern int client_write_obj(osdmap* osdmap, int64_t log_id,
+extern int cceph_client_write_obj(osdmap* osdmap, int64_t log_id,
                      char* oid, int64_t offset, int64_t length, char* data);
 
-extern int client_read_obj(osdmap* osdmap, int64_t log_id,
+extern int cceph_client_read_obj(osdmap* osdmap, int64_t log_id,
                     char* oid, int64_t offset, int64_t length, char* data);
 
-extern int client_delete_obj(osdmap* osdmap, int64_t log_id,
+extern int cceph_client_delete_obj(osdmap* osdmap, int64_t log_id,
                       char* oid);
 
 #endif

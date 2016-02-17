@@ -20,7 +20,7 @@ static int client_process_message(msg_handle* msg_handle, conn_id_t conn_id, msg
     return 0;
 }
 
-extern client_handle *new_client_handle(osdmap* osdmap) {
+extern client_handle *cceph_new_client_handle(osdmap* osdmap) {
     int64_t log_id = 0;
     client_handle *handle = (client_handle*)malloc(sizeof(client_handle));
     if (handle == NULL) {
@@ -42,11 +42,11 @@ extern client_handle *new_client_handle(osdmap* osdmap) {
     return handle;
 }
 
-extern int init_client(client_handle *handle) {
+extern int cceph_init_client(client_handle *handle) {
     return 0;
 }
 
-extern int client_write_obj(osdmap* osdmap, int64_t log_id,
+extern int cceph_client_write_obj(osdmap* osdmap, int64_t log_id,
                      char* oid, int64_t offset, int64_t length, char* data) {
 
     msg_write_obj_req req;
@@ -70,7 +70,7 @@ extern int client_write_obj(osdmap* osdmap, int64_t log_id,
          *}
          */
 
-        LOG(LL_INFO, log_id, 
+        LOG(LL_INFO, log_id,
             "send req_write oid: %s, offset: %ld, length: %ld " \
             "to osd %s: %d.", oid, offset, length, host, port);
     }
