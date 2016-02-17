@@ -1,0 +1,2 @@
+./autogen.sh
+make check

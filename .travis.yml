@@ -1,0 +1,6 @@
+language: c
+script: ./make_cceph.sh
+
+before_install:
+    - sudo apt-get -qq update
+    - sudo apt-get install -y binutils-dev
