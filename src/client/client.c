@@ -9,6 +9,9 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+#include "include/errno.h"
+
+#include "common/assert.h"
 #include "common/log.h"
 
 #include "message/io.h"
@@ -16,8 +19,40 @@
 #include "message/msg_header.h"
 #include "message/msg_write_obj.h"
 
-static int client_process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message, void* context) {
+static int do_object_write_ack(client_handle *handle,
+        msg_handle* msg_handle, conn_id_t conn_id, msg_write_obj_ack* ack) {
+
     return 0;
+}
+
+static int client_process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message, void* context) {
+    //Now we just process msg_write_object_ack
+    int64_t log_id = message->log_id;
+    assert(log_id, msg_handle != NULL);
+    assert(log_id, message != NULL);
+    assert(log_id, context == NULL);
+
+    client_handle *handle = (client_handle*)context;
+
+    int8_t op = message->op;
+    LOG(LL_NOTICE, log_id, "Porcess message msg from conn %ld, op %d", conn_id, message->op);
+
+    int ret = 0;
+    switch (op) {
+        case CCEPH_MSG_OP_WRITE_ACK:
+            ret = do_object_write_ack(handle, msg_handle, conn_id, (msg_write_obj_ack*)message);
+            break;
+        default:
+            ret = CCEPH_ERR_UNKNOWN_OP;
+    }
+
+    if (ret == 0) {
+        LOG(LL_NOTICE, log_id, "Porcess message msg from conn %ld, op %d success.", conn_id, op);
+    } else {
+        LOG(LL_INFO, log_id, "Porcess message msg from conn %ld, op %d failed, errno %d", conn_id, op, ret);
+    }
+
+    return ret;
 }
 
 extern client_handle *cceph_new_client_handle(osdmap* osdmap) {
