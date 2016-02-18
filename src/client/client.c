@@ -42,8 +42,24 @@ extern client_handle *cceph_new_client_handle(osdmap* osdmap) {
     return handle;
 }
 
-extern int cceph_init_client(client_handle *handle) {
-    return 0;
+extern int cceph_initial_client(client_handle *handle) {
+    int64_t log_id = new_log_id();
+    LOG(LL_INFO, log_id, "log id for cceph_initial_client: %lld.", log_id);
+
+    init_list_head(&handle->wait_req_list.list_node);
+    pthread_mutex_init(&handle->wait_req_lock, NULL);
+    pthread_cond_init(&handle->wait_req_cond, NULL);
+
+    int ret = start_messager(handle->msg_handle, log_id);
+    if (ret != 0) {
+        LOG(LL_ERROR, log_id, "start_messager failed, errno %d.", ret);
+    }
+
+    if (ret == 0) {
+        handle->state = CCEPH_CLIENT_STATE_NORMAL;
+    }
+
+    return ret;
 }
 
 extern int cceph_client_write_obj(osdmap* osdmap, int64_t log_id,

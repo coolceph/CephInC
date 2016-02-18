@@ -318,7 +318,7 @@ extern msg_handle* new_msg_handle(msg_handler msg_handler, void* context, int64_
         free(handle); handle = NULL;
         return NULL;
     }
-    
+
     //create epoll_fd
     handle->epoll_fd = epoll_create1(0);
     if (handle->epoll_fd == -1) {
@@ -353,7 +353,7 @@ extern int start_messager(msg_handle* handle, int64_t log_id) {
             return ret;
         }
     }
-    
+
     return 0;
 }
 extern int stop_messager(msg_handle* handle, int64_t log_id) {
