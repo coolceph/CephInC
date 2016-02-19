@@ -27,6 +27,9 @@ typedef struct {
 
 typedef struct {
     msg_write_obj_req *req;
+    int ack_count;
+    int commit_count;
+    int req_count;
     struct list_head list_node;
 } wait_req;
 
@@ -36,9 +39,9 @@ typedef struct {
 
     int state;
 
-    wait_req wait_req_list;
+    wait_req        wait_req_list;
     pthread_mutex_t wait_req_lock;
-    pthread_cond_t wait_req_cond;
+    pthread_cond_t  wait_req_cond; //when req finished, this will be singal
 } client_handle;
 
 extern client_handle *cceph_new_client_handle(osdmap* osdmap);

@@ -22,6 +22,8 @@
 static int do_object_write_ack(client_handle *handle,
         msg_handle* msg_handle, conn_id_t conn_id, msg_write_obj_ack* ack) {
 
+
+
     return 0;
 }
 
