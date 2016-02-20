@@ -42,7 +42,7 @@ struct msg_handle_ {
     int thread_count;
     pthread_t *thread_ids;
 
-    atomic64_t next_conn_id;
+    cceph_atomic64_t next_conn_id;
     connection conn_list;
     pthread_rwlock_t conn_list_lock;
 

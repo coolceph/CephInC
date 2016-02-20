@@ -303,7 +303,7 @@ extern msg_handle* new_msg_handle(msg_handler msg_handler, void* context, int64_
     handle->context = context;
     handle->thread_count = 2; //TODO: we need a opinion
     handle->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * handle->thread_count);
-    atomic_set64(&handle->next_conn_id, 1);
+    cceph_atomic_set64(&handle->next_conn_id, 1);
 
     init_list_head(&handle->conn_list.list_node);
     pthread_rwlockattr_t attr;
@@ -384,7 +384,7 @@ extern int free_msg_handle(msg_handle** handle, int64_t log_id) {
 extern conn_id_t new_conn(msg_handle* handle, const char* host, int port, int fd, int64_t log_id) {
     //New connection from params
     connection* conn = (connection*)malloc(sizeof(connection));
-    conn->id = atomic_add64(&handle->next_conn_id, 1);
+    conn->id = cceph_atomic_add64(&handle->next_conn_id, 1);
     conn->fd = fd;
     conn->port = port;
     conn->host = (char*)malloc(sizeof(char) * strlen(host));

@@ -61,7 +61,7 @@ TEST(message_messenger, new_msg_handle) {
     EXPECT_TRUE(handle->msg_process == &MOCK_process_message);
 
     EXPECT_EQ(handle->log_id, 1);
-    EXPECT_EQ(atomic_get64(&handle->next_conn_id), 1);
+    EXPECT_EQ(cceph_atomic_get64(&handle->next_conn_id), 1);
 
     EXPECT_EQ(handle->thread_count, 2);
     EXPECT_NE(handle->thread_ids, (long unsigned int*)NULL);
