@@ -83,7 +83,7 @@ extern int cceph_initial_client(client_handle *handle) {
     int64_t log_id = new_log_id();
     LOG(LL_INFO, log_id, "log id for cceph_initial_client: %lld.", log_id);
 
-    init_list_head(&handle->wait_req_list.list_node);
+    cceph_init_list_head(&handle->wait_req_list.list_node);
     pthread_mutex_init(&handle->wait_req_lock, NULL);
     pthread_cond_init(&handle->wait_req_cond, NULL);
 

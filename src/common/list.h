@@ -1,31 +1,31 @@
 #ifndef CCEPH_COMMON_LIST_
 #define CCEPH_COMMON_LIST_
 
-#define POISON_POINTER_DELTA 0
+#define CCEPH_POISON_POINTER_DELTA 0
 
-#define LIST_POISON1  ((char *) 0x00100100 + POISON_POINTER_DELTA)
-#define LIST_POISON2  ((char *) 0x00200200 + POISON_POINTER_DELTA)
+#define CCEPH_LIST_POISON1  ((char *) 0x00100100 + CCEPH_POISON_POINTER_DELTA)
+#define CCEPH_LIST_POISON2  ((char *) 0x00200200 + CCEPH_POISON_POINTER_DELTA)
 
-#define offsetof(type, member)  (size_t)(&((type*)0)->member)
+#define cceph_offsetof(type, member)  (size_t)(&((type*)0)->member)
 
-#define container_of(ptr, type, member) ({                   \
-        const typeof(((type *)0)->member)*__mptr = (ptr);    \
-    (type *)((char *)__mptr - offsetof(type, member)); })
+#define cceph_container_of(ptr, type, member) ({                   \
+        const typeof(((type *)0)->member)*__mptr = (ptr);          \
+    (type *)((char *)__mptr - cceph_offsetof(type, member)); })
 
-struct list_head
+struct cceph_list_head
 {
-    struct list_head *prev;
-    struct list_head *next;
+    struct cceph_list_head *prev;
+    struct cceph_list_head *next;
 };
 
-static inline void init_list_head(struct list_head *list)
+static inline void cceph_init_list_head(struct cceph_list_head *list)
 {
     list->prev = list;
     list->next = list;
 };
 
-static inline void __list_add(struct list_head *new_node,
-    struct list_head *prev, struct list_head *next)
+static inline void __cceph_list_add(struct cceph_list_head *new_node,
+    struct cceph_list_head *prev, struct cceph_list_head *next)
 {
     prev->next = new_node;
     new_node->prev = prev;
@@ -33,47 +33,47 @@ static inline void __list_add(struct list_head *new_node,
     next->prev = new_node;
 };
 
-static inline void list_add(struct list_head *new_node , struct list_head *head)
+static inline void cceph_list_add(struct cceph_list_head *new_node , struct cceph_list_head *head)
 {
-    __list_add(new_node, head, head->next);
+    __cceph_list_add(new_node, head, head->next);
 };
-static inline void list_add_tail(struct list_head *new_node, struct list_head *head)
+static inline void cceph_list_add_tail(struct cceph_list_head *new_node, struct cceph_list_head *head)
 {
-    __list_add(new_node, head->prev, head);
+    __cceph_list_add(new_node, head->prev, head);
 };
 
-static inline  void __list_del(struct list_head *prev, struct list_head *next)
+static inline  void __cceph_list_del(struct cceph_list_head *prev, struct cceph_list_head *next)
 {
     prev->next = next;
     next->prev = prev;
 };
 
-static inline void list_del(struct list_head *entry)
+static inline void cceph_list_del(struct cceph_list_head *entry)
 {
-    __list_del(entry->prev, entry->next);
-    entry->next = (struct list_head*)LIST_POISON1;
-    entry->prev = (struct list_head*)LIST_POISON2;
+    __cceph_list_del(entry->prev, entry->next);
+    entry->next = (struct cceph_list_head*)CCEPH_LIST_POISON1;
+    entry->prev = (struct cceph_list_head*)CCEPH_LIST_POISON2;
 };
 
-static inline void list_move(struct list_head *list, struct list_head *head)
+static inline void cceph_list_move(struct cceph_list_head *list, struct cceph_list_head *head)
 {
-        __list_del(list->prev, list->next);
-        list_add(list, head);
+        __cceph_list_del(list->prev, list->next);
+        cceph_list_add(list, head);
 };
 
-static inline void list_move_tail(struct list_head *list,
-                      struct list_head *head)
+static inline void cceph_list_move_tail(struct cceph_list_head *list,
+                      struct cceph_list_head *head)
 {
-        __list_del(list->prev, list->next);
-        list_add_tail(list, head);
+        __cceph_list_del(list->prev, list->next);
+        cceph_list_add_tail(list, head);
 };
-#define list_entry(ptr, type, member) \
-    container_of(ptr, type, member)
+#define cceph_list_entry(ptr, type, member) \
+    cceph_container_of(ptr, type, member)
 
-#define list_first_entry(ptr, type, member) \
-    list_entry((ptr)->next, type, member)
+#define cceph_list_first_entry(ptr, type, member) \
+    cceph_list_entry((ptr)->next, type, member)
 
-#define list_for_each(pos, head) \
+#define cceph_list_for_each(pos, head) \
     for (pos = (head)->next; pos != (head); pos = pos->next)
 
 #endif

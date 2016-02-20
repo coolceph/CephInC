@@ -30,7 +30,7 @@ typedef struct {
     int ack_count;
     int commit_count;
     int req_count;
-    struct list_head list_node;
+    struct cceph_list_head list_node;
 } wait_req;
 
 typedef struct {

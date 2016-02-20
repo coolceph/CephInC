@@ -40,7 +40,7 @@ connection* add_conn(msg_handle* handle, char* host, int port, int fd) {
     strcpy(conn->host, host);
     pthread_mutex_init(&conn->lock, NULL);
 
-    list_add(&conn->list_node, &handle->conn_list.list_node);
+    cceph_list_add(&conn->list_node, &handle->conn_list.list_node);
     return conn;
 }
 int MOCK_process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message, void* context) {

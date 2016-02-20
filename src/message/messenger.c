@@ -22,12 +22,12 @@
 
 //caller must has handle->conn_list_lock
 static connection* get_conn_by_id(msg_handle* handle, int id) {
-    struct list_head *pos;
+    struct cceph_list_head *pos;
     connection *conn = NULL;
     connection *result = NULL;
 
-    list_for_each(pos, &(handle->conn_list.list_node)) {
-        conn = list_entry(pos, connection, list_node);
+    cceph_list_for_each(pos, &(handle->conn_list.list_node)) {
+        conn = cceph_list_entry(pos, connection, list_node);
         if (conn->id == id) {
             result = conn;
             break;
@@ -37,12 +37,12 @@ static connection* get_conn_by_id(msg_handle* handle, int id) {
 }
 //caller must has handle->conn_list_lock
 static connection* get_conn_by_fd(msg_handle* handle, int fd) {
-    struct list_head *pos;
+    struct cceph_list_head *pos;
     connection *conn = NULL;
     connection *result = NULL;
 
-    list_for_each(pos, &(handle->conn_list.list_node)) {
-        conn = list_entry(pos, connection, list_node);
+    cceph_list_for_each(pos, &(handle->conn_list.list_node)) {
+        conn = cceph_list_entry(pos, connection, list_node);
         if (conn->fd == fd) {
             result = conn;
             break;
@@ -52,12 +52,12 @@ static connection* get_conn_by_fd(msg_handle* handle, int fd) {
 }
 //caller must has handle->conn_list_lock
 static connection* get_conn_by_host_and_port(msg_handle* handle, const char* host, int port) {
-    struct list_head *pos;
+    struct cceph_list_head *pos;
     connection *conn = NULL;
     connection *result = NULL;
 
-    list_for_each(pos, &(handle->conn_list.list_node)) {
-        conn = list_entry(pos, connection, list_node);
+    cceph_list_for_each(pos, &(handle->conn_list.list_node)) {
+        conn = cceph_list_entry(pos, connection, list_node);
         if (conn->port == port && strcmp(conn->host, host) == 0) {
             result = conn;
             break;
@@ -75,7 +75,7 @@ extern int close_conn(msg_handle* handle, conn_id_t id, int64_t log_id) {
         return CCEPH_ERR_CONN_NOT_FOUND;
     }
 
-    list_del(&conn->list_node);
+    cceph_list_del(&conn->list_node);
     pthread_rwlock_unlock(&handle->conn_list_lock);
 
     LOG(LL_NOTICE, log_id, "Close conn %s:%d, conn_id %ld, fd %d", conn->host, conn->port, conn->id, conn->fd);
@@ -305,7 +305,7 @@ extern msg_handle* new_msg_handle(msg_handler msg_handler, void* context, int64_
     handle->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * handle->thread_count);
     cceph_atomic_set64(&handle->next_conn_id, 1);
 
-    init_list_head(&handle->conn_list.list_node);
+    cceph_init_list_head(&handle->conn_list.list_node);
     pthread_rwlockattr_t attr;
     pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
     pthread_rwlock_init(&handle->conn_list_lock, &attr);
@@ -393,7 +393,7 @@ extern conn_id_t new_conn(msg_handle* handle, const char* host, int port, int fd
 
     //Add conn to handle->conn_list
     pthread_rwlock_wrlock(&handle->conn_list_lock);
-    list_add(&conn->list_node, &handle->conn_list.list_node);
+    cceph_list_add(&conn->list_node, &handle->conn_list.list_node);
     pthread_rwlock_unlock(&handle->conn_list_lock);
 
     //Add fd to epoll set

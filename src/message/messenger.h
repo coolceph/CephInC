@@ -25,7 +25,7 @@ typedef struct {
 
     pthread_mutex_t lock;
 
-    struct list_head list_node;
+    struct cceph_list_head list_node;
 } connection;
 
 typedef int8_t messenger_op_t;
