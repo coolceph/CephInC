@@ -8,9 +8,9 @@
 
 #include "include/errno.h"
 
-static int recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id);
+static int cceph_recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id);
 
-int send_int8(int fd, int8_t value, int64_t log_id) {
+int cceph_send_int8(int fd, int8_t value, int64_t log_id) {
     int ret = send(fd, &value, sizeof(int8_t), 0);
     if (ret != sizeof(int8_t)) {
         int err_no = ret < 0 ? ret : errno;
@@ -20,7 +20,7 @@ int send_int8(int fd, int8_t value, int64_t log_id) {
     }
     return 0;
 }
-int send_int16(int fd, int16_t value, int64_t log_id) {
+int cceph_send_int16(int fd, int16_t value, int64_t log_id) {
     int ret = send(fd, &value, sizeof(int16_t), 0);
     if (ret != sizeof(int16_t)) {
         int err_no = ret < 0 ? ret : errno;
@@ -29,7 +29,7 @@ int send_int16(int fd, int16_t value, int64_t log_id) {
     }
     return 0;
 }
-int send_int32(int fd, int32_t value, int64_t log_id) {
+int cceph_send_int32(int fd, int32_t value, int64_t log_id) {
     int ret = send(fd, &value, sizeof(int32_t), 0);
     if (ret != sizeof(int32_t)) {
         int err_no = ret < 0 ? ret : errno;
@@ -38,7 +38,7 @@ int send_int32(int fd, int32_t value, int64_t log_id) {
     }
     return 0;
 }
-int send_int64(int fd, int64_t value, int64_t log_id) {
+int cceph_send_int64(int fd, int64_t value, int64_t log_id) {
     int ret = send(fd, &value, sizeof(int64_t), 0);
     if (ret != sizeof(int64_t)) {
         int err_no = ret < 0 ? ret : errno;
@@ -47,7 +47,7 @@ int send_int64(int fd, int64_t value, int64_t log_id) {
     }
     return 0;
 }
-int send_string(int fd, char* string, int64_t log_id) {
+int cceph_send_string(int fd, char* string, int64_t log_id) {
     int16_t size = strlen(string);
     
     int ret = send(fd, &size, sizeof(int16_t), 0);
@@ -64,7 +64,7 @@ int send_string(int fd, char* string, int64_t log_id) {
     }
     return 0;
 }
-int send_data(int fd, int64_t length, char* data, int64_t log_id) {
+int cceph_send_data(int fd, int64_t length, char* data, int64_t log_id) {
     int ret = send(fd, &length, sizeof(int64_t), 0);
     if (ret != sizeof(int64_t)) {
         int err_no = ret < 0 ? ret : errno;
@@ -81,41 +81,41 @@ int send_data(int fd, int64_t length, char* data, int64_t log_id) {
     return 0;
 }
 
-int recv_int8(int data_fd, int8_t* value, int64_t log_id) {
-    int ret = recv_from_conn(data_fd, value, sizeof(int8_t), log_id);
+int cceph_recv_int8(int data_fd, int8_t* value, int64_t log_id) {
+    int ret = cceph_recv_from_conn(data_fd, value, sizeof(int8_t), log_id);
     return (ret == sizeof(int8_t)) ? 0 : (ret < 0 ? ret : -1);
 }
-int recv_int16(int data_fd, int16_t* value, int64_t log_id) {
-    int ret = recv_from_conn(data_fd, value, sizeof(int16_t), log_id);
+int cceph_recv_int16(int data_fd, int16_t* value, int64_t log_id) {
+    int ret = cceph_recv_from_conn(data_fd, value, sizeof(int16_t), log_id);
     return (ret == sizeof(int16_t)) ? 0 : (ret < 0 ? ret : -1);
 }
-int recv_int32(int data_fd, int32_t* value, int64_t log_id) {
-    int ret = recv_from_conn(data_fd, value, sizeof(int32_t), log_id);
+int cceph_recv_int32(int data_fd, int32_t* value, int64_t log_id) {
+    int ret = cceph_recv_from_conn(data_fd, value, sizeof(int32_t), log_id);
     return (ret == sizeof(int32_t)) ? 0 : (ret < 0 ? ret : -1);
 }
-int recv_int64(int data_fd, int64_t* value, int64_t log_id) {
-    int ret = recv_from_conn(data_fd, value, sizeof(int64_t), log_id);
+int cceph_recv_int64(int data_fd, int64_t* value, int64_t log_id) {
+    int ret = cceph_recv_from_conn(data_fd, value, sizeof(int64_t), log_id);
     return (ret == sizeof(int64_t)) ? 0 : (ret < 0 ? ret : -1);
 }
-int recv_string(int data_fd, int16_t *size, char **string, int64_t log_id) {
-    int ret = recv_from_conn(data_fd, size, sizeof(int16_t), log_id);
+int cceph_recv_string(int data_fd, int16_t *size, char **string, int64_t log_id) {
+    int ret = cceph_recv_from_conn(data_fd, size, sizeof(int16_t), log_id);
     if (ret != sizeof(int16_t)) return (ret < 0 ? ret : -1);
     
     *string = malloc(*size + 1);
     (*string)[*size] = '\0';
-    ret = recv_from_conn(data_fd, *string, *size, log_id);
+    ret = cceph_recv_from_conn(data_fd, *string, *size, log_id);
     if (ret < 0 || ret != *size) {
         free(*string);
         *string = NULL;
     }
     return (ret == *size) ? 0 : (ret < 0 ? ret : -1);
 }
-int recv_data(int data_fd, int64_t *size, char **data, int64_t log_id) {
-    int ret = recv_from_conn(data_fd, size, sizeof(*size), log_id);
+int cceph_recv_data(int data_fd, int64_t *size, char **data, int64_t log_id) {
+    int ret = cceph_recv_from_conn(data_fd, size, sizeof(*size), log_id);
     if (ret != sizeof(int64_t)) return (ret < 0 ? ret : -1);
     
     *data = malloc(*size);
-    ret = recv_from_conn(data_fd, *data, *size, log_id);
+    ret = cceph_recv_from_conn(data_fd, *data, *size, log_id);
     if (ret < 0 || ret != *size) {
         free(*data);
         *data = NULL;
@@ -123,7 +123,7 @@ int recv_data(int data_fd, int64_t *size, char **data, int64_t log_id) {
     return (ret == *size) ? 0 : (ret < 0 ? ret : -1);
 }
 
-static int recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id) {
+static int cceph_recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id) {
     int total = 0;
     while(size > 0) {
         int count = recv(data_fd, buf, size, 0);
@@ -149,6 +149,6 @@ static int recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id) {
     return total;
 }
 
-extern int TEST_recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id) {
-    return recv_from_conn(data_fd, buf, size, log_id);
+extern int TEST_cceph_recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id) {
+    return cceph_recv_from_conn(data_fd, buf, size, log_id);
 }
