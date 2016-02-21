@@ -9,6 +9,9 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+#include "include/errno.h"
+
+#include "common/assert.h"
 #include "common/log.h"
 
 #include "message/io.h"
@@ -16,11 +19,45 @@
 #include "message/msg_header.h"
 #include "message/msg_write_obj.h"
 
-static int client_process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message, void* context) {
+static int do_object_write_ack(client_handle *handle,
+        msg_handle* msg_handle, conn_id_t conn_id, msg_write_obj_ack* ack) {
+
+
+
     return 0;
 }
 
-extern client_handle *new_client_handle(osdmap* osdmap) {
+static int client_process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message, void* context) {
+    //Now we just process msg_write_object_ack
+    int64_t log_id = message->log_id;
+    assert(log_id, msg_handle != NULL);
+    assert(log_id, message != NULL);
+    assert(log_id, context == NULL);
+
+    client_handle *handle = (client_handle*)context;
+
+    int8_t op = message->op;
+    LOG(LL_NOTICE, log_id, "Porcess message msg from conn %ld, op %d", conn_id, message->op);
+
+    int ret = 0;
+    switch (op) {
+        case CCEPH_MSG_OP_WRITE_ACK:
+            ret = do_object_write_ack(handle, msg_handle, conn_id, (msg_write_obj_ack*)message);
+            break;
+        default:
+            ret = CCEPH_ERR_UNKNOWN_OP;
+    }
+
+    if (ret == 0) {
+        LOG(LL_NOTICE, log_id, "Porcess message msg from conn %ld, op %d success.", conn_id, op);
+    } else {
+        LOG(LL_INFO, log_id, "Porcess message msg from conn %ld, op %d failed, errno %d", conn_id, op, ret);
+    }
+
+    return ret;
+}
+
+extern client_handle *cceph_new_client_handle(osdmap* osdmap) {
     int64_t log_id = 0;
     client_handle *handle = (client_handle*)malloc(sizeof(client_handle));
     if (handle == NULL) {
@@ -42,11 +79,27 @@ extern client_handle *new_client_handle(osdmap* osdmap) {
     return handle;
 }
 
-extern int init_client(client_handle *handle) {
-    return 0;
+extern int cceph_initial_client(client_handle *handle) {
+    int64_t log_id = new_log_id();
+    LOG(LL_INFO, log_id, "log id for cceph_initial_client: %lld.", log_id);
+
+    init_list_head(&handle->wait_req_list.list_node);
+    pthread_mutex_init(&handle->wait_req_lock, NULL);
+    pthread_cond_init(&handle->wait_req_cond, NULL);
+
+    int ret = start_messager(handle->msg_handle, log_id);
+    if (ret != 0) {
+        LOG(LL_ERROR, log_id, "start_messager failed, errno %d.", ret);
+    }
+
+    if (ret == 0) {
+        handle->state = CCEPH_CLIENT_STATE_NORMAL;
+    }
+
+    return ret;
 }
 
-extern int client_write_obj(osdmap* osdmap, int64_t log_id,
+extern int cceph_client_write_obj(osdmap* osdmap, int64_t log_id,
                      char* oid, int64_t offset, int64_t length, char* data) {
 
     msg_write_obj_req req;
@@ -70,7 +123,7 @@ extern int client_write_obj(osdmap* osdmap, int64_t log_id,
          *}
          */
 
-        LOG(LL_INFO, log_id, 
+        LOG(LL_INFO, log_id,
             "send req_write oid: %s, offset: %ld, length: %ld " \
             "to osd %s: %d.", oid, offset, length, host, port);
     }
