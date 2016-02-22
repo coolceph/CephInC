@@ -9,32 +9,32 @@
 typedef struct
 {
     volatile int32_t counter32;
-} atomic_t;
+} cceph_atomic_t;
 
 typedef struct
 {
     volatile int64_t counter64;
-} atomic64_t;
+} cceph_atomic64_t;
 
-int32_t atomic_get(atomic_t *v);
-int64_t atomic_get64(atomic64_t *v);
+int32_t cceph_atomic_get(cceph_atomic_t *v);
+int64_t cceph_atomic_get64(cceph_atomic64_t *v);
 
-void atomic_set(atomic_t *v, int32_t i);
-void atomic_set64(atomic64_t *v, int64_t i);
+void cceph_atomic_set(cceph_atomic_t *v, int32_t i);
+void cceph_atomic_set64(cceph_atomic64_t *v, int64_t i);
 
-int32_t atomic_add(atomic_t *v, int32_t i);
-int64_t atomic_add64(atomic64_t *v, int64_t i);
+int32_t cceph_atomic_add(cceph_atomic_t *v, int32_t i);
+int64_t cceph_atomic_add64(cceph_atomic64_t *v, int64_t i);
 
-int32_t atomic_sub(atomic_t *v, int32_t i);
-int64_t atomic_sub64(atomic64_t *v, int64_t i);
+int32_t cceph_atomic_sub(cceph_atomic_t *v, int32_t i);
+int64_t cceph_atomic_sub64(cceph_atomic64_t *v, int64_t i);
 
-void atomic_inc(atomic_t *v);
-void atomic_inc64(atomic64_t *v);
+void cceph_atomic_inc(cceph_atomic_t *v);
+void cceph_atomic_inc64(cceph_atomic64_t *v);
 
-void atomic_dec(atomic_t *v);
-void atomic_dec64(atomic64_t *v);
+void cceph_atomic_dec(cceph_atomic_t *v);
+void cceph_atomic_dec64(cceph_atomic64_t *v);
 
-int32_t atomic_exchange(atomic_t *v, int32_t i);
-int64_t atomic_exchange64(atomic64_t *v, int64_t i);
+int32_t cceph_atomic_exchange(cceph_atomic_t *v, int32_t i);
+int64_t cceph_atomic_exchange64(cceph_atomic64_t *v, int64_t i);
 
 #endif

@@ -22,12 +22,12 @@
 
 //caller must has handle->conn_list_lock
 static connection* get_conn_by_id(msg_handle* handle, int id) {
-    struct list_head *pos;
+    struct cceph_list_head *pos;
     connection *conn = NULL;
     connection *result = NULL;
 
-    list_for_each(pos, &(handle->conn_list.list_node)) {
-        conn = list_entry(pos, connection, list_node);
+    cceph_list_for_each(pos, &(handle->conn_list.list_node)) {
+        conn = cceph_list_entry(pos, connection, list_node);
         if (conn->id == id) {
             result = conn;
             break;
@@ -37,12 +37,12 @@ static connection* get_conn_by_id(msg_handle* handle, int id) {
 }
 //caller must has handle->conn_list_lock
 static connection* get_conn_by_fd(msg_handle* handle, int fd) {
-    struct list_head *pos;
+    struct cceph_list_head *pos;
     connection *conn = NULL;
     connection *result = NULL;
 
-    list_for_each(pos, &(handle->conn_list.list_node)) {
-        conn = list_entry(pos, connection, list_node);
+    cceph_list_for_each(pos, &(handle->conn_list.list_node)) {
+        conn = cceph_list_entry(pos, connection, list_node);
         if (conn->fd == fd) {
             result = conn;
             break;
@@ -52,12 +52,12 @@ static connection* get_conn_by_fd(msg_handle* handle, int fd) {
 }
 //caller must has handle->conn_list_lock
 static connection* get_conn_by_host_and_port(msg_handle* handle, const char* host, int port) {
-    struct list_head *pos;
+    struct cceph_list_head *pos;
     connection *conn = NULL;
     connection *result = NULL;
 
-    list_for_each(pos, &(handle->conn_list.list_node)) {
-        conn = list_entry(pos, connection, list_node);
+    cceph_list_for_each(pos, &(handle->conn_list.list_node)) {
+        conn = cceph_list_entry(pos, connection, list_node);
         if (conn->port == port && strcmp(conn->host, host) == 0) {
             result = conn;
             break;
@@ -75,7 +75,7 @@ extern int close_conn(msg_handle* handle, conn_id_t id, int64_t log_id) {
         return CCEPH_ERR_CONN_NOT_FOUND;
     }
 
-    list_del(&conn->list_node);
+    cceph_list_del(&conn->list_node);
     pthread_rwlock_unlock(&handle->conn_list_lock);
 
     LOG(LL_NOTICE, log_id, "Close conn %s:%d, conn_id %ld, fd %d", conn->host, conn->port, conn->id, conn->fd);
@@ -91,17 +91,17 @@ extern int close_conn(msg_handle* handle, conn_id_t id, int64_t log_id) {
 }
 
 static int is_conn_err(struct epoll_event event) {
-    return (event.events & EPOLLERR) 
-           || (event.events & EPOLLHUP) 
+    return (event.events & EPOLLERR)
+           || (event.events & EPOLLHUP)
            || !(event.events & EPOLLIN);
 }
 
-static msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int fd, int64_t log_id) {
+static cceph_msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int fd, int64_t log_id) {
     LOG(LL_INFO, log_id, "Read Message from conn_id %ld, fd %d.", conn_id, fd);
 
     //Read msg_hedaer
-    msg_header header;
-    int ret = recv_msg_header(fd, &header, log_id);
+    cceph_msg_header header;
+    int ret = cceph_msg_header_recv(fd, &header, log_id);
     if (ret == CCEPH_ERR_CONN_CLOSED) {
         LOG(LL_NOTICE, log_id, "Read msg_header from conn_id %ld failed, conn closed", conn_id);
         close_conn(handle, conn_id, log_id);
@@ -111,18 +111,18 @@ static msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int fd, i
         return NULL;
     } else {
         LOG(LL_INFO, log_id, "read msg_header form conn_id %ld, op %s(%d), log_id %ld", 
-            conn_id, str_msg_op(header.op), header.op, header.log_id);
+            conn_id, cceph_str_msg_op(header.op), header.op, header.log_id);
     }
 
     //Read message
-    msg_header *message = NULL;
+    cceph_msg_header *message = NULL;
     switch (header.op) {
         case CCEPH_MSG_OP_WRITE:
             {
                 msg_write_obj_req *msg = malloc_msg_write_obj_req(log_id);
                 ret = recv_msg_write_obj_req(fd, msg, log_id);
                 if (ret != 0) free_msg_write_obj_req(&msg, log_id);
-                message = (msg_header*)msg;
+                message = (cceph_msg_header*)msg;
                 break;
             }
         case CCEPH_MSG_OP_WRITE_ACK:
@@ -130,7 +130,7 @@ static msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int fd, i
                 msg_write_obj_ack *msg =  malloc_msg_write_obj_ack(log_id);
                 ret = recv_msg_write_obj_ack(fd, msg, log_id);
                 if (ret != 0) free_msg_write_obj_ack(&msg, log_id);
-                message = (msg_header*)msg;
+                message = (cceph_msg_header*)msg;
                 break;
             }
         case CCEPH_MSG_OP_READ:
@@ -151,23 +151,23 @@ static msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int fd, i
         LOG(LL_ERROR, log_id, "Read message from conn_id %ld error %d.", conn_id, ret);
         return NULL;
     } else {
-        LOG(LL_INFO, log_id, "Read message form conn_id %ld, op %s(%d), log_id %ld", 
-            conn_id, str_msg_op(header.op), header.op, header.log_id);
+        LOG(LL_INFO, log_id, "Read message form conn_id %ld, op %s(%d), log_id %ld",
+            conn_id, cceph_str_msg_op(header.op), header.op, header.log_id);
     }
 
     message->op = header.op;
     message->log_id = header.log_id;
     return message;
 }
-static int write_message(connection* conn, msg_header* msg, int64_t log_id) {
+static int write_message(connection* conn, cceph_msg_header* msg, int64_t log_id) {
     int fd = conn->fd;
     conn_id_t conn_id = conn->id;
 
-    LOG(LL_INFO, log_id, "Write Message to conn_id %ld, fd %d, op %s(%d).", 
-        conn_id, fd, str_msg_op(msg->op), msg->op);
+    LOG(LL_INFO, log_id, "Write Message to conn_id %ld, fd %d, op %s(%d).",
+        conn_id, fd, cceph_str_msg_op(msg->op), msg->op);
 
     //Write msg_hedaer
-    int ret = send_msg_header(fd, msg, log_id);
+    int ret = cceph_msg_header_send(fd, msg, log_id);
     if (ret != 0) {
         LOG(LL_ERROR, log_id, "Write msg_header to conn_id %ld error %d.", conn_id, ret);
         return ret;
@@ -266,14 +266,14 @@ static void* start_epoll(void* arg) {
             break;
         }
 
-        log_id = new_log_id(); //new message, new log_id, just for read process
-        msg_header* msg = read_message(handle, conn_id, fd, log_id);
+        log_id = cceph_new_log_id(); //new message, new log_id, just for read process
+        cceph_msg_header* msg = read_message(handle, conn_id, fd, log_id);
         if (msg == NULL) {
             LOG(LL_NOTICE, log_id, "Read message from conn %ld, fd %d failed, conn may closed.", conn_id, fd);
             continue;
         } else {
-            LOG(LL_INFO, log_id, "Msg read from conn %ld, fd %d, op %s(%d), log_id %ld", 
-                conn_id, fd, str_msg_op(msg->op), msg->op, msg->log_id);
+            LOG(LL_INFO, log_id, "Msg read from conn %ld, fd %d, op %s(%d), log_id %ld",
+                conn_id, fd, cceph_str_msg_op(msg->op), msg->op, msg->log_id);
         }
 
         //Wait for the next msg
@@ -303,9 +303,9 @@ extern msg_handle* new_msg_handle(msg_handler msg_handler, void* context, int64_
     handle->context = context;
     handle->thread_count = 2; //TODO: we need a opinion
     handle->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * handle->thread_count);
-    atomic_set64(&handle->next_conn_id, 1);
+    cceph_atomic_set64(&handle->next_conn_id, 1);
 
-    init_list_head(&handle->conn_list.list_node);
+    cceph_init_list_head(&handle->conn_list.list_node);
     pthread_rwlockattr_t attr;
     pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
     pthread_rwlock_init(&handle->conn_list_lock, &attr);
@@ -384,7 +384,7 @@ extern int free_msg_handle(msg_handle** handle, int64_t log_id) {
 extern conn_id_t new_conn(msg_handle* handle, const char* host, int port, int fd, int64_t log_id) {
     //New connection from params
     connection* conn = (connection*)malloc(sizeof(connection));
-    conn->id = atomic_add64(&handle->next_conn_id, 1);
+    conn->id = cceph_atomic_add64(&handle->next_conn_id, 1);
     conn->fd = fd;
     conn->port = port;
     conn->host = (char*)malloc(sizeof(char) * strlen(host));
@@ -393,7 +393,7 @@ extern conn_id_t new_conn(msg_handle* handle, const char* host, int port, int fd
 
     //Add conn to handle->conn_list
     pthread_rwlock_wrlock(&handle->conn_list_lock);
-    list_add(&conn->list_node, &handle->conn_list.list_node);
+    cceph_list_add(&conn->list_node, &handle->conn_list.list_node);
     pthread_rwlock_unlock(&handle->conn_list_lock);
 
     //Add fd to epoll set
@@ -452,7 +452,7 @@ extern conn_id_t get_conn(msg_handle* handle, const char* host, int port, int64_
     return conn_id;
 }
 
-extern int send_msg(msg_handle* handle, conn_id_t conn_id, msg_header* msg, int64_t log_id) {
+extern int send_msg(msg_handle* handle, conn_id_t conn_id, cceph_msg_header* msg, int64_t log_id) {
     assert(log_id, msg != NULL);
     assert(log_id, handle != NULL);
 
@@ -474,7 +474,7 @@ extern int send_msg(msg_handle* handle, conn_id_t conn_id, msg_header* msg, int6
     }
 
     LOG(LL_INFO, log_id, "Send msg to %s:%d, conn_id %ld, fd %d, op %s(%d).",
-        conn->host, conn->port, conn->id, conn->fd, str_msg_op(msg->op), msg->op);
+        conn->host, conn->port, conn->id, conn->fd, cceph_str_msg_op(msg->op), msg->op);
     if (write_message(conn, msg, log_id) != 0) {
         conn->state = CCEPH_CONN_STATE_CLOSED;
         pthread_mutex_unlock(&conn->lock);

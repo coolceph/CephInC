@@ -18,42 +18,42 @@
 typedef struct {
     char* host;
     int   port;
-} osd_id;
+} cceph_osd_id;
 
 typedef struct {
     int osd_count;
-    osd_id* osds;
-} osdmap;
+    cceph_osd_id* osds;
+} cceph_osdmap;
 
 typedef struct {
     msg_write_obj_req *req;
     int ack_count;
     int commit_count;
     int req_count;
-    struct list_head list_node;
-} wait_req;
+    struct cceph_list_head list_node;
+} cceph_client_wait_req;
 
 typedef struct {
-    osdmap *osdmap;
+    cceph_osdmap *osdmap;
     msg_handle *msg_handle;
 
     int state;
 
-    wait_req        wait_req_list;
-    pthread_mutex_t wait_req_lock;
-    pthread_cond_t  wait_req_cond; //when req finished, this will be singal
-} client_handle;
+    cceph_client_wait_req  wait_req_list;
+    pthread_mutex_t        wait_req_lock;
+    pthread_cond_t         wait_req_cond; //when req finished, this will be singal
+} cceph_client_handle;
 
-extern client_handle *cceph_new_client_handle(osdmap* osdmap);
-extern int cceph_initial_client(client_handle *handle);
+extern cceph_client_handle *cceph_new_client_handle(cceph_osdmap* osdmap);
+extern int cceph_initial_client(cceph_client_handle *handle);
 
-extern int cceph_client_write_obj(osdmap* osdmap, int64_t log_id,
+extern int cceph_client_write_obj(cceph_osdmap* osdmap, int64_t log_id,
                      char* oid, int64_t offset, int64_t length, char* data);
 
-extern int cceph_client_read_obj(osdmap* osdmap, int64_t log_id,
+extern int cceph_client_read_obj(cceph_client_handle* handle, int64_t log_id,
                     char* oid, int64_t offset, int64_t length, char* data);
 
-extern int cceph_client_delete_obj(osdmap* osdmap, int64_t log_id,
+extern int cceph_client_delete_obj(cceph_client_handle* handle, int64_t log_id,
                       char* oid);
 
 #endif
