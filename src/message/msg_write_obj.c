@@ -11,16 +11,16 @@
 
 #include "message/io.h"
 
-extern msg_write_obj_req* malloc_msg_write_obj_req() {
-    msg_write_obj_req* req = malloc(sizeof(msg_write_obj_req));
-    bzero(req, sizeof(msg_write_obj_req));
+extern cceph_msg_write_obj_req* cceph_msg_write_obj_new() {
+    cceph_msg_write_obj_req* req = malloc(sizeof(cceph_msg_write_obj_req));
+    bzero(req, sizeof(cceph_msg_write_obj_req));
     req->header.op = CCEPH_MSG_OP_WRITE;
     return req;
 }
-extern int free_msg_write_obj_req(msg_write_obj_req** req, int64_t log_id) {
+extern int cceph_msg_write_obj_req_free(cceph_msg_write_obj_req** req, int64_t log_id) {
     assert(log_id, *req != NULL);
 
-    msg_write_obj_req* msg = *req;
+    cceph_msg_write_obj_req* msg = *req;
     if (msg->oid != NULL) {
         free(msg->oid);
     }
@@ -33,7 +33,7 @@ extern int free_msg_write_obj_req(msg_write_obj_req** req, int64_t log_id) {
     return 0;
 }
 
-extern int send_msg_write_obj_req(int fd, msg_write_obj_req* req, int64_t log_id) {
+extern int cceph_msg_write_obj_req_send(int fd, cceph_msg_write_obj_req* req, int64_t log_id) {
     assert(log_id, req != NULL);
     assert(log_id, req->oid != NULL);
     assert(log_id, req->data != NULL);
@@ -46,7 +46,7 @@ extern int send_msg_write_obj_req(int fd, msg_write_obj_req* req, int64_t log_id
     CCEPH_SEND_DATA_FIELD(data, req->length, req->data);
     return 0;
 }
-extern int recv_msg_write_obj_req(int fd, msg_write_obj_req* req, int64_t log_id) {
+extern int cceph_msg_write_obj_req_recv(int fd, cceph_msg_write_obj_req* req, int64_t log_id) {
     assert(log_id, req != NULL);
     assert(log_id, req->oid == NULL);
     assert(log_id, req->data == NULL);

@@ -53,7 +53,7 @@ static int io_write_object(const char* oid,
 //TODO: The write process is not so simply by our design, this is just a demo
 //TODO: We should define/impl the object_store/transaction first before impl the write process
 //TODO: Aslo the client behavier should be consisent with the osd
-static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, msg_write_obj_req* req) {
+static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, cceph_msg_write_obj_req* req) {
     int64_t log_id = req->header.log_id;
 
     char* oid = req->oid;
@@ -90,7 +90,7 @@ static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, msg_wr
         LOG(LL_INFO, log_id, "send_msg_write_obj_ack success for client %d, req_id %d.", client_id, req_id);
     }
 
-    ret = free_msg_write_obj_req(&req, log_id);
+    ret = cceph_msg_write_obj_req_free(&req, log_id);
     assert(log_id, ret == 0);
     ret = free_msg_write_obj_ack(&ack, log_id);
     assert(log_id, ret == 0);
@@ -110,7 +110,7 @@ extern int osd_process_message(msg_handle* msg_handle, conn_id_t conn_id, cceph_
     int ret = 0;
     switch (op) {
         case CCEPH_MSG_OP_WRITE:
-            ret = do_object_write_req(msg_handle, conn_id, (msg_write_obj_req*)message);
+            ret = do_object_write_req(msg_handle, conn_id, (cceph_msg_write_obj_req*)message);
             break;
         default:
             ret = CCEPH_ERR_UNKNOWN_OP;

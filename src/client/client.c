@@ -105,7 +105,7 @@ extern int cceph_initial_client(cceph_client_handle *handle) {
 extern int cceph_client_write_obj(cceph_osdmap* osdmap, int64_t log_id,
                      char* oid, int64_t offset, int64_t length, char* data) {
 
-    msg_write_obj_req req;
+    cceph_msg_write_obj_req req;
     req.header.op = CCEPH_MSG_OP_WRITE;
     req.oid = oid;
     req.offset = offset;

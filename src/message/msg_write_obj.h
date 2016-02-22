@@ -15,13 +15,13 @@ typedef struct {
     int64_t offset;
     int64_t length;
     char* data;
-} msg_write_obj_req;
+} cceph_msg_write_obj_req;
 
-extern msg_write_obj_req* malloc_msg_write_obj_req();
-extern int free_msg_write_obj_req(msg_write_obj_req** req, int64_t log_id);
+extern cceph_msg_write_obj_req* cceph_msg_write_obj_new();
+extern int cceph_msg_write_obj_req_free(cceph_msg_write_obj_req** req, int64_t log_id);
 
-extern int recv_msg_write_obj_req(int fd, msg_write_obj_req* req, int64_t log_id);
-extern int send_msg_write_obj_req(int fd, msg_write_obj_req* req, int64_t log_id);
+extern int cceph_msg_write_obj_req_recv(int fd, cceph_msg_write_obj_req* req, int64_t log_id);
+extern int cceph_msg_write_obj_req_send(int fd, cceph_msg_write_obj_req* req, int64_t log_id);
 
 #define CCEPH_WRITE_OBJ_ACK_UNKNOWN 0
 #define CCEPH_WRITE_OBJ_ACK_OK      1

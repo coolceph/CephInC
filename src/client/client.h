@@ -26,7 +26,7 @@ typedef struct {
 } cceph_osdmap;
 
 typedef struct {
-    msg_write_obj_req *req;
+    cceph_msg_write_obj_req *req;
     int ack_count;
     int commit_count;
     int req_count;
