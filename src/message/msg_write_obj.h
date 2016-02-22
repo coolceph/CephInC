@@ -4,8 +4,8 @@
 #include "message/msg_header.h"
 
 typedef struct {
-    msg_header header;
-    
+    cceph_msg_header header;
+
     int32_t client_id;
     int32_t req_id;
 
@@ -27,7 +27,7 @@ extern int send_msg_write_obj_req(int fd, msg_write_obj_req* req, int64_t log_id
 #define CCEPH_WRITE_OBJ_ACK_OK      1
 
 typedef struct {
-    msg_header header;
+    cceph_msg_header header;
 
     int32_t client_id;
     int32_t req_id;

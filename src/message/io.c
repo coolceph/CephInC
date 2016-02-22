@@ -113,7 +113,7 @@ int cceph_recv_string(int data_fd, int16_t *size, char **string, int64_t log_id)
 int cceph_recv_data(int data_fd, int64_t *size, char **data, int64_t log_id) {
     int ret = cceph_recv_from_conn(data_fd, size, sizeof(*size), log_id);
     if (ret != sizeof(int64_t)) return (ret < 0 ? ret : -1);
-    
+
     *data = malloc(*size);
     ret = cceph_recv_from_conn(data_fd, *data, *size, log_id);
     if (ret < 0 || ret != *size) {

@@ -83,7 +83,7 @@ static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, msg_wr
     ack->result = result;
 
     LOG(LL_INFO, log_id, "send_msg_write_obj_ack to client %d, req_id %d, result %d.", client_id, req_id, result);
-    ret = send_msg(msg_handle, conn_id, (msg_header*)ack, log_id);
+    ret = send_msg(msg_handle, conn_id, (cceph_msg_header*)ack, log_id);
     if (ret != 0) {
         LOG(LL_ERROR, log_id, "send_msg_write_obj_ack failed for client %d, req_id %d, errno %d.", client_id, req_id, ret);
     } else {
@@ -98,7 +98,7 @@ static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, msg_wr
     return 0;
 }
 
-extern int osd_process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message, void* context) {
+extern int osd_process_message(msg_handle* msg_handle, conn_id_t conn_id, cceph_msg_header* message, void* context) {
     int64_t log_id = message->log_id;
     assert(log_id, msg_handle != NULL);
     assert(log_id, message != NULL);

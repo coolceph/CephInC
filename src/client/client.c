@@ -22,12 +22,15 @@
 static int do_object_write_ack(cceph_client_handle *handle,
         msg_handle* msg_handle, conn_id_t conn_id, msg_write_obj_ack* ack) {
 
-
+    int64_t log_id = ack->header.log_id;
+    assert(log_id, handle != NULL);
+    assert(log_id, msg_handle != NULL);
+    assert(log_id, conn_id > 0);
 
     return 0;
 }
 
-static int client_process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message, void* context) {
+static int client_process_message(msg_handle* msg_handle, conn_id_t conn_id, cceph_msg_header* message, void* context) {
     //Now we just process msg_write_object_ack
     int64_t log_id = message->log_id;
     assert(log_id, msg_handle != NULL);

@@ -43,7 +43,7 @@ connection* add_conn(msg_handle* handle, char* host, int port, int fd) {
     cceph_list_add(&conn->list_node, &handle->conn_list.list_node);
     return conn;
 }
-int MOCK_process_message(msg_handle* msg_handle, conn_id_t conn_id, msg_header* message, void* context) {
+int MOCK_process_message(msg_handle* msg_handle, conn_id_t conn_id, cceph_msg_header* message, void* context) {
     EXPECT_TRUE(msg_handle != NULL);
     EXPECT_TRUE(conn_id > 0);
     EXPECT_TRUE(message != NULL);
@@ -147,14 +147,14 @@ TEST(message_messenger, close_conn) {
     detach_func(close_func_name);
 }
 
-int MOCK_send_msg_write_message_success(connection* conn, msg_header* msg, int64_t log_id) {
+int MOCK_send_msg_write_message_success(connection* conn, cceph_msg_header* msg, int64_t log_id) {
     EXPECT_TRUE(conn != NULL);
     EXPECT_TRUE(msg != NULL);
     EXPECT_EQ(2, conn->fd);
     EXPECT_EQ(1, log_id);
     return 0;
 }
-int MOCK_send_msg_write_message_failed(connection* conn, msg_header* msg, int64_t log_id) {
+int MOCK_send_msg_write_message_failed(connection* conn, cceph_msg_header* msg, int64_t log_id) {
     EXPECT_TRUE(conn != NULL);
     EXPECT_TRUE(msg != NULL);
     EXPECT_EQ(2, conn->fd);
@@ -171,7 +171,7 @@ int MOCK_send_msg_close_conn(msg_handle* handle, conn_id_t id, int64_t log_id) {
     return -1;
 }
 TEST(message_messenger, send_msg) {
-    msg_header msg;
+    cceph_msg_header msg;
     msg_handle* handle = new_msg_handle(&MOCK_process_message, NULL, 1);
     connection* conn = add_conn(handle, (char*)"host1", 9001, 1);
     add_conn(handle, (char*)"host2", 9002, 2);
@@ -232,7 +232,7 @@ void expect_msg_write_obj_ack(msg_write_obj_ack* ack) {
     EXPECT_EQ(1002, ack->req_id);
     EXPECT_EQ(CCEPH_WRITE_OBJ_ACK_OK, ack->result);
 }
-int msg_handler_server(msg_handle* msg_handle, conn_id_t conn_id, msg_header* header, void* context) {
+int msg_handler_server(msg_handle* msg_handle, conn_id_t conn_id, cceph_msg_header* header, void* context) {
     EXPECT_EQ(NULL, context);
 
     msg_write_obj_req* req = (msg_write_obj_req*)header;
@@ -245,7 +245,7 @@ int msg_handler_server(msg_handle* msg_handle, conn_id_t conn_id, msg_header* he
     ack->result        = CCEPH_WRITE_OBJ_ACK_OK;
 
     int64_t log_id = header->log_id;
-    int ret = send_msg(msg_handle, conn_id, (msg_header*)ack, log_id);
+    int ret = send_msg(msg_handle, conn_id, (cceph_msg_header*)ack, log_id);
     EXPECT_EQ(0, ret);
 
     EXPECT_EQ(0, free_msg_write_obj_req(&req, log_id));
@@ -343,10 +343,10 @@ msg_handle* start_listen_thread(int port, int log_id) {
 //TEST: send_and_recv
 void TEST_send_msg_write_obj_req(int fd, pthread_mutex_t *lock, int64_t log_id) {
     pthread_mutex_lock(lock);
-    
+
     msg_write_obj_req *req = get_msg_write_obj_req();
 
-    int ret = send_msg_header(fd, &(req->header), log_id);
+    int ret = cceph_msg_header_send(fd, &(req->header), log_id);
     EXPECT_EQ(0, ret);
     ret = send_msg_write_obj_req(fd, req, log_id);
     EXPECT_EQ(0, ret);
@@ -359,7 +359,7 @@ void TEST_recv_msg_write_obj_ack(int fd, pthread_mutex_t *lock, int64_t log_id) 
     pthread_mutex_lock(lock);
     msg_write_obj_ack *ack = malloc_msg_write_obj_ack();
 
-    int ret = recv_msg_header(fd, &ack->header, log_id);
+    int ret = cceph_msg_header_recv(fd, &ack->header, log_id);
     EXPECT_EQ(0, ret);
     ret = recv_msg_write_obj_ack(fd, ack, log_id);
     EXPECT_EQ(0, ret);
@@ -445,7 +445,7 @@ TEST(message_messenger, send_and_recv) {
 
 
 //TEST: send_and_recv_with_messenger_client
-int msg_handler_client(msg_handle* handle, conn_id_t conn_id, msg_header* header, void* context) {
+int msg_handler_client(msg_handle* handle, conn_id_t conn_id, cceph_msg_header* header, void* context) {
     EXPECT_NE((void*)NULL, context);
     EXPECT_NE((msg_handle*)NULL, handle);
     EXPECT_TRUE(conn_id > 0);
@@ -471,7 +471,7 @@ void* client_thread_func(void* arg) {
 
     int ret = start_messager(handle, log_id);
     EXPECT_EQ(0, ret);
-    
+
     msg_write_obj_req *req = get_msg_write_obj_req();
 
     //Send msg by one conn;
@@ -479,7 +479,7 @@ void* client_thread_func(void* arg) {
     EXPECT_TRUE(conn_id1 > 0);
     int count = 10;
     for (int i = 0; i < count; i++) {
-        ret = send_msg(handle, conn_id1, (msg_header*)req, log_id);
+        ret = send_msg(handle, conn_id1, (cceph_msg_header*)req, log_id);
         EXPECT_EQ(0, ret);
     }
     while (called_count < count) ;
@@ -490,7 +490,7 @@ void* client_thread_func(void* arg) {
     EXPECT_TRUE(conn_id2 > 0);
     EXPECT_EQ(conn_id1, conn_id2);
     for (int i = 0; i < count; i++) {
-        ret = send_msg(handle, conn_id2, (msg_header*)req, log_id);
+        ret = send_msg(handle, conn_id2, (cceph_msg_header*)req, log_id);
         EXPECT_EQ(0, ret);
     }
     while (called_count < count) ;
@@ -508,7 +508,7 @@ void* client_thread_func(void* arg) {
         conn_id_t conn_id = get_conn(handle, "127.0.0.1", port, log_id);
         EXPECT_TRUE(conn_id > 0);
 
-        ret = send_msg(handle, conn_id, (msg_header*)req, log_id);
+        ret = send_msg(handle, conn_id, (cceph_msg_header*)req, log_id);
         EXPECT_EQ(0, ret);
 
         while (called_count < 1) ;
