@@ -198,9 +198,9 @@ TEST(message_messenger, send_msg) {
 
 //This is used by the TEST_listen_thread_func
 //The TEST_listen_thread_func is used both by send_and_recv & send_and_recv_with_messenger_client tests
-msg_write_obj_req* get_msg_write_obj_req() {
-    msg_write_obj_req *req = malloc_msg_write_obj_req();
-    EXPECT_NE((msg_write_obj_req*)NULL, req);
+cceph_msg_write_obj_req* get_cceph_msg_write_obj_req() {
+    cceph_msg_write_obj_req *req = cceph_msg_write_obj_new();
+    EXPECT_NE((cceph_msg_write_obj_req*)NULL, req);
 
     req->header.log_id = 1000;
     req->client_id     = 1001;
@@ -214,7 +214,7 @@ msg_write_obj_req* get_msg_write_obj_req() {
     strcpy(req->oid, (char*)"cceph_oid");
     return req;
 }
-void expect_msg_write_obj_req(msg_write_obj_req* req) {
+void expect_cceph_msg_write_obj_req(cceph_msg_write_obj_req* req) {
     EXPECT_EQ(CCEPH_MSG_OP_WRITE, req->header.op);
     EXPECT_EQ(1000, req->header.log_id);
     EXPECT_EQ(1001, req->client_id);
@@ -225,7 +225,7 @@ void expect_msg_write_obj_req(msg_write_obj_req* req) {
     EXPECT_EQ(1024, req->length);
     EXPECT_NE((char*)NULL, req->data);
 }
-void expect_msg_write_obj_ack(msg_write_obj_ack* ack) {
+void expect_cceph_msg_write_obj_ack(cceph_msg_write_obj_ack* ack) {
     EXPECT_EQ(CCEPH_MSG_OP_WRITE_ACK, ack->header.op);
     EXPECT_EQ(1000, ack->header.log_id);
     EXPECT_EQ(1001, ack->client_id);
@@ -235,10 +235,10 @@ void expect_msg_write_obj_ack(msg_write_obj_ack* ack) {
 int msg_handler_server(msg_handle* msg_handle, conn_id_t conn_id, cceph_msg_header* header, void* context) {
     EXPECT_EQ(NULL, context);
 
-    msg_write_obj_req* req = (msg_write_obj_req*)header;
-    expect_msg_write_obj_req(req);
+    cceph_msg_write_obj_req* req = (cceph_msg_write_obj_req*)header;
+    expect_cceph_msg_write_obj_req(req);
 
-    msg_write_obj_ack *ack = malloc_msg_write_obj_ack();
+    cceph_msg_write_obj_ack *ack = cceph_msg_write_obj_ack_new();
     ack->header.log_id = req->header.log_id;
     ack->client_id     = req->client_id;
     ack->req_id        = req->req_id;
@@ -248,8 +248,8 @@ int msg_handler_server(msg_handle* msg_handle, conn_id_t conn_id, cceph_msg_head
     int ret = send_msg(msg_handle, conn_id, (cceph_msg_header*)ack, log_id);
     EXPECT_EQ(0, ret);
 
-    EXPECT_EQ(0, free_msg_write_obj_req(&req, log_id));
-    EXPECT_EQ(0, free_msg_write_obj_ack(&ack, log_id));
+    EXPECT_EQ(0, cceph_msg_write_obj_req_free(&req, log_id));
+    EXPECT_EQ(0, cceph_msg_write_obj_ack_free(&ack, log_id));
 
     return 0;
 }
@@ -341,32 +341,32 @@ msg_handle* start_listen_thread(int port, int log_id) {
 }
 
 //TEST: send_and_recv
-void TEST_send_msg_write_obj_req(int fd, pthread_mutex_t *lock, int64_t log_id) {
+void TEST_cceph_msg_write_obj_req_send(int fd, pthread_mutex_t *lock, int64_t log_id) {
     pthread_mutex_lock(lock);
 
-    msg_write_obj_req *req = get_msg_write_obj_req();
+    cceph_msg_write_obj_req *req = get_cceph_msg_write_obj_req();
 
     int ret = cceph_msg_header_send(fd, &(req->header), log_id);
     EXPECT_EQ(0, ret);
-    ret = send_msg_write_obj_req(fd, req, log_id);
+    ret = cceph_msg_write_obj_req_send(fd, req, log_id);
     EXPECT_EQ(0, ret);
 
-    EXPECT_EQ(0, free_msg_write_obj_req(&req, log_id));
+    EXPECT_EQ(0, cceph_msg_write_obj_req_free(&req, log_id));
     pthread_mutex_unlock(lock);
 }
 
-void TEST_recv_msg_write_obj_ack(int fd, pthread_mutex_t *lock, int64_t log_id) {
+void TEST_cceph_msg_write_obj_ack_recv(int fd, pthread_mutex_t *lock, int64_t log_id) {
     pthread_mutex_lock(lock);
-    msg_write_obj_ack *ack = malloc_msg_write_obj_ack();
+    cceph_msg_write_obj_ack *ack = cceph_msg_write_obj_ack_new();
 
     int ret = cceph_msg_header_recv(fd, &ack->header, log_id);
     EXPECT_EQ(0, ret);
-    ret = recv_msg_write_obj_ack(fd, ack, log_id);
+    ret = cceph_msg_write_obj_ack_recv(fd, ack, log_id);
     EXPECT_EQ(0, ret);
 
-    expect_msg_write_obj_ack(ack);
+    expect_cceph_msg_write_obj_ack(ack);
 
-    ret = free_msg_write_obj_ack(&ack, log_id);
+    ret = cceph_msg_write_obj_ack_free(&ack, log_id);
     EXPECT_EQ(0, ret);
     pthread_mutex_unlock(lock);
 }
@@ -384,14 +384,14 @@ void* send_and_recv_msg(void* arg_ptr) {
     int64_t log_id = 124;
 
     for(int i = 0; i < count; i++) {
-        TEST_send_msg_write_obj_req(fd, lock, log_id);
-        TEST_recv_msg_write_obj_ack(fd, lock, log_id);
+        TEST_cceph_msg_write_obj_req_send(fd, lock, log_id);
+        TEST_cceph_msg_write_obj_ack_recv(fd, lock, log_id);
     }
     for(int i = 0; i < count; i++) {
-        TEST_send_msg_write_obj_req(fd, lock, log_id);
-        TEST_send_msg_write_obj_req(fd, lock, log_id);
-        TEST_recv_msg_write_obj_ack(fd, lock, log_id);
-        TEST_recv_msg_write_obj_ack(fd, lock, log_id);
+        TEST_cceph_msg_write_obj_req_send(fd, lock, log_id);
+        TEST_cceph_msg_write_obj_req_send(fd, lock, log_id);
+        TEST_cceph_msg_write_obj_ack_recv(fd, lock, log_id);
+        TEST_cceph_msg_write_obj_ack_recv(fd, lock, log_id);
     }
     return NULL;
 }
@@ -452,10 +452,10 @@ int msg_handler_client(msg_handle* handle, conn_id_t conn_id, cceph_msg_header* 
 
     *((int*)context) += 1;
 
-    msg_write_obj_ack *ack = (msg_write_obj_ack*)header;
-    expect_msg_write_obj_ack(ack);
+    cceph_msg_write_obj_ack *ack = (cceph_msg_write_obj_ack*)header;
+    expect_cceph_msg_write_obj_ack(ack);
 
-    int ret = free_msg_write_obj_ack(&ack, header->log_id);
+    int ret = cceph_msg_write_obj_ack_free(&ack, header->log_id);
     EXPECT_EQ(0, ret);
     return 0;
 }
@@ -472,7 +472,7 @@ void* client_thread_func(void* arg) {
     int ret = start_messager(handle, log_id);
     EXPECT_EQ(0, ret);
 
-    msg_write_obj_req *req = get_msg_write_obj_req();
+    cceph_msg_write_obj_req *req = get_cceph_msg_write_obj_req();
 
     //Send msg by one conn;
     conn_id_t conn_id1 = get_conn(handle, "127.0.0.1", port, log_id);
@@ -516,7 +516,7 @@ void* client_thread_func(void* arg) {
         EXPECT_EQ(0, ret);
     }
 
-    EXPECT_EQ(0, free_msg_write_obj_req(&req, log_id));
+    EXPECT_EQ(0, cceph_msg_write_obj_req_free(&req, log_id));
     return NULL;
 }
 TEST(message_messenger, send_and_recv_with_messenger_client) {

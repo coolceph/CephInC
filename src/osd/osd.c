@@ -53,7 +53,7 @@ static int io_write_object(const char* oid,
 //TODO: The write process is not so simply by our design, this is just a demo
 //TODO: We should define/impl the object_store/transaction first before impl the write process
 //TODO: Aslo the client behavier should be consisent with the osd
-static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, msg_write_obj_req* req) {
+static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, cceph_msg_write_obj_req* req) {
     int64_t log_id = req->header.log_id;
 
     char* oid = req->oid;
@@ -73,7 +73,7 @@ static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, msg_wr
 
     int result = ret == 0 ? CCEPH_WRITE_OBJ_ACK_OK : ret; //TODO: we need more CCEPH_WRITE_OBJ_ACK_*
 
-    msg_write_obj_ack* ack = malloc_msg_write_obj_ack();
+    cceph_msg_write_obj_ack* ack = cceph_msg_write_obj_ack_new();
     assert(log_id, ack != NULL);
 
     ack->header.op = CCEPH_MSG_OP_WRITE_ACK;
@@ -82,17 +82,17 @@ static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, msg_wr
     ack->req_id = req_id;
     ack->result = result;
 
-    LOG(LL_INFO, log_id, "send_msg_write_obj_ack to client %d, req_id %d, result %d.", client_id, req_id, result);
+    LOG(LL_INFO, log_id, "cceph_msg_write_obj_ack_send to client %d, req_id %d, result %d.", client_id, req_id, result);
     ret = send_msg(msg_handle, conn_id, (cceph_msg_header*)ack, log_id);
     if (ret != 0) {
-        LOG(LL_ERROR, log_id, "send_msg_write_obj_ack failed for client %d, req_id %d, errno %d.", client_id, req_id, ret);
+        LOG(LL_ERROR, log_id, "cceph_msg_write_obj_ack_send failed for client %d, req_id %d, errno %d.", client_id, req_id, ret);
     } else {
-        LOG(LL_INFO, log_id, "send_msg_write_obj_ack success for client %d, req_id %d.", client_id, req_id);
+        LOG(LL_INFO, log_id, "cceph_msg_write_obj_ack_send success for client %d, req_id %d.", client_id, req_id);
     }
 
-    ret = free_msg_write_obj_req(&req, log_id);
+    ret = cceph_msg_write_obj_req_free(&req, log_id);
     assert(log_id, ret == 0);
-    ret = free_msg_write_obj_ack(&ack, log_id);
+    ret = cceph_msg_write_obj_ack_free(&ack, log_id);
     assert(log_id, ret == 0);
 
     return 0;
@@ -110,7 +110,7 @@ extern int osd_process_message(msg_handle* msg_handle, conn_id_t conn_id, cceph_
     int ret = 0;
     switch (op) {
         case CCEPH_MSG_OP_WRITE:
-            ret = do_object_write_req(msg_handle, conn_id, (msg_write_obj_req*)message);
+            ret = do_object_write_req(msg_handle, conn_id, (cceph_msg_write_obj_req*)message);
             break;
         default:
             ret = CCEPH_ERR_UNKNOWN_OP;

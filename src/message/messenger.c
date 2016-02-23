@@ -119,17 +119,17 @@ static cceph_msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int
     switch (header.op) {
         case CCEPH_MSG_OP_WRITE:
             {
-                msg_write_obj_req *msg = malloc_msg_write_obj_req(log_id);
-                ret = recv_msg_write_obj_req(fd, msg, log_id);
-                if (ret != 0) free_msg_write_obj_req(&msg, log_id);
+                cceph_msg_write_obj_req *msg = cceph_msg_write_obj_new(log_id);
+                ret = cceph_msg_write_obj_req_recv(fd, msg, log_id);
+                if (ret != 0) cceph_msg_write_obj_req_free(&msg, log_id);
                 message = (cceph_msg_header*)msg;
                 break;
             }
         case CCEPH_MSG_OP_WRITE_ACK:
             {
-                msg_write_obj_ack *msg =  malloc_msg_write_obj_ack(log_id);
-                ret = recv_msg_write_obj_ack(fd, msg, log_id);
-                if (ret != 0) free_msg_write_obj_ack(&msg, log_id);
+                cceph_msg_write_obj_ack *msg =  cceph_msg_write_obj_ack_new(log_id);
+                ret = cceph_msg_write_obj_ack_recv(fd, msg, log_id);
+                if (ret != 0) cceph_msg_write_obj_ack_free(&msg, log_id);
                 message = (cceph_msg_header*)msg;
                 break;
             }
@@ -179,12 +179,12 @@ static int write_message(connection* conn, cceph_msg_header* msg, int64_t log_id
     switch (msg->op) {
         case CCEPH_MSG_OP_WRITE:
             {
-                ret = send_msg_write_obj_req(fd, (msg_write_obj_req*)msg, log_id);
+                ret = cceph_msg_write_obj_req_send(fd, (cceph_msg_write_obj_req*)msg, log_id);
                 break;
             }
         case CCEPH_MSG_OP_WRITE_ACK:
             {
-                ret = send_msg_write_obj_ack(fd, (msg_write_obj_ack*)msg, log_id);
+                ret = cceph_msg_write_obj_ack_send(fd, (cceph_msg_write_obj_ack*)msg, log_id);
                 break;
             }
         case CCEPH_MSG_OP_READ:
