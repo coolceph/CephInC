@@ -266,7 +266,7 @@ static void* start_epoll(void* arg) {
             break;
         }
 
-        log_id = cceph_new_log_id(); //new message, new log_id, just for read process
+        log_id = cceph_log_new_id(); //new message, new log_id, just for read process
         cceph_msg_header* msg = read_message(handle, conn_id, fd, log_id);
         if (msg == NULL) {
             LOG(LL_NOTICE, log_id, "Read message from conn %ld, fd %d failed, conn may closed.", conn_id, fd);

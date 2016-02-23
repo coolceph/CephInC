@@ -83,7 +83,7 @@ extern cceph_client_handle *cceph_new_client_handle(cceph_osdmap* osdmap) {
 }
 
 extern int cceph_initial_client(cceph_client_handle *handle) {
-    int64_t log_id = cceph_new_log_id();
+    int64_t log_id = cceph_log_new_id();
     LOG(LL_INFO, log_id, "log id for cceph_initial_client: %lld.", log_id);
 
     cceph_init_list_head(&handle->wait_req_list.list_node);
