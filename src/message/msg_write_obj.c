@@ -60,20 +60,20 @@ extern int cceph_msg_write_obj_req_recv(int fd, cceph_msg_write_obj_req* req, in
     return ret;
 }
 
-extern msg_write_obj_ack* malloc_msg_write_obj_ack() {
-    msg_write_obj_ack* msg = malloc(sizeof(msg_write_obj_ack));
-    bzero(msg, sizeof(msg_write_obj_ack));
+extern cceph_msg_write_obj_ack* cceph_msg_write_obj_ack_new() {
+    cceph_msg_write_obj_ack* msg = malloc(sizeof(cceph_msg_write_obj_ack));
+    bzero(msg, sizeof(cceph_msg_write_obj_ack));
     msg->header.op = CCEPH_MSG_OP_WRITE_ACK;
     return msg;
 }
-extern int free_msg_write_obj_ack(msg_write_obj_ack** msg, int64_t log_id) {
+extern int cceph_msg_write_obj_ack_free(cceph_msg_write_obj_ack** msg, int64_t log_id) {
     assert(log_id, *msg != NULL);
     free(*msg); 
     *msg = NULL;
     return 0;
 }
 
-extern int recv_msg_write_obj_ack(int fd, msg_write_obj_ack* msg, int64_t log_id) {
+extern int cceph_msg_write_obj_ack_recv(int fd, cceph_msg_write_obj_ack* msg, int64_t log_id) {
     assert(log_id, msg != NULL);
     int ret = 0;
     CCEPH_RECV_FIELD(client_id, int32, &msg->client_id);
@@ -81,7 +81,7 @@ extern int recv_msg_write_obj_ack(int fd, msg_write_obj_ack* msg, int64_t log_id
     CCEPH_RECV_FIELD(result, int8, &msg->result);
     return 0;
 }
-extern int send_msg_write_obj_ack(int fd, msg_write_obj_ack* msg, int64_t log_id) {
+extern int cceph_msg_write_obj_ack_send(int fd, cceph_msg_write_obj_ack* msg, int64_t log_id) {
     assert(log_id, msg != NULL);
     int ret = 0;
     CCEPH_SEND_FIELD(client_id, int32, msg->client_id);

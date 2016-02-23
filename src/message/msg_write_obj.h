@@ -33,12 +33,12 @@ typedef struct {
     int32_t req_id;
 
     int8_t result;
-} msg_write_obj_ack;
+} cceph_msg_write_obj_ack;
 
-extern msg_write_obj_ack* malloc_msg_write_obj_ack();
-extern int free_msg_write_obj_ack(msg_write_obj_ack** msg, int64_t log_id);
+extern cceph_msg_write_obj_ack* cceph_msg_write_obj_ack_new();
+extern int cceph_msg_write_obj_ack_free(cceph_msg_write_obj_ack** msg, int64_t log_id);
 
-extern int recv_msg_write_obj_ack(int fd, msg_write_obj_ack* msg, int64_t log_id);
-extern int send_msg_write_obj_ack(int fd, msg_write_obj_ack* msg, int64_t log_id);
+extern int cceph_msg_write_obj_ack_recv(int fd, cceph_msg_write_obj_ack* msg, int64_t log_id);
+extern int cceph_msg_write_obj_ack_send(int fd, cceph_msg_write_obj_ack* msg, int64_t log_id);
 
 #endif

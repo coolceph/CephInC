@@ -20,7 +20,7 @@
 #include "message/msg_write_obj.h"
 
 static int do_object_write_ack(cceph_client_handle *handle,
-        msg_handle* msg_handle, conn_id_t conn_id, msg_write_obj_ack* ack) {
+        msg_handle* msg_handle, conn_id_t conn_id, cceph_msg_write_obj_ack* ack) {
 
     int64_t log_id = ack->header.log_id;
     assert(log_id, handle != NULL);
@@ -45,7 +45,7 @@ static int client_process_message(msg_handle* msg_handle, conn_id_t conn_id, cce
     int ret = 0;
     switch (op) {
         case CCEPH_MSG_OP_WRITE_ACK:
-            ret = do_object_write_ack(handle, msg_handle, conn_id, (msg_write_obj_ack*)message);
+            ret = do_object_write_ack(handle, msg_handle, conn_id, (cceph_msg_write_obj_ack*)message);
             break;
         default:
             ret = CCEPH_ERR_UNKNOWN_OP;
