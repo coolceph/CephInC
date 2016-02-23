@@ -75,7 +75,7 @@ extern int close_conn(msg_handle* handle, conn_id_t id, int64_t log_id) {
         return CCEPH_ERR_CONN_NOT_FOUND;
     }
 
-    cceph_list_del(&conn->list_node);
+    cceph_list_delete(&conn->list_node);
     pthread_rwlock_unlock(&handle->conn_list_lock);
 
     LOG(LL_NOTICE, log_id, "Close conn %s:%d, conn_id %ld, fd %d", conn->host, conn->port, conn->id, conn->fd);
@@ -305,7 +305,7 @@ extern msg_handle* new_msg_handle(msg_handler msg_handler, void* context, int64_
     handle->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * handle->thread_count);
     cceph_atomic_set64(&handle->next_conn_id, 1);
 
-    cceph_init_list_head(&handle->conn_list.list_node);
+    cceph_list_initial(&handle->conn_list.list_node);
     pthread_rwlockattr_t attr;
     pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
     pthread_rwlock_init(&handle->conn_list_lock, &attr);
