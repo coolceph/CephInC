@@ -21,13 +21,13 @@
 #include "message/msg_write_obj.h"
 
 //caller must has handle->conn_list_lock
-static connection* get_conn_by_id(msg_handle* handle, int id) {
+static cceph_connection* get_conn_by_id(msg_handle* handle, int id) {
     struct cceph_list_head *pos;
-    connection *conn = NULL;
-    connection *result = NULL;
+    cceph_connection *conn = NULL;
+    cceph_connection *result = NULL;
 
     cceph_list_for_each(pos, &(handle->conn_list.list_node)) {
-        conn = cceph_list_entry(pos, connection, list_node);
+        conn = cceph_list_entry(pos, cceph_connection, list_node);
         if (conn->id == id) {
             result = conn;
             break;
@@ -36,13 +36,13 @@ static connection* get_conn_by_id(msg_handle* handle, int id) {
     return result;
 }
 //caller must has handle->conn_list_lock
-static connection* get_conn_by_fd(msg_handle* handle, int fd) {
+static cceph_connection* get_conn_by_fd(msg_handle* handle, int fd) {
     struct cceph_list_head *pos;
-    connection *conn = NULL;
-    connection *result = NULL;
+    cceph_connection *conn = NULL;
+    cceph_connection *result = NULL;
 
     cceph_list_for_each(pos, &(handle->conn_list.list_node)) {
-        conn = cceph_list_entry(pos, connection, list_node);
+        conn = cceph_list_entry(pos, cceph_connection, list_node);
         if (conn->fd == fd) {
             result = conn;
             break;
@@ -51,13 +51,13 @@ static connection* get_conn_by_fd(msg_handle* handle, int fd) {
     return result;
 }
 //caller must has handle->conn_list_lock
-static connection* get_conn_by_host_and_port(msg_handle* handle, const char* host, int port) {
+static cceph_connection* get_conn_by_host_and_port(msg_handle* handle, const char* host, int port) {
     struct cceph_list_head *pos;
-    connection *conn = NULL;
-    connection *result = NULL;
+    cceph_connection *conn = NULL;
+    cceph_connection *result = NULL;
 
     cceph_list_for_each(pos, &(handle->conn_list.list_node)) {
-        conn = cceph_list_entry(pos, connection, list_node);
+        conn = cceph_list_entry(pos, cceph_connection, list_node);
         if (conn->port == port && strcmp(conn->host, host) == 0) {
             result = conn;
             break;
@@ -66,9 +66,9 @@ static connection* get_conn_by_host_and_port(msg_handle* handle, const char* hos
     return result;
 }
 
-extern int close_conn(msg_handle* handle, conn_id_t id, int64_t log_id) {
+extern int close_conn(msg_handle* handle, cceph_conn_id_t id, int64_t log_id) {
     pthread_rwlock_wrlock(&handle->conn_list_lock);
-    connection* conn = get_conn_by_id(handle, id);
+    cceph_connection* conn = get_conn_by_id(handle, id);
     if (conn == NULL) {
         pthread_rwlock_unlock(&handle->conn_list_lock);
         LOG(LL_NOTICE, log_id, "The conn %ld is not found when close", id);
@@ -96,7 +96,7 @@ static int is_conn_err(struct epoll_event event) {
            || !(event.events & EPOLLIN);
 }
 
-static cceph_msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int fd, int64_t log_id) {
+static cceph_msg_header* read_message(msg_handle *handle, cceph_conn_id_t conn_id, int fd, int64_t log_id) {
     LOG(LL_INFO, log_id, "Read Message from conn_id %ld, fd %d.", conn_id, fd);
 
     //Read msg_hedaer
@@ -110,7 +110,7 @@ static cceph_msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int
         LOG(LL_ERROR, log_id, "Read msg_header from conn_id %ld error %d.", conn_id, ret);
         return NULL;
     } else {
-        LOG(LL_INFO, log_id, "read msg_header form conn_id %ld, op %s(%d), log_id %ld", 
+        LOG(LL_INFO, log_id, "read msg_header form conn_id %ld, op %s(%d), log_id %ld",
             conn_id, cceph_str_msg_op(header.op), header.op, header.log_id);
     }
 
@@ -159,9 +159,9 @@ static cceph_msg_header* read_message(msg_handle *handle, conn_id_t conn_id, int
     message->log_id = header.log_id;
     return message;
 }
-static int write_message(connection* conn, cceph_msg_header* msg, int64_t log_id) {
+static int write_message(cceph_connection* conn, cceph_msg_header* msg, int64_t log_id) {
     int fd = conn->fd;
-    conn_id_t conn_id = conn->id;
+    cceph_conn_id_t conn_id = conn->id;
 
     LOG(LL_INFO, log_id, "Write Message to conn_id %ld, fd %d, op %s(%d).",
         conn_id, fd, cceph_str_msg_op(msg->op), msg->op);
@@ -233,10 +233,10 @@ static void* start_epoll(void* arg) {
         }
 
         int fd = event.data.fd;
-        conn_id_t conn_id = -1;
+        cceph_conn_id_t conn_id = -1;
 
         pthread_rwlock_rdlock(&handle->conn_list_lock);
-        connection* conn = get_conn_by_fd(handle, fd);
+        cceph_connection* conn = get_conn_by_fd(handle, fd);
         if (conn == NULL) {
             LOG(LL_ERROR, log_id, "epoll_wait return fd %d, but conn is not found", fd);
             pthread_rwlock_unlock(&handle->conn_list_lock);
@@ -381,9 +381,9 @@ extern int free_msg_handle(msg_handle** handle, int64_t log_id) {
     return 0;
 }
 
-extern conn_id_t new_conn(msg_handle* handle, const char* host, int port, int fd, int64_t log_id) {
+extern cceph_conn_id_t new_conn(msg_handle* handle, const char* host, int port, int fd, int64_t log_id) {
     //New connection from params
-    connection* conn = (connection*)malloc(sizeof(connection));
+    cceph_connection* conn = (cceph_connection*)malloc(sizeof(cceph_connection));
     conn->id = cceph_atomic_add64(&handle->next_conn_id, 1);
     conn->fd = fd;
     conn->port = port;
@@ -410,16 +410,16 @@ extern conn_id_t new_conn(msg_handle* handle, const char* host, int port, int fd
     LOG(LL_NOTICE, log_id, "New conn %s:%d, fd %d", host, port, fd);
     return conn->id;
 }
-extern conn_id_t get_conn(msg_handle* handle, const char* host, int port, int64_t log_id) {
+extern cceph_conn_id_t get_conn(msg_handle* handle, const char* host, int port, int64_t log_id) {
     assert(log_id, handle != NULL);
     assert(log_id, host != NULL);
     assert(log_id, port > 0);
 
-    conn_id_t conn_id = -1;
+    cceph_conn_id_t conn_id = -1;
 
     //try to find conn from list first;
     pthread_rwlock_rdlock(&handle->conn_list_lock);
-    connection* conn = get_conn_by_host_and_port(handle, host, port);
+    cceph_connection* conn = get_conn_by_host_and_port(handle, host, port);
     if (conn != NULL) {
         conn_id = conn->id;
     }
@@ -452,12 +452,12 @@ extern conn_id_t get_conn(msg_handle* handle, const char* host, int port, int64_
     return conn_id;
 }
 
-extern int send_msg(msg_handle* handle, conn_id_t conn_id, cceph_msg_header* msg, int64_t log_id) {
+extern int send_msg(msg_handle* handle, cceph_conn_id_t conn_id, cceph_msg_header* msg, int64_t log_id) {
     assert(log_id, msg != NULL);
     assert(log_id, handle != NULL);
 
     pthread_rwlock_rdlock(&handle->conn_list_lock);
-    connection* conn = get_conn_by_id(handle, conn_id);
+    cceph_connection* conn = get_conn_by_id(handle, conn_id);
     if (conn == NULL) {
         pthread_rwlock_unlock(&handle->conn_list_lock);
         LOG(LL_ERROR, log_id, "send_msg can't find conn_id %ld.", conn_id);
@@ -488,12 +488,12 @@ extern int send_msg(msg_handle* handle, conn_id_t conn_id, cceph_msg_header* msg
     return 0;
 }
 
-extern connection* TEST_get_conn_by_id(msg_handle* handle, int id) {
+extern cceph_connection* TEST_get_conn_by_id(msg_handle* handle, int id) {
     return get_conn_by_id(handle, id);
 }
-extern connection* TEST_get_conn_by_fd(msg_handle* handle, int fd) {
+extern cceph_connection* TEST_get_conn_by_fd(msg_handle* handle, int fd) {
     return get_conn_by_fd(handle, fd);
 }
-extern connection* TEST_get_conn_by_host_and_port(msg_handle* handle, const char* host, int port) {
+extern cceph_connection* TEST_get_conn_by_host_and_port(msg_handle* handle, const char* host, int port) {
     return get_conn_by_host_and_port(handle, host, port);
 }

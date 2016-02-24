@@ -98,7 +98,7 @@ static int bind_and_listen(server_msg_handle *handle, int64_t log_id) {
                                   "But getnameinfo failed %d", com_fd, ret);
         }
 
-        conn_id_t conn_id = new_conn(msg_handle, hbuf, atoi(sbuf), com_fd, log_id);
+        cceph_conn_id_t conn_id = new_conn(msg_handle, hbuf, atoi(sbuf), com_fd, log_id);
         if (conn_id < 0) {
             LOG(LL_ERROR, log_id, "Call new_conn failed, fd %d.", com_fd);
             break;

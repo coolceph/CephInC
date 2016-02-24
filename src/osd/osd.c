@@ -53,7 +53,7 @@ static int io_write_object(const char* oid,
 //TODO: The write process is not so simply by our design, this is just a demo
 //TODO: We should define/impl the object_store/transaction first before impl the write process
 //TODO: Aslo the client behavier should be consisent with the osd
-static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, cceph_msg_write_obj_req* req) {
+static int do_object_write_req(msg_handle* msg_handle, cceph_conn_id_t conn_id, cceph_msg_write_obj_req* req) {
     int64_t log_id = req->header.log_id;
 
     char* oid = req->oid;
@@ -98,7 +98,11 @@ static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, cceph_
     return 0;
 }
 
-extern int cceph_osd_process_message(msg_handle* msg_handle, conn_id_t conn_id, cceph_msg_header* message, void* context) {
+extern int cceph_osd_process_message(
+        msg_handle* msg_handle,
+        cceph_conn_id_t conn_id,
+        cceph_msg_header* message,
+        void* context) {
     int64_t log_id = message->log_id;
     assert(log_id, msg_handle != NULL);
     assert(log_id, message != NULL);
