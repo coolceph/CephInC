@@ -21,7 +21,6 @@ typedef struct {
 
 extern cceph_msg_header* cceph_msg_header_new(int64_t log_id);
 extern int cceph_msg_header_free(cceph_msg_header** header, int64_t log_id);
-
 extern int cceph_msg_header_recv(int fd, cceph_msg_header* header, int64_t log_id);
 extern int cceph_msg_header_send(int fd, cceph_msg_header* header, int64_t log_id);
 
