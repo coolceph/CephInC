@@ -333,7 +333,7 @@ extern cceph_messenger* cceph_messenger_new(cceph_msg_handler msg_handler, void*
     return handle;
 }
 
-extern int start_messager(cceph_messenger* handle, int64_t log_id) {
+extern int cceph_messenger_start(cceph_messenger* handle, int64_t log_id) {
 
     //add the wake_thread_pipe_fd to epoll set
     int ret = new_conn(handle, "wake_thread_pipe", 0, handle->wake_thread_pipe_fd[0], log_id);

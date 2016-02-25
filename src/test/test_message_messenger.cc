@@ -324,7 +324,7 @@ cceph_messenger* start_listen_thread(int port, int log_id) {
     cceph_messenger* handle = cceph_messenger_new(&cceph_messengerr_server, NULL, log_id);
     EXPECT_NE((cceph_messenger*)NULL, handle);
 
-    int ret = start_messager(handle, log_id);
+    int ret = cceph_messenger_start(handle, log_id);
     EXPECT_EQ(0, ret);
 
     listen_thread_arg listen_thread_arg;
@@ -469,7 +469,7 @@ void* client_thread_func(void* arg) {
     cceph_messenger* handle = cceph_messenger_new(&cceph_messengerr_client, &called_count, log_id);
     EXPECT_NE((cceph_messenger*)NULL, handle);
 
-    int ret = start_messager(handle, log_id);
+    int ret = cceph_messenger_start(handle, log_id);
     EXPECT_EQ(0, ret);
 
     cceph_msg_write_obj_req *req = get_cceph_msg_write_obj_req();

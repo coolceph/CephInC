@@ -108,7 +108,7 @@ static int bind_and_listen(server_cceph_messenger *handle, int64_t log_id) {
 }
 
 extern int start_server_messenger(server_cceph_messenger *handle, int64_t log_id) {
-    int ret = start_messager(handle->messenger, log_id);
+    int ret = cceph_messenger_start(handle->messenger, log_id);
     if (ret == 0) {
         LOG(LL_INFO, log_id, "start messenger for server_messenger success.");
     } else {
