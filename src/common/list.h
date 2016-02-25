@@ -18,7 +18,7 @@ struct cceph_list_head
     struct cceph_list_head *next;
 };
 
-static inline void cceph_list_initial(struct cceph_list_head *list)
+static inline void cceph_list_head_init(struct cceph_list_head *list)
 {
     list->prev = list;
     list->next = list;
