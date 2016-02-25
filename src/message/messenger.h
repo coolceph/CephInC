@@ -58,8 +58,10 @@ extern int cceph_messenger_free(cceph_messenger** handle, int64_t log_id);
 extern int cceph_messenger_start(cceph_messenger* cceph_messenger, int64_t log_id);
 extern int cceph_messenger_stop(cceph_messenger* handle, int64_t log_id);
 
-extern cceph_conn_id_t new_conn(cceph_messenger* handle, const char* host, int port, int fd, int64_t log_id);
-extern cceph_conn_id_t get_conn(cceph_messenger* handle, const char* host, int port, int64_t log_id);
+extern cceph_conn_id_t cceph_messenger_add_conn(
+        cceph_messenger* handle, const char* host, int port, int fd, int64_t log_id);
+extern cceph_conn_id_t get_conn(
+        cceph_messenger* handle, const char* host, int port, int64_t log_id);
 extern int close_conn(cceph_messenger* handle, cceph_conn_id_t id, int64_t log_id);
 
 //Send msg to cceph_conn_id

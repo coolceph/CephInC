@@ -98,9 +98,9 @@ static int bind_and_listen(server_cceph_messenger *handle, int64_t log_id) {
                                   "But getnameinfo failed %d", com_fd, ret);
         }
 
-        cceph_conn_id_t conn_id = new_conn(messenger, hbuf, atoi(sbuf), com_fd, log_id);
+        cceph_conn_id_t conn_id = cceph_messenger_add_conn(messenger, hbuf, atoi(sbuf), com_fd, log_id);
         if (conn_id < 0) {
-            LOG(LL_ERROR, log_id, "Call new_conn failed, fd %d.", com_fd);
+            LOG(LL_ERROR, log_id, "Call cceph_messenger_add_conn failed, fd %d.", com_fd);
             break;
         }
     }

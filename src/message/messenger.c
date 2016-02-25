@@ -336,7 +336,7 @@ extern cceph_messenger* cceph_messenger_new(cceph_msg_handler msg_handler, void*
 extern int cceph_messenger_start(cceph_messenger* handle, int64_t log_id) {
 
     //add the wake_thread_pipe_fd to epoll set
-    int ret = new_conn(handle, "wake_thread_pipe", 0, handle->wake_thread_pipe_fd[0], log_id);
+    int ret = cceph_messenger_add_conn(handle, "wake_thread_pipe", 0, handle->wake_thread_pipe_fd[0], log_id);
     if (ret < 0) {
         LOG(LL_FATAL, log_id, "Add wake_thread_pipe to cceph_messenger error %d", ret);
         return ret;
@@ -381,7 +381,7 @@ extern int cceph_messenger_free(cceph_messenger** handle, int64_t log_id) {
     return 0;
 }
 
-extern cceph_conn_id_t new_conn(cceph_messenger* handle, const char* host, int port, int fd, int64_t log_id) {
+extern cceph_conn_id_t cceph_messenger_add_conn(cceph_messenger* handle, const char* host, int port, int fd, int64_t log_id) {
     //New connection from params
     cceph_connection* conn = (cceph_connection*)malloc(sizeof(cceph_connection));
     conn->id = cceph_atomic_add64(&handle->next_conn_id, 1);
@@ -446,7 +446,7 @@ extern cceph_conn_id_t get_conn(cceph_messenger* handle, const char* host, int p
     }
     LOG(LL_DEBUG, log_id, "Connect to %s:%d success", host, port);
 
-    conn_id = new_conn(handle, host, port, fd, log_id);
+    conn_id = cceph_messenger_add_conn(handle, host, port, fd, log_id);
     assert(log_id, conn_id > 0);
 
     return conn_id;

@@ -100,19 +100,19 @@ TEST(message_messenger, find_conn_by_port_and_ip) {
     EXPECT_EQ(conn2, TEST_get_conn_by_host_and_port(handle, (char*)"host2", 9002));
 }
 
-int MOCK_new_conn_epoll_ctl(int epfd, int op, int fd, struct epoll_event *event) {
+int MOCK_cceph_messenger_add_conn_epoll_ctl(int epfd, int op, int fd, struct epoll_event *event) {
 	EXPECT_TRUE(epfd > 0);
 	EXPECT_EQ(op, EPOLL_CTL_ADD);
 	EXPECT_EQ(fd, 1);
 	EXPECT_EQ(event->events, EPOLLIN | EPOLLONESHOT);
     return 0;
 }
-TEST(message_messenger, new_conn) {
+TEST(message_messenger, cceph_messenger_add_conn) {
     cceph_messenger* handle = cceph_messenger_new(&MOCK_process_message, NULL, 1);
 
-    attach_and_enable_func(fname_epoll_ctl, (void*)&MOCK_new_conn_epoll_ctl);
+    attach_and_enable_func(fname_epoll_ctl, (void*)&MOCK_cceph_messenger_add_conn_epoll_ctl);
 
-    cceph_conn_id_t conn_id = new_conn(handle, (char*)"host1", 9001, 1, 1);
+    cceph_conn_id_t conn_id = cceph_messenger_add_conn(handle, (char*)"host1", 9001, 1, 1);
     EXPECT_TRUE(conn_id > 0);
 
     detach_func(fname_epoll_ctl);
@@ -312,9 +312,9 @@ void* listen_thread_func(void* arg_ptr){
                                   "But getnameinfo failed %d", com_fd, ret);
         }
 
-        cceph_conn_id_t conn_id = new_conn(handle, hbuf, atoi(sbuf), com_fd, log_id);
+        cceph_conn_id_t conn_id = cceph_messenger_add_conn(handle, hbuf, atoi(sbuf), com_fd, log_id);
         if (conn_id < 0) {
-            LOG(LL_ERROR, log_id, "Call new_conn failed, fd %d.", com_fd);
+            LOG(LL_ERROR, log_id, "Call cceph_messenger_add_conn failed, fd %d.", com_fd);
             break;
         }
     }
