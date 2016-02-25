@@ -44,8 +44,8 @@ typedef struct {
     pthread_cond_t         wait_req_cond; //when req finished, this will be singal
 } cceph_client_handle;
 
-extern cceph_client_handle *cceph_new_client_handle(cceph_osdmap* osdmap);
-extern int cceph_initial_client(cceph_client_handle *handle);
+extern cceph_client_handle *cceph_client_handle_new(cceph_osdmap* osdmap);
+extern int cceph_client_initial(cceph_client_handle *handle);
 
 extern int cceph_client_write_obj(cceph_osdmap* osdmap, int64_t log_id,
                      char* oid, int64_t offset, int64_t length, char* data);

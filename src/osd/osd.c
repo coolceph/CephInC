@@ -98,7 +98,7 @@ static int do_object_write_req(msg_handle* msg_handle, conn_id_t conn_id, cceph_
     return 0;
 }
 
-extern int osd_process_message(msg_handle* msg_handle, conn_id_t conn_id, cceph_msg_header* message, void* context) {
+extern int cceph_osd_process_message(msg_handle* msg_handle, conn_id_t conn_id, cceph_msg_header* message, void* context) {
     int64_t log_id = message->log_id;
     assert(log_id, msg_handle != NULL);
     assert(log_id, message != NULL);

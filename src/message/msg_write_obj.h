@@ -19,7 +19,6 @@ typedef struct {
 
 extern cceph_msg_write_obj_req* cceph_msg_write_obj_new();
 extern int cceph_msg_write_obj_req_free(cceph_msg_write_obj_req** req, int64_t log_id);
-
 extern int cceph_msg_write_obj_req_recv(int fd, cceph_msg_write_obj_req* req, int64_t log_id);
 extern int cceph_msg_write_obj_req_send(int fd, cceph_msg_write_obj_req* req, int64_t log_id);
 
@@ -37,7 +36,6 @@ typedef struct {
 
 extern cceph_msg_write_obj_ack* cceph_msg_write_obj_ack_new();
 extern int cceph_msg_write_obj_ack_free(cceph_msg_write_obj_ack** msg, int64_t log_id);
-
 extern int cceph_msg_write_obj_ack_recv(int fd, cceph_msg_write_obj_ack* msg, int64_t log_id);
 extern int cceph_msg_write_obj_ack_send(int fd, cceph_msg_write_obj_ack* msg, int64_t log_id);
 

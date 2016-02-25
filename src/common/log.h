@@ -31,7 +31,7 @@
 
 void _cceph_log(int level, int64_t log_id, const char* fmt, ...);
 
-extern void cceph_initial_log_id(int seed);
-extern int64_t cceph_new_log_id();
+extern void cceph_log_initial_id(int seed);
+extern int64_t cceph_log_new_id();
 
 #endif

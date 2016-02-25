@@ -60,7 +60,7 @@ static int client_process_message(msg_handle* msg_handle, conn_id_t conn_id, cce
     return ret;
 }
 
-extern cceph_client_handle *cceph_new_client_handle(cceph_osdmap* osdmap) {
+extern cceph_client_handle *cceph_client_handle_new(cceph_osdmap* osdmap) {
     int64_t log_id = 0;
     cceph_client_handle *handle = (cceph_client_handle*)malloc(sizeof(cceph_client_handle));
     if (handle == NULL) {
@@ -82,11 +82,11 @@ extern cceph_client_handle *cceph_new_client_handle(cceph_osdmap* osdmap) {
     return handle;
 }
 
-extern int cceph_initial_client(cceph_client_handle *handle) {
-    int64_t log_id = cceph_new_log_id();
+extern int cceph_client_initial(cceph_client_handle *handle) {
+    int64_t log_id = cceph_log_new_id();
     LOG(LL_INFO, log_id, "log id for cceph_initial_client: %lld.", log_id);
 
-    cceph_init_list_head(&handle->wait_req_list.list_node);
+    cceph_list_head_init(&handle->wait_req_list.list_node);
     pthread_mutex_init(&handle->wait_req_lock, NULL);
     pthread_cond_init(&handle->wait_req_cond, NULL);
 

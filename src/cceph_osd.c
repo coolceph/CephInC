@@ -11,10 +11,10 @@ int main(int argc, char *argv[]) {
     int port = atoi(argv[1]);
 
     int32_t log_prefix = 201;
-    cceph_initial_log_id(log_prefix);
+    cceph_log_initial_id(log_prefix);
 
-    int64_t log_id = cceph_new_log_id();
-    msg_handle* msg_handle = new_msg_handle(&osd_process_message, NULL, log_id);
+    int64_t log_id = cceph_log_new_id();
+    msg_handle* msg_handle = new_msg_handle(&cceph_osd_process_message, NULL, log_id);
     server_msg_handle *server_msg_handle = new_server_msg_handle(msg_handle, port, log_id);
 
     start_server_messenger(server_msg_handle, log_id);
