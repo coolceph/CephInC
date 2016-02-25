@@ -35,7 +35,7 @@ typedef struct {
 
 typedef struct {
     cceph_osdmap *osdmap;
-    msg_handle *msg_handle;
+    cceph_messenger *messenger;
 
     int state;
 

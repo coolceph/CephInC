@@ -12,10 +12,10 @@
 #define CCEPH_CONN_STATE_OPEN    1
 #define CCEPH_CONN_STATE_CLOSED  2
 
-typedef int64_t conn_id_t;
+typedef int64_t cceph_conn_id_t;
 
 typedef struct {
-    conn_id_t id;
+    cceph_conn_id_t id;
 
     char* host;
     int   port;
@@ -26,16 +26,16 @@ typedef struct {
     pthread_mutex_t lock;
 
     struct cceph_list_head list_node;
-} connection;
+} cceph_connection;
 
-typedef int8_t messenger_op_t;
+typedef int8_t cceph_messenger_op_t;
 #define CCEPH_MESSENGER_OP_UNKOWN  0
 #define CCEPH_MESSENGER_OP_STOP    1
 
-typedef struct msg_handle_ msg_handle_;
-struct msg_handle_ {
+typedef struct cceph_messenger_ cceph_messenger_;
+struct cceph_messenger_ {
     int log_id;
-    int (*msg_process)(struct msg_handle_*, conn_id_t, cceph_msg_header*, void*);
+    int (*msg_process)(struct cceph_messenger_*, cceph_conn_id_t, cceph_msg_header*, void*);
     int *context;
 
     int epoll_fd;
@@ -43,32 +43,32 @@ struct msg_handle_ {
     pthread_t *thread_ids;
 
     cceph_atomic64_t next_conn_id;
-    connection conn_list;
+    cceph_connection conn_list;
     pthread_rwlock_t conn_list_lock;
 
     int wake_thread_pipe_fd[2]; //used to wake up thread to send msg
 };
 
-typedef msg_handle_ msg_handle;
-typedef int (*msg_handler)(msg_handle*, conn_id_t, cceph_msg_header*, void*);
+typedef cceph_messenger_ cceph_messenger;
+typedef int (*cceph_msg_handler)(cceph_messenger*, cceph_conn_id_t, cceph_msg_header*, void*);
 
-extern msg_handle* new_msg_handle(msg_handler msg_handler, void* context, int64_t log_id);
-extern int free_msg_handle(msg_handle** handle, int64_t log_id);
+extern cceph_messenger* cceph_messenger_new(cceph_msg_handler msg_handler, void* context, int64_t log_id);
+extern int free_cceph_messenger(cceph_messenger** handle, int64_t log_id);
 
-extern int start_messager(msg_handle* msg_handle, int64_t log_id);
-extern int stop_messager(msg_handle* handle, int64_t log_id);
+extern int start_messager(cceph_messenger* cceph_messenger, int64_t log_id);
+extern int stop_messager(cceph_messenger* handle, int64_t log_id);
 
-extern conn_id_t new_conn(msg_handle* handle, const char* host, int port, int fd, int64_t log_id);
-extern conn_id_t get_conn(msg_handle* handle, const char* host, int port, int64_t log_id);
-extern int close_conn(msg_handle* handle, conn_id_t id, int64_t log_id);
+extern cceph_conn_id_t new_conn(cceph_messenger* handle, const char* host, int port, int fd, int64_t log_id);
+extern cceph_conn_id_t get_conn(cceph_messenger* handle, const char* host, int port, int64_t log_id);
+extern int close_conn(cceph_messenger* handle, cceph_conn_id_t id, int64_t log_id);
 
-//Send msg to conn_id
+//Send msg to cceph_conn_id
 //  if success return 0, else -1 and close the conn
 //  this function will not free the msg
-extern int send_msg(msg_handle* handle, conn_id_t conn_id, cceph_msg_header* msg, int64_t log_id);
+extern int send_msg(cceph_messenger* handle, cceph_conn_id_t conn_id, cceph_msg_header* msg, int64_t log_id);
 
 //for test
-extern connection* TEST_get_conn_by_id(msg_handle* handle, int id);
-extern connection* TEST_get_conn_by_fd(msg_handle* handle, int fd);
-extern connection* TEST_get_conn_by_host_and_port(msg_handle* handle, const char* host, int port);
+extern cceph_connection* TEST_get_conn_by_id(cceph_messenger* handle, int id);
+extern cceph_connection* TEST_get_conn_by_fd(cceph_messenger* handle, int fd);
+extern cceph_connection* TEST_get_conn_by_host_and_port(cceph_messenger* handle, const char* host, int port);
 #endif

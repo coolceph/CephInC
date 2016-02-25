@@ -8,7 +8,7 @@ TEST(client, new_client_handle) {
     cceph_osdmap osdmap;
     cceph_client_handle *handle = cceph_client_handle_new(&osdmap);
     EXPECT_NE((cceph_client_handle*)NULL, handle);
-    EXPECT_NE((msg_handle*)NULL, handle->msg_handle);
+    EXPECT_NE((cceph_messenger*)NULL, handle->messenger);
     EXPECT_EQ(&osdmap, handle->osdmap);
     EXPECT_EQ(handle->state, CCEPH_CLIENT_STATE_UNKNOWN);
 }

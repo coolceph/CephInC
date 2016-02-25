@@ -6,16 +6,16 @@ extern "C" {
 #include "bhook.h"
 #include "gtest/gtest.h"
 
-TEST(server_messenger, new_server_msg_handle) {
-    msg_handle msg_handle;
+TEST(server_messenger, new_server_cceph_messenger) {
+    cceph_messenger cceph_messenger;
     int port = 12;
     int64_t log_id = 345;
 
-    server_msg_handle* handle = new_server_msg_handle(&msg_handle, port, log_id);
-    EXPECT_NE((server_msg_handle*)NULL, handle);
-    EXPECT_EQ(&msg_handle, handle->msg_handle);
+    server_cceph_messenger* handle = new_server_cceph_messenger(&cceph_messenger, port, log_id);
+    EXPECT_NE((server_cceph_messenger*)NULL, handle);
+    EXPECT_EQ(&cceph_messenger, handle->messenger);
     EXPECT_EQ(port, handle->port);
     EXPECT_EQ(log_id, handle->log_id);
 
-    EXPECT_EQ(&msg_handle, get_msg_handle(handle));
+    EXPECT_EQ(&cceph_messenger, get_cceph_messenger(handle));
 }
