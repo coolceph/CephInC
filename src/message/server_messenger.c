@@ -16,11 +16,11 @@
 #include "common/log.h"
 
 extern server_cceph_messenger* new_server_cceph_messenger(
-        cceph_messenger* cceph_messenger, 
-        int port, 
+        cceph_messenger* messenger,
+        int port,
         int64_t log_id) {
 
-    assert(log_id, cceph_messenger != NULL);
+    assert(log_id, messenger != NULL);
 
     server_cceph_messenger* handle = (server_cceph_messenger*)malloc(sizeof(server_cceph_messenger));
     if (handle == NULL) {
@@ -29,7 +29,7 @@ extern server_cceph_messenger* new_server_cceph_messenger(
     }
 
     bzero(handle, sizeof(server_cceph_messenger));
-    handle->cceph_messenger = cceph_messenger;
+    handle->messenger = messenger;
     handle->port = port;
     handle->log_id = log_id;
     return handle;
@@ -44,7 +44,7 @@ extern int free_server_cceph_messenger(server_cceph_messenger** handle, int64_t 
 }
 
 static int bind_and_listen(server_cceph_messenger *handle, int64_t log_id) {
-    cceph_messenger* cceph_messenger = handle->cceph_messenger;
+    cceph_messenger* messenger = handle->messenger;
     int port = handle->port;
 
     int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -98,7 +98,7 @@ static int bind_and_listen(server_cceph_messenger *handle, int64_t log_id) {
                                   "But getnameinfo failed %d", com_fd, ret);
         }
 
-        cceph_conn_id_t conn_id = new_conn(cceph_messenger, hbuf, atoi(sbuf), com_fd, log_id);
+        cceph_conn_id_t conn_id = new_conn(messenger, hbuf, atoi(sbuf), com_fd, log_id);
         if (conn_id < 0) {
             LOG(LL_ERROR, log_id, "Call new_conn failed, fd %d.", com_fd);
             break;
@@ -108,7 +108,7 @@ static int bind_and_listen(server_cceph_messenger *handle, int64_t log_id) {
 }
 
 extern int start_server_messenger(server_cceph_messenger *handle, int64_t log_id) {
-    int ret = start_messager(handle->cceph_messenger, log_id);
+    int ret = start_messager(handle->messenger, log_id);
     if (ret == 0) {
         LOG(LL_INFO, log_id, "start messenger for server_messenger success.");
     } else {
@@ -117,7 +117,7 @@ extern int start_server_messenger(server_cceph_messenger *handle, int64_t log_id
     }
 
     ret = bind_and_listen(handle, log_id);
-    ret = stop_messager(handle->cceph_messenger, log_id);
+    ret = stop_messager(handle->messenger, log_id);
 
     return ret;
 }
@@ -128,5 +128,5 @@ extern int stop_server_messenger(server_cceph_messenger *handle, int64_t log_id)
 }
 
 extern cceph_messenger* get_cceph_messenger(server_cceph_messenger *handle) {
-    return handle->cceph_messenger;
+    return handle->messenger;
 }

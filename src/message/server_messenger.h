@@ -4,12 +4,12 @@
 #include "message/messenger.h"
 
 typedef struct {
-    cceph_messenger* cceph_messenger;
+    cceph_messenger* messenger;
     int port;
     int64_t log_id;
 } server_cceph_messenger;
 
-extern server_cceph_messenger* new_server_cceph_messenger(cceph_messenger* cceph_messenger, int port, int64_t log_id);
+extern server_cceph_messenger* new_server_cceph_messenger(cceph_messenger* messenger, int port, int64_t log_id);
 
 extern int start_server_messenger(server_cceph_messenger *handle, int64_t log_id);
 extern int stop_server_messenger(server_cceph_messenger *handle, int64_t log_id);

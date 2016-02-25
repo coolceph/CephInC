@@ -20,24 +20,24 @@
 #include "message/msg_write_obj.h"
 
 static int do_object_write_ack(cceph_client_handle *handle,
-        cceph_messenger* cceph_messenger, cceph_conn_id_t conn_id, cceph_msg_write_obj_ack* ack) {
+        cceph_messenger* messenger, cceph_conn_id_t conn_id, cceph_msg_write_obj_ack* ack) {
 
     int64_t log_id = ack->header.log_id;
     assert(log_id, handle != NULL);
-    assert(log_id, cceph_messenger != NULL);
+    assert(log_id, messenger != NULL);
     assert(log_id, conn_id > 0);
 
     return 0;
 }
 
 static int client_process_message(
-        cceph_messenger* cceph_messenger,
+        cceph_messenger* messenger,
         cceph_conn_id_t conn_id,
         cceph_msg_header* message,
         void* context) {
     //Now we just process msg_write_object_ack
     int64_t log_id = message->log_id;
-    assert(log_id, cceph_messenger != NULL);
+    assert(log_id, messenger != NULL);
     assert(log_id, message != NULL);
     assert(log_id, context == NULL);
 
@@ -49,7 +49,7 @@ static int client_process_message(
     int ret = 0;
     switch (op) {
         case CCEPH_MSG_OP_WRITE_ACK:
-            ret = do_object_write_ack(handle, cceph_messenger, conn_id, (cceph_msg_write_obj_ack*)message);
+            ret = do_object_write_ack(handle, messenger, conn_id, (cceph_msg_write_obj_ack*)message);
             break;
         default:
             ret = CCEPH_ERR_UNKNOWN_OP;
@@ -74,7 +74,7 @@ extern cceph_client_handle *cceph_client_handle_new(cceph_osdmap* osdmap) {
 
     handle->messenger = cceph_messenger_new(&client_process_message, handle, log_id);
     if (handle->messenger == NULL) {
-        LOG(LL_ERROR, log_id, "Failed to malloc cceph_client_handle->cceph_messenger, maybe not enough memory.");
+        LOG(LL_ERROR, log_id, "Failed to malloc cceph_client_handle->messenger, maybe not enough memory.");
         free(handle);
         handle = NULL;
         return NULL;

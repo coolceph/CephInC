@@ -13,7 +13,7 @@ TEST(server_messenger, new_server_cceph_messenger) {
 
     server_cceph_messenger* handle = new_server_cceph_messenger(&cceph_messenger, port, log_id);
     EXPECT_NE((server_cceph_messenger*)NULL, handle);
-    EXPECT_EQ(&cceph_messenger, handle->cceph_messenger);
+    EXPECT_EQ(&cceph_messenger, handle->messenger);
     EXPECT_EQ(port, handle->port);
     EXPECT_EQ(log_id, handle->log_id);
 

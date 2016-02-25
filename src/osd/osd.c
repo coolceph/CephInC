@@ -53,7 +53,7 @@ static int io_write_object(const char* oid,
 //TODO: The write process is not so simply by our design, this is just a demo
 //TODO: We should define/impl the object_store/transaction first before impl the write process
 //TODO: Aslo the client behavier should be consisent with the osd
-static int do_object_write_req(cceph_messenger* cceph_messenger, cceph_conn_id_t conn_id, cceph_msg_write_obj_req* req) {
+static int do_object_write_req(cceph_messenger* messenger, cceph_conn_id_t conn_id, cceph_msg_write_obj_req* req) {
     int64_t log_id = req->header.log_id;
 
     char* oid = req->oid;
@@ -83,7 +83,7 @@ static int do_object_write_req(cceph_messenger* cceph_messenger, cceph_conn_id_t
     ack->result = result;
 
     LOG(LL_INFO, log_id, "cceph_msg_write_obj_ack_send to client %d, req_id %d, result %d.", client_id, req_id, result);
-    ret = send_msg(cceph_messenger, conn_id, (cceph_msg_header*)ack, log_id);
+    ret = send_msg(messenger, conn_id, (cceph_msg_header*)ack, log_id);
     if (ret != 0) {
         LOG(LL_ERROR, log_id, "cceph_msg_write_obj_ack_send failed for client %d, req_id %d, errno %d.", client_id, req_id, ret);
     } else {
@@ -99,12 +99,12 @@ static int do_object_write_req(cceph_messenger* cceph_messenger, cceph_conn_id_t
 }
 
 extern int cceph_osd_process_message(
-        cceph_messenger* cceph_messenger,
+        cceph_messenger* messenger,
         cceph_conn_id_t conn_id,
         cceph_msg_header* message,
         void* context) {
     int64_t log_id = message->log_id;
-    assert(log_id, cceph_messenger != NULL);
+    assert(log_id, messenger != NULL);
     assert(log_id, message != NULL);
     assert(log_id, context == NULL);
 
@@ -114,7 +114,7 @@ extern int cceph_osd_process_message(
     int ret = 0;
     switch (op) {
         case CCEPH_MSG_OP_WRITE:
-            ret = do_object_write_req(cceph_messenger, conn_id, (cceph_msg_write_obj_req*)message);
+            ret = do_object_write_req(messenger, conn_id, (cceph_msg_write_obj_req*)message);
             break;
         default:
             ret = CCEPH_ERR_UNKNOWN_OP;
