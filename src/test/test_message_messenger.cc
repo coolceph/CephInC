@@ -278,7 +278,7 @@ void* listen_thread_func(void* arg_ptr){
     int ret = bind(listen_fd, (struct sockaddr*)&my_addr, sizeof(struct sockaddr_in));
     EXPECT_NE(-1, ret);
     if (ret == -1) {
-        ret = stop_messager(handle, log_id);
+        ret = cceph_messenger_stop(handle, log_id);
         return NULL;
     }
 
@@ -286,7 +286,7 @@ void* listen_thread_func(void* arg_ptr){
     ret = listen(listen_fd, 5);
     EXPECT_NE(-1, ret);
     if (ret == -1) {
-        ret = stop_messager(handle, log_id);
+        ret = cceph_messenger_stop(handle, log_id);
         return NULL;
     }
 
@@ -435,7 +435,7 @@ TEST(message_messenger, send_and_recv) {
         pthread_join(*(client_thread_ids + i), NULL);
     }
 
-    ret = stop_messager(handle, log_id);
+    ret = cceph_messenger_stop(handle, log_id);
     EXPECT_EQ(0, ret);
 
     ret = cceph_messenger_free(&handle, log_id);
@@ -537,7 +537,7 @@ TEST(message_messenger, send_and_recv_with_messenger_client) {
         pthread_join(*(client_thread_ids + i), NULL);
     }
 
-    int ret = stop_messager(handle, log_id);
+    int ret = cceph_messenger_stop(handle, log_id);
     EXPECT_EQ(0, ret);
 
     ret = cceph_messenger_free(&handle, log_id);
@@ -587,7 +587,7 @@ TEST(server_messenger, start_server_messager) {
     }
 
     //TODO: stop server_messenger not messenger
-    ret = stop_messager(handle, log_id);
+    ret = cceph_messenger_stop(handle, log_id);
     EXPECT_EQ(0, ret);
 
     ret = cceph_messenger_free(&handle, log_id);

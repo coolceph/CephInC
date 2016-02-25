@@ -117,7 +117,7 @@ extern int start_server_messenger(server_cceph_messenger *handle, int64_t log_id
     }
 
     ret = bind_and_listen(handle, log_id);
-    ret = stop_messager(handle->messenger, log_id);
+    ret = cceph_messenger_stop(handle->messenger, log_id);
 
     return ret;
 }

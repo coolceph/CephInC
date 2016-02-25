@@ -356,7 +356,7 @@ extern int cceph_messenger_start(cceph_messenger* handle, int64_t log_id) {
 
     return 0;
 }
-extern int stop_messager(cceph_messenger* handle, int64_t log_id) {
+extern int cceph_messenger_stop(cceph_messenger* handle, int64_t log_id) {
     int i = 0, ret = 0;
     cceph_messenger_op_t op = CCEPH_MESSENGER_OP_STOP;
     for (i = 0; i < handle->thread_count; i++) {

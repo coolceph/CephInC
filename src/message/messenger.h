@@ -56,7 +56,7 @@ extern cceph_messenger* cceph_messenger_new(cceph_msg_handler msg_handler, void*
 extern int cceph_messenger_free(cceph_messenger** handle, int64_t log_id);
 
 extern int cceph_messenger_start(cceph_messenger* cceph_messenger, int64_t log_id);
-extern int stop_messager(cceph_messenger* handle, int64_t log_id);
+extern int cceph_messenger_stop(cceph_messenger* handle, int64_t log_id);
 
 extern cceph_conn_id_t new_conn(cceph_messenger* handle, const char* host, int port, int fd, int64_t log_id);
 extern cceph_conn_id_t get_conn(cceph_messenger* handle, const char* host, int port, int64_t log_id);
