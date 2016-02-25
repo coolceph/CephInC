@@ -438,7 +438,7 @@ TEST(message_messenger, send_and_recv) {
     ret = stop_messager(handle, log_id);
     EXPECT_EQ(0, ret);
 
-    ret = free_cceph_messenger(&handle, log_id);
+    ret = cceph_messenger_free(&handle, log_id);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(NULL, handle);
 }
@@ -540,7 +540,7 @@ TEST(message_messenger, send_and_recv_with_messenger_client) {
     int ret = stop_messager(handle, log_id);
     EXPECT_EQ(0, ret);
 
-    ret = free_cceph_messenger(&handle, log_id);
+    ret = cceph_messenger_free(&handle, log_id);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(NULL, handle);
 }
@@ -590,7 +590,7 @@ TEST(server_messenger, start_server_messager) {
     ret = stop_messager(handle, log_id);
     EXPECT_EQ(0, ret);
 
-    ret = free_cceph_messenger(&handle, log_id);
+    ret = cceph_messenger_free(&handle, log_id);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(NULL, handle);
 }

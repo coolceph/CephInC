@@ -369,7 +369,7 @@ extern int stop_messager(cceph_messenger* handle, int64_t log_id) {
     }
     return 0;
 }
-extern int free_cceph_messenger(cceph_messenger** handle, int64_t log_id) {
+extern int cceph_messenger_free(cceph_messenger** handle, int64_t log_id) {
     assert(log_id, *handle != NULL);
     assert(log_id, (*handle)->thread_ids != NULL);
 
