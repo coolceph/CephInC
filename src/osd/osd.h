@@ -5,7 +5,7 @@
 #include "message/msg_header.h"
 
 extern int cceph_osd_process_message(
-        msg_handle* msg_handle,
+        cceph_messenger* cceph_messenger,
         cceph_conn_id_t conn_id,
         cceph_msg_header* message,
         void* context);

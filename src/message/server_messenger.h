@@ -4,16 +4,16 @@
 #include "message/messenger.h"
 
 typedef struct {
-    msg_handle* msg_handle;
+    cceph_messenger* cceph_messenger;
     int port;
     int64_t log_id;
-} server_msg_handle;
+} server_cceph_messenger;
 
-extern server_msg_handle* new_server_msg_handle(msg_handle* msg_handle, int port, int64_t log_id);
+extern server_cceph_messenger* new_server_cceph_messenger(cceph_messenger* cceph_messenger, int port, int64_t log_id);
 
-extern int start_server_messenger(server_msg_handle *handle, int64_t log_id);
-extern int stop_server_messenger(server_msg_handle *handle, int64_t log_id);
+extern int start_server_messenger(server_cceph_messenger *handle, int64_t log_id);
+extern int stop_server_messenger(server_cceph_messenger *handle, int64_t log_id);
 
-extern msg_handle* get_msg_handle(server_msg_handle *handle);
+extern cceph_messenger* get_cceph_messenger(server_cceph_messenger *handle);
 
 #endif
