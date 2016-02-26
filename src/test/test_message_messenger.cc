@@ -75,9 +75,9 @@ TEST(message_messenger, find_conn_by_id) {
     cceph_connection* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
     cceph_connection* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
 
-    EXPECT_EQ(NULL, TEST_get_conn_by_id(handle, 0));
-    EXPECT_EQ(conn1, TEST_get_conn_by_id(handle, 9002));
-    EXPECT_EQ(conn2, TEST_get_conn_by_id(handle, 9004));
+    EXPECT_EQ(NULL, TEST_cceph_messenger_get_conn_by_id(handle, 0));
+    EXPECT_EQ(conn1, TEST_cceph_messenger_get_conn_by_id(handle, 9002));
+    EXPECT_EQ(conn2, TEST_cceph_messenger_get_conn_by_id(handle, 9004));
 }
 
 TEST(message_messenger, find_conn_by_fd) {
@@ -85,9 +85,9 @@ TEST(message_messenger, find_conn_by_fd) {
     cceph_connection* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
     cceph_connection* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
 
-    EXPECT_EQ(NULL, TEST_get_conn_by_fd(handle, 0));
-    EXPECT_EQ(conn1, TEST_get_conn_by_fd(handle, 1));
-    EXPECT_EQ(conn2, TEST_get_conn_by_fd(handle, 2));
+    EXPECT_EQ(NULL, TEST_cceph_messenger_get_conn_by_fd(handle, 0));
+    EXPECT_EQ(conn1, TEST_cceph_messenger_get_conn_by_fd(handle, 1));
+    EXPECT_EQ(conn2, TEST_cceph_messenger_get_conn_by_fd(handle, 2));
 }
 
 TEST(message_messenger, find_conn_by_port_and_ip) {
@@ -95,9 +95,9 @@ TEST(message_messenger, find_conn_by_port_and_ip) {
     cceph_connection* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
     cceph_connection* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
 
-    EXPECT_EQ(NULL, TEST_get_conn_by_host_and_port(handle, (char*)"no_this_host", 1));
-    EXPECT_EQ(conn1, TEST_get_conn_by_host_and_port(handle, (char*)"host1", 9001));
-    EXPECT_EQ(conn2, TEST_get_conn_by_host_and_port(handle, (char*)"host2", 9002));
+    EXPECT_EQ(NULL, TEST_cceph_messenger_get_conn_by_host_and_port(handle, (char*)"no_this_host", 1));
+    EXPECT_EQ(conn1, TEST_cceph_messenger_get_conn_by_host_and_port(handle, (char*)"host1", 9001));
+    EXPECT_EQ(conn2, TEST_cceph_messenger_get_conn_by_host_and_port(handle, (char*)"host2", 9002));
 }
 
 int MOCK_cceph_messenger_add_conn_epoll_ctl(int epfd, int op, int fd, struct epoll_event *event) {
@@ -117,7 +117,7 @@ TEST(message_messenger, cceph_messenger_add_conn) {
 
     detach_func(fname_epoll_ctl);
 
-	cceph_connection* conn = TEST_get_conn_by_id(handle, conn_id);
+	cceph_connection* conn = TEST_cceph_messenger_get_conn_by_id(handle, conn_id);
 	EXPECT_TRUE(conn != NULL);
 	EXPECT_STREQ(conn->host, "host1");
 	EXPECT_EQ(conn->port, 9001);
@@ -137,11 +137,11 @@ TEST(message_messenger, close_conn) {
     attach_and_enable_func(close_func_name, (void*)&MOCK_close_conn_close);
 
     EXPECT_EQ(0, close_conn(handle, 9002, 1));
-    EXPECT_EQ(NULL, TEST_get_conn_by_id(handle, 9002));
+    EXPECT_EQ(NULL, TEST_cceph_messenger_get_conn_by_id(handle, 9002));
     EXPECT_EQ(CCEPH_ERR_CONN_NOT_FOUND, close_conn(handle, 9002, 1));
 
     EXPECT_EQ(0, close_conn(handle, 9004, 1));
-    EXPECT_EQ(NULL, TEST_get_conn_by_id(handle, 9004));
+    EXPECT_EQ(NULL, TEST_cceph_messenger_get_conn_by_id(handle, 9004));
     EXPECT_EQ(CCEPH_ERR_CONN_NOT_FOUND, close_conn(handle, 9004, 1));
 
     detach_func(close_func_name);
@@ -166,7 +166,7 @@ int MOCK_send_msg_close_conn(cceph_messenger* handle, cceph_conn_id_t id, int64_
     EXPECT_EQ(9004, id);
     EXPECT_EQ(1, log_id);
 
-    cceph_connection* conn = TEST_get_conn_by_id(handle, 9004);
+    cceph_connection* conn = TEST_cceph_messenger_get_conn_by_id(handle, 9004);
     EXPECT_EQ(CCEPH_CONN_STATE_CLOSED, conn->state);
     return -1;
 }
@@ -475,7 +475,7 @@ void* client_thread_func(void* arg) {
     cceph_msg_write_obj_req *req = get_cceph_msg_write_obj_req();
 
     //Send msg by one conn;
-    cceph_conn_id_t conn_id1 = get_conn(handle, "127.0.0.1", port, log_id);
+    cceph_conn_id_t conn_id1 = cceph_messenger_get_conn(handle, "127.0.0.1", port, log_id);
     EXPECT_TRUE(conn_id1 > 0);
     int count = 10;
     for (int i = 0; i < count; i++) {
@@ -486,7 +486,7 @@ void* client_thread_func(void* arg) {
 
     //Send msg from the same conn
     called_count = 0;
-    cceph_conn_id_t conn_id2 = get_conn(handle, "127.0.0.1", port, log_id);
+    cceph_conn_id_t conn_id2 = cceph_messenger_get_conn(handle, "127.0.0.1", port, log_id);
     EXPECT_TRUE(conn_id2 > 0);
     EXPECT_EQ(conn_id1, conn_id2);
     for (int i = 0; i < count; i++) {
@@ -505,7 +505,7 @@ void* client_thread_func(void* arg) {
     for (int i = 0; i < count; i++) {
         called_count = 0;
 
-        cceph_conn_id_t conn_id = get_conn(handle, "127.0.0.1", port, log_id);
+        cceph_conn_id_t conn_id = cceph_messenger_get_conn(handle, "127.0.0.1", port, log_id);
         EXPECT_TRUE(conn_id > 0);
 
         ret = send_msg(handle, conn_id, (cceph_msg_header*)req, log_id);

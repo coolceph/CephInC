@@ -60,7 +60,7 @@ extern int cceph_messenger_stop(cceph_messenger* handle, int64_t log_id);
 
 extern cceph_conn_id_t cceph_messenger_add_conn(
         cceph_messenger* handle, const char* host, int port, int fd, int64_t log_id);
-extern cceph_conn_id_t get_conn(
+extern cceph_conn_id_t cceph_messenger_get_conn(
         cceph_messenger* handle, const char* host, int port, int64_t log_id);
 extern int close_conn(cceph_messenger* handle, cceph_conn_id_t id, int64_t log_id);
 
@@ -70,7 +70,7 @@ extern int close_conn(cceph_messenger* handle, cceph_conn_id_t id, int64_t log_i
 extern int send_msg(cceph_messenger* handle, cceph_conn_id_t conn_id, cceph_msg_header* msg, int64_t log_id);
 
 //for test
-extern cceph_connection* TEST_get_conn_by_id(cceph_messenger* handle, int id);
-extern cceph_connection* TEST_get_conn_by_fd(cceph_messenger* handle, int fd);
-extern cceph_connection* TEST_get_conn_by_host_and_port(cceph_messenger* handle, const char* host, int port);
+extern cceph_connection* TEST_cceph_messenger_get_conn_by_id(cceph_messenger* handle, int id);
+extern cceph_connection* TEST_cceph_messenger_get_conn_by_fd(cceph_messenger* handle, int fd);
+extern cceph_connection* TEST_cceph_messenger_get_conn_by_host_and_port(cceph_messenger* handle, const char* host, int port);
 #endif
