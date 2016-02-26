@@ -94,9 +94,9 @@ extern int cceph_client_initial(cceph_client_handle *handle) {
     pthread_mutex_init(&handle->wait_req_lock, NULL);
     pthread_cond_init(&handle->wait_req_cond, NULL);
 
-    int ret = start_messager(handle->messenger, log_id);
+    int ret = cceph_messenger_start(handle->messenger, log_id);
     if (ret != 0) {
-        LOG(LL_ERROR, log_id, "start_messager failed, errno %d.", ret);
+        LOG(LL_ERROR, log_id, "cceph_messenger_start failed, errno %d.", ret);
     }
 
     if (ret == 0) {

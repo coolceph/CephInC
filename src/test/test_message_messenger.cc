@@ -27,7 +27,7 @@ extern "C" {
 #include "gtest/gtest.h"
 
 char* fname_epoll_ctl = (char*)"epoll_ctl";
-char* fname_close_conn = (char*)"close_conn";
+char* fname_cceph_messenger_close_conn = (char*)"cceph_messenger_close_conn";
 char* fname_write_message = (char*)"write_message";
 
 cceph_connection* add_conn(cceph_messenger* handle, char* host, int port, int fd) {
@@ -75,9 +75,9 @@ TEST(message_messenger, find_conn_by_id) {
     cceph_connection* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
     cceph_connection* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
 
-    EXPECT_EQ(NULL, TEST_get_conn_by_id(handle, 0));
-    EXPECT_EQ(conn1, TEST_get_conn_by_id(handle, 9002));
-    EXPECT_EQ(conn2, TEST_get_conn_by_id(handle, 9004));
+    EXPECT_EQ(NULL, TEST_cceph_messenger_get_conn_by_id(handle, 0));
+    EXPECT_EQ(conn1, TEST_cceph_messenger_get_conn_by_id(handle, 9002));
+    EXPECT_EQ(conn2, TEST_cceph_messenger_get_conn_by_id(handle, 9004));
 }
 
 TEST(message_messenger, find_conn_by_fd) {
@@ -85,9 +85,9 @@ TEST(message_messenger, find_conn_by_fd) {
     cceph_connection* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
     cceph_connection* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
 
-    EXPECT_EQ(NULL, TEST_get_conn_by_fd(handle, 0));
-    EXPECT_EQ(conn1, TEST_get_conn_by_fd(handle, 1));
-    EXPECT_EQ(conn2, TEST_get_conn_by_fd(handle, 2));
+    EXPECT_EQ(NULL, TEST_cceph_messenger_get_conn_by_fd(handle, 0));
+    EXPECT_EQ(conn1, TEST_cceph_messenger_get_conn_by_fd(handle, 1));
+    EXPECT_EQ(conn2, TEST_cceph_messenger_get_conn_by_fd(handle, 2));
 }
 
 TEST(message_messenger, find_conn_by_port_and_ip) {
@@ -95,105 +95,105 @@ TEST(message_messenger, find_conn_by_port_and_ip) {
     cceph_connection* conn1 = add_conn(handle, (char*)"host1", 9001, 1);
     cceph_connection* conn2 = add_conn(handle, (char*)"host2", 9002, 2);
 
-    EXPECT_EQ(NULL, TEST_get_conn_by_host_and_port(handle, (char*)"no_this_host", 1));
-    EXPECT_EQ(conn1, TEST_get_conn_by_host_and_port(handle, (char*)"host1", 9001));
-    EXPECT_EQ(conn2, TEST_get_conn_by_host_and_port(handle, (char*)"host2", 9002));
+    EXPECT_EQ(NULL, TEST_cceph_messenger_get_conn_by_host_and_port(handle, (char*)"no_this_host", 1));
+    EXPECT_EQ(conn1, TEST_cceph_messenger_get_conn_by_host_and_port(handle, (char*)"host1", 9001));
+    EXPECT_EQ(conn2, TEST_cceph_messenger_get_conn_by_host_and_port(handle, (char*)"host2", 9002));
 }
 
-int MOCK_new_conn_epoll_ctl(int epfd, int op, int fd, struct epoll_event *event) {
+int MOCK_cceph_messenger_add_conn_epoll_ctl(int epfd, int op, int fd, struct epoll_event *event) {
 	EXPECT_TRUE(epfd > 0);
 	EXPECT_EQ(op, EPOLL_CTL_ADD);
 	EXPECT_EQ(fd, 1);
 	EXPECT_EQ(event->events, EPOLLIN | EPOLLONESHOT);
     return 0;
 }
-TEST(message_messenger, new_conn) {
+TEST(message_messenger, cceph_messenger_add_conn) {
     cceph_messenger* handle = cceph_messenger_new(&MOCK_process_message, NULL, 1);
 
-    attach_and_enable_func(fname_epoll_ctl, (void*)&MOCK_new_conn_epoll_ctl);
+    attach_and_enable_func(fname_epoll_ctl, (void*)&MOCK_cceph_messenger_add_conn_epoll_ctl);
 
-    cceph_conn_id_t conn_id = new_conn(handle, (char*)"host1", 9001, 1, 1);
+    cceph_conn_id_t conn_id = cceph_messenger_add_conn(handle, (char*)"host1", 9001, 1, 1);
     EXPECT_TRUE(conn_id > 0);
 
     detach_func(fname_epoll_ctl);
 
-	cceph_connection* conn = TEST_get_conn_by_id(handle, conn_id);
+	cceph_connection* conn = TEST_cceph_messenger_get_conn_by_id(handle, conn_id);
 	EXPECT_TRUE(conn != NULL);
 	EXPECT_STREQ(conn->host, "host1");
 	EXPECT_EQ(conn->port, 9001);
 	EXPECT_EQ(conn->fd, 1);
 }
 
-int MOCK_close_conn_close(int fd) {
+int MOCK_cceph_messenger_close_conn_close(int fd) {
     EXPECT_TRUE(fd == 1 || fd == 2);
     return 0;
 }
-TEST(message_messenger, close_conn) {
+TEST(message_messenger, cceph_messenger_close_conn) {
     cceph_messenger* handle = cceph_messenger_new(&MOCK_process_message, NULL, 1);
     add_conn(handle, (char*)"host1", 9001, 1);
     add_conn(handle, (char*)"host2", 9002, 2);
 
     char* close_func_name = (char*)"close";
-    attach_and_enable_func(close_func_name, (void*)&MOCK_close_conn_close);
+    attach_and_enable_func(close_func_name, (void*)&MOCK_cceph_messenger_close_conn_close);
 
-    EXPECT_EQ(0, close_conn(handle, 9002, 1));
-    EXPECT_EQ(NULL, TEST_get_conn_by_id(handle, 9002));
-    EXPECT_EQ(CCEPH_ERR_CONN_NOT_FOUND, close_conn(handle, 9002, 1));
+    EXPECT_EQ(0, cceph_messenger_close_conn(handle, 9002, 1));
+    EXPECT_EQ(NULL, TEST_cceph_messenger_get_conn_by_id(handle, 9002));
+    EXPECT_EQ(CCEPH_ERR_CONN_NOT_FOUND, cceph_messenger_close_conn(handle, 9002, 1));
 
-    EXPECT_EQ(0, close_conn(handle, 9004, 1));
-    EXPECT_EQ(NULL, TEST_get_conn_by_id(handle, 9004));
-    EXPECT_EQ(CCEPH_ERR_CONN_NOT_FOUND, close_conn(handle, 9004, 1));
+    EXPECT_EQ(0, cceph_messenger_close_conn(handle, 9004, 1));
+    EXPECT_EQ(NULL, TEST_cceph_messenger_get_conn_by_id(handle, 9004));
+    EXPECT_EQ(CCEPH_ERR_CONN_NOT_FOUND, cceph_messenger_close_conn(handle, 9004, 1));
 
     detach_func(close_func_name);
 }
 
-int MOCK_send_msg_write_message_success(cceph_connection* conn, cceph_msg_header* msg, int64_t log_id) {
+int MOCK_cceph_messenger_send_msg_write_message_success(cceph_connection* conn, cceph_msg_header* msg, int64_t log_id) {
     EXPECT_TRUE(conn != NULL);
     EXPECT_TRUE(msg != NULL);
     EXPECT_EQ(2, conn->fd);
     EXPECT_EQ(1, log_id);
     return 0;
 }
-int MOCK_send_msg_write_message_failed(cceph_connection* conn, cceph_msg_header* msg, int64_t log_id) {
+int MOCK_cceph_messenger_send_msg_write_message_failed(cceph_connection* conn, cceph_msg_header* msg, int64_t log_id) {
     EXPECT_TRUE(conn != NULL);
     EXPECT_TRUE(msg != NULL);
     EXPECT_EQ(2, conn->fd);
     EXPECT_EQ(1, log_id);
     return -1;
 }
-int MOCK_send_msg_close_conn(cceph_messenger* handle, cceph_conn_id_t id, int64_t log_id) {
+int MOCK_cceph_messenger_send_msg_cceph_messenger_close_conn(cceph_messenger* handle, cceph_conn_id_t id, int64_t log_id) {
     EXPECT_TRUE(handle != NULL);
     EXPECT_EQ(9004, id);
     EXPECT_EQ(1, log_id);
 
-    cceph_connection* conn = TEST_get_conn_by_id(handle, 9004);
+    cceph_connection* conn = TEST_cceph_messenger_get_conn_by_id(handle, 9004);
     EXPECT_EQ(CCEPH_CONN_STATE_CLOSED, conn->state);
     return -1;
 }
-TEST(message_messenger, send_msg) {
+TEST(message_messenger, cceph_messenger_send_msg) {
     cceph_msg_header msg;
     cceph_messenger* handle = cceph_messenger_new(&MOCK_process_message, NULL, 1);
     cceph_connection* conn = add_conn(handle, (char*)"host1", 9001, 1);
     add_conn(handle, (char*)"host2", 9002, 2);
 
     //Case: Conn not found
-    EXPECT_EQ(CCEPH_ERR_CONN_NOT_FOUND, send_msg(handle, 1, &msg, 1));
+    EXPECT_EQ(CCEPH_ERR_CONN_NOT_FOUND, cceph_messenger_send_msg(handle, 1, &msg, 1));
 
     //Case: Conn is closed
     conn->state = CCEPH_CONN_STATE_CLOSED;
-    EXPECT_EQ(CCEPH_ERR_CONN_CLOSED, send_msg(handle, 9002, &msg, 1));
+    EXPECT_EQ(CCEPH_ERR_CONN_CLOSED, cceph_messenger_send_msg(handle, 9002, &msg, 1));
 
     //Case: Normal
-    attach_and_enable_func_lib(fname_write_message, (void*)&MOCK_send_msg_write_message_success);
-    EXPECT_EQ(0, send_msg(handle, 9004, &msg, 1));
+    attach_and_enable_func_lib(fname_write_message, (void*)&MOCK_cceph_messenger_send_msg_write_message_success);
+    EXPECT_EQ(0, cceph_messenger_send_msg(handle, 9004, &msg, 1));
     detach_func_lib(fname_write_message);
 
     //Case: Write failed
-    attach_and_enable_func_lib(fname_write_message, (void*)&MOCK_send_msg_write_message_failed);
-    attach_and_enable_func_lib(fname_close_conn, (void*)&MOCK_send_msg_close_conn);
-    EXPECT_EQ(CCEPH_ERR_WRITE_CONN_ERR, send_msg(handle, 9004, &msg, 1));
+    attach_and_enable_func_lib(fname_write_message, (void*)&MOCK_cceph_messenger_send_msg_write_message_failed);
+    attach_and_enable_func_lib(fname_cceph_messenger_close_conn, (void*)&MOCK_cceph_messenger_send_msg_cceph_messenger_close_conn);
+    EXPECT_EQ(CCEPH_ERR_WRITE_CONN_ERR, cceph_messenger_send_msg(handle, 9004, &msg, 1));
     detach_func_lib(fname_write_message);
-    detach_func_lib(fname_close_conn);
+    detach_func_lib(fname_cceph_messenger_close_conn);
 }
 
 //This is used by the TEST_listen_thread_func
@@ -245,7 +245,7 @@ int cceph_messengerr_server(cceph_messenger* cceph_messenger, cceph_conn_id_t co
     ack->result        = CCEPH_WRITE_OBJ_ACK_OK;
 
     int64_t log_id = header->log_id;
-    int ret = send_msg(cceph_messenger, conn_id, (cceph_msg_header*)ack, log_id);
+    int ret = cceph_messenger_send_msg(cceph_messenger, conn_id, (cceph_msg_header*)ack, log_id);
     EXPECT_EQ(0, ret);
 
     EXPECT_EQ(0, cceph_msg_write_obj_req_free(&req, log_id));
@@ -278,7 +278,7 @@ void* listen_thread_func(void* arg_ptr){
     int ret = bind(listen_fd, (struct sockaddr*)&my_addr, sizeof(struct sockaddr_in));
     EXPECT_NE(-1, ret);
     if (ret == -1) {
-        ret = stop_messager(handle, log_id);
+        ret = cceph_messenger_stop(handle, log_id);
         return NULL;
     }
 
@@ -286,7 +286,7 @@ void* listen_thread_func(void* arg_ptr){
     ret = listen(listen_fd, 5);
     EXPECT_NE(-1, ret);
     if (ret == -1) {
-        ret = stop_messager(handle, log_id);
+        ret = cceph_messenger_stop(handle, log_id);
         return NULL;
     }
 
@@ -312,9 +312,9 @@ void* listen_thread_func(void* arg_ptr){
                                   "But getnameinfo failed %d", com_fd, ret);
         }
 
-        cceph_conn_id_t conn_id = new_conn(handle, hbuf, atoi(sbuf), com_fd, log_id);
+        cceph_conn_id_t conn_id = cceph_messenger_add_conn(handle, hbuf, atoi(sbuf), com_fd, log_id);
         if (conn_id < 0) {
-            LOG(LL_ERROR, log_id, "Call new_conn failed, fd %d.", com_fd);
+            LOG(LL_ERROR, log_id, "Call cceph_messenger_add_conn failed, fd %d.", com_fd);
             break;
         }
     }
@@ -324,7 +324,7 @@ cceph_messenger* start_listen_thread(int port, int log_id) {
     cceph_messenger* handle = cceph_messenger_new(&cceph_messengerr_server, NULL, log_id);
     EXPECT_NE((cceph_messenger*)NULL, handle);
 
-    int ret = start_messager(handle, log_id);
+    int ret = cceph_messenger_start(handle, log_id);
     EXPECT_EQ(0, ret);
 
     listen_thread_arg listen_thread_arg;
@@ -435,10 +435,10 @@ TEST(message_messenger, send_and_recv) {
         pthread_join(*(client_thread_ids + i), NULL);
     }
 
-    ret = stop_messager(handle, log_id);
+    ret = cceph_messenger_stop(handle, log_id);
     EXPECT_EQ(0, ret);
 
-    ret = free_cceph_messenger(&handle, log_id);
+    ret = cceph_messenger_free(&handle, log_id);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(NULL, handle);
 }
@@ -469,35 +469,35 @@ void* client_thread_func(void* arg) {
     cceph_messenger* handle = cceph_messenger_new(&cceph_messengerr_client, &called_count, log_id);
     EXPECT_NE((cceph_messenger*)NULL, handle);
 
-    int ret = start_messager(handle, log_id);
+    int ret = cceph_messenger_start(handle, log_id);
     EXPECT_EQ(0, ret);
 
     cceph_msg_write_obj_req *req = get_cceph_msg_write_obj_req();
 
     //Send msg by one conn;
-    cceph_conn_id_t conn_id1 = get_conn(handle, "127.0.0.1", port, log_id);
+    cceph_conn_id_t conn_id1 = cceph_messenger_get_conn(handle, "127.0.0.1", port, log_id);
     EXPECT_TRUE(conn_id1 > 0);
     int count = 10;
     for (int i = 0; i < count; i++) {
-        ret = send_msg(handle, conn_id1, (cceph_msg_header*)req, log_id);
+        ret = cceph_messenger_send_msg(handle, conn_id1, (cceph_msg_header*)req, log_id);
         EXPECT_EQ(0, ret);
     }
     while (called_count < count) ;
 
     //Send msg from the same conn
     called_count = 0;
-    cceph_conn_id_t conn_id2 = get_conn(handle, "127.0.0.1", port, log_id);
+    cceph_conn_id_t conn_id2 = cceph_messenger_get_conn(handle, "127.0.0.1", port, log_id);
     EXPECT_TRUE(conn_id2 > 0);
     EXPECT_EQ(conn_id1, conn_id2);
     for (int i = 0; i < count; i++) {
-        ret = send_msg(handle, conn_id2, (cceph_msg_header*)req, log_id);
+        ret = cceph_messenger_send_msg(handle, conn_id2, (cceph_msg_header*)req, log_id);
         EXPECT_EQ(0, ret);
     }
     while (called_count < count) ;
 
-    ret = close_conn(handle, conn_id1, log_id);
+    ret = cceph_messenger_close_conn(handle, conn_id1, log_id);
     EXPECT_EQ(0, ret);
-    ret = close_conn(handle, conn_id2, log_id);
+    ret = cceph_messenger_close_conn(handle, conn_id2, log_id);
     EXPECT_EQ(CCEPH_ERR_CONN_NOT_FOUND, ret);
 
     //Send msg by many conn
@@ -505,14 +505,14 @@ void* client_thread_func(void* arg) {
     for (int i = 0; i < count; i++) {
         called_count = 0;
 
-        cceph_conn_id_t conn_id = get_conn(handle, "127.0.0.1", port, log_id);
+        cceph_conn_id_t conn_id = cceph_messenger_get_conn(handle, "127.0.0.1", port, log_id);
         EXPECT_TRUE(conn_id > 0);
 
-        ret = send_msg(handle, conn_id, (cceph_msg_header*)req, log_id);
+        ret = cceph_messenger_send_msg(handle, conn_id, (cceph_msg_header*)req, log_id);
         EXPECT_EQ(0, ret);
 
         while (called_count < 1) ;
-        ret = close_conn(handle, conn_id, log_id);
+        ret = cceph_messenger_close_conn(handle, conn_id, log_id);
         EXPECT_EQ(0, ret);
     }
 
@@ -537,10 +537,10 @@ TEST(message_messenger, send_and_recv_with_messenger_client) {
         pthread_join(*(client_thread_ids + i), NULL);
     }
 
-    int ret = stop_messager(handle, log_id);
+    int ret = cceph_messenger_stop(handle, log_id);
     EXPECT_EQ(0, ret);
 
-    ret = free_cceph_messenger(&handle, log_id);
+    ret = cceph_messenger_free(&handle, log_id);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(NULL, handle);
 }
@@ -587,10 +587,10 @@ TEST(server_messenger, start_server_messager) {
     }
 
     //TODO: stop server_messenger not messenger
-    ret = stop_messager(handle, log_id);
+    ret = cceph_messenger_stop(handle, log_id);
     EXPECT_EQ(0, ret);
 
-    ret = free_cceph_messenger(&handle, log_id);
+    ret = cceph_messenger_free(&handle, log_id);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(NULL, handle);
 }

@@ -98,9 +98,9 @@ static int bind_and_listen(server_cceph_messenger *handle, int64_t log_id) {
                                   "But getnameinfo failed %d", com_fd, ret);
         }
 
-        cceph_conn_id_t conn_id = new_conn(messenger, hbuf, atoi(sbuf), com_fd, log_id);
+        cceph_conn_id_t conn_id = cceph_messenger_add_conn(messenger, hbuf, atoi(sbuf), com_fd, log_id);
         if (conn_id < 0) {
-            LOG(LL_ERROR, log_id, "Call new_conn failed, fd %d.", com_fd);
+            LOG(LL_ERROR, log_id, "Call cceph_messenger_add_conn failed, fd %d.", com_fd);
             break;
         }
     }
@@ -108,7 +108,7 @@ static int bind_and_listen(server_cceph_messenger *handle, int64_t log_id) {
 }
 
 extern int start_server_messenger(server_cceph_messenger *handle, int64_t log_id) {
-    int ret = start_messager(handle->messenger, log_id);
+    int ret = cceph_messenger_start(handle->messenger, log_id);
     if (ret == 0) {
         LOG(LL_INFO, log_id, "start messenger for server_messenger success.");
     } else {
@@ -117,7 +117,7 @@ extern int start_server_messenger(server_cceph_messenger *handle, int64_t log_id
     }
 
     ret = bind_and_listen(handle, log_id);
-    ret = stop_messager(handle->messenger, log_id);
+    ret = cceph_messenger_stop(handle->messenger, log_id);
 
     return ret;
 }
