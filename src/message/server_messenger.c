@@ -15,37 +15,37 @@
 #include "common/assert.h"
 #include "common/log.h"
 
-extern server_cceph_messenger* new_server_cceph_messenger(
+extern cceph_server_messenger* new_cceph_server_messenger(
         cceph_messenger* messenger,
         int port,
         int64_t log_id) {
 
     assert(log_id, messenger != NULL);
 
-    server_cceph_messenger* handle = (server_cceph_messenger*)malloc(sizeof(server_cceph_messenger));
-    if (handle == NULL) {
-        LOG(LL_FATAL, log_id, "Malloc server_cceph_messenger failed");
+    cceph_server_messenger* server_messenger = (cceph_server_messenger*)malloc(sizeof(cceph_server_messenger));
+    if (server_messenger == NULL) {
+        LOG(LL_FATAL, log_id, "Malloc cceph_server_messenger failed");
         return NULL;
     }
 
-    bzero(handle, sizeof(server_cceph_messenger));
-    handle->messenger = messenger;
-    handle->port = port;
-    handle->log_id = log_id;
-    return handle;
+    bzero(server_messenger, sizeof(cceph_server_messenger));
+    server_messenger->messenger = messenger;
+    server_messenger->port = port;
+    server_messenger->log_id = log_id;
+    return server_messenger;
 }
-extern int free_server_cceph_messenger(server_cceph_messenger** handle, int64_t log_id) {
-    assert(log_id, *handle != NULL);
+extern int free_cceph_server_messenger(cceph_server_messenger** server_messenger, int64_t log_id) {
+    assert(log_id, *server_messenger != NULL);
 
-    free(*handle);
-    *handle = NULL;
+    free(*server_messenger);
+    *server_messenger = NULL;
 
     return 0;
 }
 
-static int bind_and_listen(server_cceph_messenger *handle, int64_t log_id) {
-    cceph_messenger* messenger = handle->messenger;
-    int port = handle->port;
+static int bind_and_listen(cceph_server_messenger *server_messenger, int64_t log_id) {
+    cceph_messenger* messenger = server_messenger->messenger;
+    int port = server_messenger->port;
 
     int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (listen_fd < 0) {
@@ -107,8 +107,8 @@ static int bind_and_listen(server_cceph_messenger *handle, int64_t log_id) {
     return 0;
 }
 
-extern int start_server_messenger(server_cceph_messenger *handle, int64_t log_id) {
-    int ret = cceph_messenger_start(handle->messenger, log_id);
+extern int cceph_server_messenger_start(cceph_server_messenger *server_messenger, int64_t log_id) {
+    int ret = cceph_messenger_start(server_messenger->messenger, log_id);
     if (ret == 0) {
         LOG(LL_INFO, log_id, "start messenger for server_messenger success.");
     } else {
@@ -116,17 +116,17 @@ extern int start_server_messenger(server_cceph_messenger *handle, int64_t log_id
         return ret;
     }
 
-    ret = bind_and_listen(handle, log_id);
-    ret = cceph_messenger_stop(handle->messenger, log_id);
+    ret = bind_and_listen(server_messenger, log_id);
+    ret = cceph_messenger_stop(server_messenger->messenger, log_id);
 
     return ret;
 }
-extern int stop_server_messenger(server_cceph_messenger *handle, int64_t log_id) {
+extern int cceph_server_messenger_stop(cceph_server_messenger *server_messenger, int64_t log_id) {
     //TODO: Do we actually need it?
-    assert(log_id, handle != NULL);
+    assert(log_id, server_messenger != NULL);
     return 0;
 }
 
-extern cceph_messenger* get_cceph_messenger(server_cceph_messenger *handle) {
-    return handle->messenger;
+extern cceph_messenger* cceph_server_messenger_get_messenger(cceph_server_messenger *server_messenger) {
+    return server_messenger->messenger;
 }

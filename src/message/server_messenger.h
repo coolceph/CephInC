@@ -7,13 +7,13 @@ typedef struct {
     cceph_messenger* messenger;
     int port;
     int64_t log_id;
-} server_cceph_messenger;
+} cceph_server_messenger;
 
-extern server_cceph_messenger* new_server_cceph_messenger(cceph_messenger* messenger, int port, int64_t log_id);
+extern cceph_server_messenger* new_cceph_server_messenger(cceph_messenger* messenger, int port, int64_t log_id);
 
-extern int start_server_messenger(server_cceph_messenger *handle, int64_t log_id);
-extern int stop_server_messenger(server_cceph_messenger *handle, int64_t log_id);
+extern int cceph_server_messenger_start(cceph_server_messenger *server_messenger, int64_t log_id);
+extern int cceph_server_messenger_stop(cceph_server_messenger *server_messenger, int64_t log_id);
 
-extern cceph_messenger* get_cceph_messenger(server_cceph_messenger *handle);
+extern cceph_messenger* cceph_server_messenger_get_messenger(cceph_server_messenger *server_messenger);
 
 #endif
