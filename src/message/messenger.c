@@ -66,7 +66,7 @@ static cceph_connection* cceph_messenger_get_conn_by_host_and_port(cceph_messeng
     return result;
 }
 
-extern int close_conn(cceph_messenger* handle, cceph_conn_id_t id, int64_t log_id) {
+extern int cceph_messenger_close_conn(cceph_messenger* handle, cceph_conn_id_t id, int64_t log_id) {
     pthread_rwlock_wrlock(&handle->conn_list_lock);
     cceph_connection* conn = cceph_messenger_get_conn_by_id(handle, id);
     if (conn == NULL) {
@@ -104,7 +104,7 @@ static cceph_msg_header* read_message(cceph_messenger *handle, cceph_conn_id_t c
     int ret = cceph_msg_header_recv(fd, &header, log_id);
     if (ret == CCEPH_ERR_CONN_CLOSED) {
         LOG(LL_NOTICE, log_id, "Read msg_header from conn_id %ld failed, conn closed", conn_id);
-        close_conn(handle, conn_id, log_id);
+        cceph_messenger_close_conn(handle, conn_id, log_id);
         return NULL;
     } else if (ret != 0) {
         LOG(LL_ERROR, log_id, "Read msg_header from conn_id %ld error %d.", conn_id, ret);
@@ -145,7 +145,7 @@ static cceph_msg_header* read_message(cceph_messenger *handle, cceph_conn_id_t c
 
     if (ret == CCEPH_ERR_CONN_CLOSED) {
         LOG(LL_NOTICE, log_id, "Read message from conn_id %ld error, conn closed", conn_id);
-        close_conn(handle, conn_id, log_id);
+        cceph_messenger_close_conn(handle, conn_id, log_id);
         return NULL;
     } else if (ret != 0) {
         LOG(LL_ERROR, log_id, "Read message from conn_id %ld error %d.", conn_id, ret);
@@ -250,7 +250,7 @@ static void* start_epoll(void* arg) {
 
         if (is_conn_err(event)) {
             LOG(LL_INFO, log_id, "Network closed for conn %ld, fd %d.", conn_id, fd);
-            close_conn(handle, conn_id, log_id);
+            cceph_messenger_close_conn(handle, conn_id, log_id);
             continue;
         }
 
@@ -280,7 +280,7 @@ static void* start_epoll(void* arg) {
         int ret = wait_for_next_msg(handle, fd);
         if (ret < -1) {
             LOG(LL_ERROR, log_id, "epoll_ctl for conn %ld, fd %d, error: %d", conn_id, fd, ret);
-            close_conn(handle, conn_id, log_id);
+            cceph_messenger_close_conn(handle, conn_id, log_id);
         } else {
             LOG(LL_INFO, log_id, "epoll_ctl for conn %ld, fd %d, wait for next msg", conn_id, fd);
         }
@@ -403,7 +403,7 @@ extern cceph_conn_id_t cceph_messenger_add_conn(cceph_messenger* handle, const c
     int ret = epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, fd, &event);
     if (ret < -1) {
         LOG(LL_ERROR, log_id, "epoll_ctl for new conn %s:%d, fd %d, error: %d", host, port, fd, ret);
-        close_conn(handle, conn->id, log_id);
+        cceph_messenger_close_conn(handle, conn->id, log_id);
         return -1;
     }
 
@@ -480,7 +480,7 @@ extern int send_msg(cceph_messenger* handle, cceph_conn_id_t conn_id, cceph_msg_
         pthread_mutex_unlock(&conn->lock);
 
         LOG(LL_ERROR, log_id, "Write message to conn_id %ld failed, close it.", conn_id);
-        close_conn(handle, conn_id, log_id);
+        cceph_messenger_close_conn(handle, conn_id, log_id);
         return CCEPH_ERR_WRITE_CONN_ERR;
     }
 

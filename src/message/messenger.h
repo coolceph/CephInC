@@ -62,7 +62,7 @@ extern cceph_conn_id_t cceph_messenger_add_conn(
         cceph_messenger* handle, const char* host, int port, int fd, int64_t log_id);
 extern cceph_conn_id_t cceph_messenger_get_conn(
         cceph_messenger* handle, const char* host, int port, int64_t log_id);
-extern int close_conn(cceph_messenger* handle, cceph_conn_id_t id, int64_t log_id);
+extern int cceph_messenger_close_conn(cceph_messenger* handle, cceph_conn_id_t id, int64_t log_id);
 
 //Send msg to cceph_conn_id
 //  if success return 0, else -1 and close the conn
