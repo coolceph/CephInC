@@ -15,9 +15,9 @@ int main(int argc, char *argv[]) {
 
     int64_t log_id = cceph_log_new_id();
     cceph_messenger* messenger = cceph_messenger_new(&cceph_osd_process_message, NULL, log_id);
-    server_cceph_messenger *server_cceph_messenger = new_server_cceph_messenger(messenger, port, log_id);
+    cceph_server_messenger *cceph_server_messenger = new_cceph_server_messenger(messenger, port, log_id);
 
-    start_server_messenger(server_cceph_messenger, log_id);
+    cceph_server_messenger_start(cceph_server_messenger, log_id);
 
     return 0;
 }
