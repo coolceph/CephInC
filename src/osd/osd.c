@@ -83,7 +83,7 @@ static int do_object_write_req(cceph_messenger* messenger, cceph_conn_id_t conn_
     ack->result = result;
 
     LOG(LL_INFO, log_id, "cceph_msg_write_obj_ack_send to client %d, req_id %d, result %d.", client_id, req_id, result);
-    ret = send_msg(messenger, conn_id, (cceph_msg_header*)ack, log_id);
+    ret = cceph_messenger_send_msg(messenger, conn_id, (cceph_msg_header*)ack, log_id);
     if (ret != 0) {
         LOG(LL_ERROR, log_id, "cceph_msg_write_obj_ack_send failed for client %d, req_id %d, errno %d.", client_id, req_id, ret);
     } else {
