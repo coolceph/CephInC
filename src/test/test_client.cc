@@ -4,19 +4,19 @@ extern "C" {
 
 #include "gtest/gtest.h"
 
-TEST(client, new_client_handle) {
+TEST(client, new_client_client) {
     cceph_osdmap osdmap;
-    cceph_client_handle *handle = cceph_client_handle_new(&osdmap);
-    EXPECT_NE((cceph_client_handle*)NULL, handle);
-    EXPECT_NE((cceph_messenger*)NULL, handle->messenger);
-    EXPECT_EQ(&osdmap, handle->osdmap);
-    EXPECT_EQ(handle->state, CCEPH_CLIENT_STATE_UNKNOWN);
+    cceph_client *client = cceph_client_new(&osdmap);
+    EXPECT_NE((cceph_client*)NULL, client);
+    EXPECT_NE((cceph_messenger*)NULL, client->messenger);
+    EXPECT_EQ(&osdmap, client->osdmap);
+    EXPECT_EQ(client->state, CCEPH_CLIENT_STATE_UNKNOWN);
 }
 TEST(client, initial_client) {
     cceph_osdmap osdmap;
-    cceph_client_handle *handle = cceph_client_handle_new(&osdmap);
+    cceph_client *client = cceph_client_new(&osdmap);
 
-    int ret = cceph_client_initial(handle);
+    int ret = cceph_client_init(client);
     EXPECT_EQ(0, ret);
-    EXPECT_EQ(CCEPH_CLIENT_STATE_NORMAL, handle->state);
+    EXPECT_EQ(CCEPH_CLIENT_STATE_NORMAL, client->state);
 }

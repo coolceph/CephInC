@@ -42,18 +42,18 @@ typedef struct {
     cceph_client_wait_req  wait_req_list;
     pthread_mutex_t        wait_req_lock;
     pthread_cond_t         wait_req_cond; //when req finished, this will be singal
-} cceph_client_handle;
+} cceph_client;
 
-extern cceph_client_handle *cceph_client_handle_new(cceph_osdmap* osdmap);
-extern int cceph_client_initial(cceph_client_handle *handle);
+extern cceph_client *cceph_client_new(cceph_osdmap* osdmap);
+extern int cceph_client_init(cceph_client *client);
 
 extern int cceph_client_write_obj(cceph_osdmap* osdmap, int64_t log_id,
                      char* oid, int64_t offset, int64_t length, char* data);
 
-extern int cceph_client_read_obj(cceph_client_handle* handle, int64_t log_id,
+extern int cceph_client_read_obj(cceph_client* client, int64_t log_id,
                     char* oid, int64_t offset, int64_t length, char* data);
 
-extern int cceph_client_delete_obj(cceph_client_handle* handle, int64_t log_id,
+extern int cceph_client_delete_obj(cceph_client* client, int64_t log_id,
                       char* oid);
 
 #endif
