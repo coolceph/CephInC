@@ -1,3 +1,16 @@
+# Abbreviation #
+
+os     = object_store
+osd    = object_storage_daemon
+pg     = placement_group
+oid    = object_id
+pid    = pg_id
+cid    = collect_id
+msg    = messeage
+msger  = messenger
+smsger = server_messenger
+
+
 # Log ID #
 
 Each log will have a log id which is stand for the process of this log.
