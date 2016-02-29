@@ -35,7 +35,8 @@ typedef int8_t cceph_messenger_op_t;
 typedef struct cceph_messenger_ cceph_messenger_;
 struct cceph_messenger_ {
     int log_id;
-    int (*msg_process)(struct cceph_messenger_*, cceph_conn_id_t, cceph_msg_header*, void*);
+    int (*msg_process)(struct cceph_messenger_*,
+            cceph_conn_id_t, cceph_msg_header*, void*);
     int *context;
 
     int epoll_fd;
@@ -50,7 +51,8 @@ struct cceph_messenger_ {
 };
 
 typedef cceph_messenger_ cceph_messenger;
-typedef int (*cceph_msg_messengerr)(cceph_messenger*, cceph_conn_id_t, cceph_msg_header*, void*);
+typedef int (*cceph_msg_messengerr)(cceph_messenger*,
+        cceph_conn_id_t, cceph_msg_header*, void*);
 
 extern cceph_messenger* cceph_messenger_new(
         cceph_msg_messengerr msg_messengerr, void* context, int64_t log_id);
@@ -74,7 +76,8 @@ extern int cceph_messenger_close_conn(
 //  if success return 0, else -1 and close the conn
 //  this function will not free the msg
 extern int cceph_messenger_send_msg(
-        cceph_messenger* messenger, cceph_conn_id_t conn_id, cceph_msg_header* msg, int64_t log_id);
+        cceph_messenger* messenger, cceph_conn_id_t conn_id,
+        cceph_msg_header* msg, int64_t log_id);
 
 //for test
 extern cceph_connection* TEST_cceph_messenger_get_conn_by_id(

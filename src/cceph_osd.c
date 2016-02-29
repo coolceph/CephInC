@@ -14,10 +14,10 @@ int main(int argc, char *argv[]) {
     cceph_log_initial_id(log_prefix);
 
     int64_t log_id = cceph_log_new_id();
-    cceph_messenger* messenger = cceph_messenger_new(&cceph_osd_process_message, NULL, log_id);
-    cceph_server_messenger *cceph_server_messenger = new_cceph_server_messenger(messenger, port, log_id);
+    cceph_messenger* msger = cceph_messenger_new(&cceph_osd_process_message, NULL, log_id);
+    cceph_server_messenger *smsger = new_cceph_server_messenger(msger, port, log_id);
 
-    cceph_server_messenger_start(cceph_server_messenger, log_id);
+    cceph_server_messenger_start(smsger, log_id);
 
     return 0;
 }

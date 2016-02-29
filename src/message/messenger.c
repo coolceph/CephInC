@@ -82,7 +82,8 @@ extern int cceph_messenger_close_conn(
     cceph_list_delete(&conn->list_node);
     pthread_rwlock_unlock(&messenger->conn_list_lock);
 
-    LOG(LL_NOTICE, log_id, "Close conn %s:%d, conn_id %ld, fd %d", conn->host, conn->port, conn->id, conn->fd);
+    LOG(LL_NOTICE, log_id, "Close conn %s:%d, conn_id %ld, fd %d",
+            conn->host, conn->port, conn->id, conn->fd);
 
     pthread_mutex_lock(&conn->lock);
     close(conn->fd);
@@ -108,7 +109,8 @@ static cceph_msg_header* cceph_messenger_read_msg(
     cceph_msg_header header;
     int ret = cceph_msg_header_recv(fd, &header, log_id);
     if (ret == CCEPH_ERR_CONN_CLOSED) {
-        LOG(LL_NOTICE, log_id, "Read msg_header from conn_id %ld failed, conn closed", conn_id);
+        LOG(LL_NOTICE, log_id, "Read msg_header from conn_id %ld failed, conn closed",
+                conn_id);
         cceph_messenger_close_conn(messenger, conn_id, log_id);
         return NULL;
     } else if (ret != 0) {
@@ -149,7 +151,8 @@ static cceph_msg_header* cceph_messenger_read_msg(
     }
 
     if (ret == CCEPH_ERR_CONN_CLOSED) {
-        LOG(LL_NOTICE, log_id, "Read message from conn_id %ld error, conn closed", conn_id);
+        LOG(LL_NOTICE, log_id, "Read message from conn_id %ld error, conn closed" ,
+                conn_id);
         cceph_messenger_close_conn(messenger, conn_id, log_id);
         return NULL;
     } else if (ret != 0) {
