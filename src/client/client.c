@@ -107,13 +107,20 @@ extern int cceph_client_init(cceph_client *client) {
 }
 
 static int cceph_client_add_wait_req(cceph_client *client, cceph_msg_write_obj_req *req, int64_t log_id) {
+    assert(log_id, client != NULL);
+    assert(log_id, req != NULL);
+
     return 0;
 }
 static int cceph_client_wait_for_req(cceph_client *client, cceph_msg_write_obj_req *req, int64_t log_id) {
+    assert(log_id, client != NULL);
+    assert(log_id, req != NULL);
+
     return 0;
 }
 extern int cceph_client_write_obj(cceph_client* client,
                      char* oid, int64_t offset, int64_t length, char* data) {
+    //TODO: check param
 
     int64_t log_id = cceph_log_new_id();
 
@@ -132,28 +139,42 @@ extern int cceph_client_write_obj(cceph_client* client,
         char *host = osdmap->osds[i].host;
         int   port = osdmap->osds[i].port;
 
+        //TODO: check host and port
+
         cceph_conn_id_t conn_id = cceph_messenger_get_conn(msger, host, port, log_id);
         if (conn_id < 0) {
             LOG(LL_WARN, log_id, "failed to get conn to %s:%d.", host, port);
             failed_count++;
             continue;
         }
+        LOG(LL_INFO, log_id, "get conn_id %d for %s:%d.", conn_id, host, port);
+
         int ret = cceph_messenger_send_msg(msger, conn_id, (cceph_msg_header*)req, log_id);
         if (ret != 0) {
             LOG(LL_WARN, log_id, "failed to send req to conn %d.", conn_id);
             failed_count++;
             continue;
         }
-        //TODO: LOG
+
+        LOG(LL_INFO, log_id, "send req to conn_id %d success.", conn_id);
         success_count++;
     }
-    if (success_count <= osdmap->osd_count) {
 
+    //TODO: this should be a opinion of the poll
+    if (success_count <= osdmap->osd_count / 2) {
+        LOG(LL_ERROR, log_id, "Can't send req to enough servers, success %d, failed %d. ",
+                success_count, failed_count);
+        return CCEPH_ERR_NOT_ENOUGH_SERVER;
     }
 
+    LOG(LL_DEBUG, log_id, "Send req success, success %d, failed %d.",
+            success_count, failed_count);
+
     int ret = cceph_client_add_wait_req(client, req, log_id);
+    LOG(LL_DEBUG, log_id, "Add req to wait list.");
 
     ret = cceph_client_wait_for_req(client, req, log_id);
+    LOG(LL_INFO, log_id, "req finished, ret %d.", ret);
 
-    return 0;
+    return ret;
 }
