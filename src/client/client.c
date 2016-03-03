@@ -106,16 +106,41 @@ extern int cceph_client_init(cceph_client *client) {
     return ret;
 }
 
-static int cceph_client_add_wait_req(cceph_client *client, cceph_msg_write_obj_req *req, int64_t log_id) {
+static int add_req_to_wait_list(cceph_client *client, cceph_msg_header *req, int64_t log_id) {
     assert(log_id, client != NULL);
     assert(log_id, req != NULL);
 
     return 0;
 }
-static int cceph_client_wait_for_req(cceph_client *client, cceph_msg_write_obj_req *req, int64_t log_id) {
+static int wait_for_req(cceph_client *client, cceph_msg_header *req, int64_t log_id) {
     assert(log_id, client != NULL);
     assert(log_id, req != NULL);
 
+    return 0;
+}
+static int send_req_to_osd(cceph_messenger* msger, cceph_osd_id *osd, cceph_msg_header* req, int64_t log_id) {
+    assert(log_id, msger != NULL);
+    assert(log_id, osd != NULL);
+    assert(log_id, osd->host != NULL);
+    assert(log_id, req != NULL);
+
+    const char* host = osd->host;
+    const int   port = osd->port;
+
+    cceph_conn_id_t conn_id = cceph_messenger_get_conn(msger, host, port, log_id);
+    if (conn_id < 0) {
+        LOG(LL_WARN, log_id, "failed to get conn to %s:%d.", host, port);
+        return conn_id;
+    }
+    LOG(LL_INFO, log_id, "get conn_id %d for %s:%d.", conn_id, host, port);
+
+    int ret = cceph_messenger_send_msg(msger, conn_id, (cceph_msg_header*)req, log_id);
+    if (ret != 0) {
+        LOG(LL_WARN, log_id, "failed to send req to conn %d.", conn_id);
+        return ret;
+    }
+
+    LOG(LL_INFO, log_id, "send req to conn_id %d success.", conn_id);
     return 0;
 }
 extern int cceph_client_write_obj(cceph_client* client,
@@ -136,28 +161,12 @@ extern int cceph_client_write_obj(cceph_client* client,
     cceph_osdmap    *osdmap = client->osdmap;
     int failed_count = 0, success_count = 0, i = 0;
     for (i = 0; i < osdmap->osd_count; i++) {
-        char *host = osdmap->osds[i].host;
-        int   port = osdmap->osds[i].port;
-
-        //TODO: check host and port
-
-        cceph_conn_id_t conn_id = cceph_messenger_get_conn(msger, host, port, log_id);
-        if (conn_id < 0) {
-            LOG(LL_WARN, log_id, "failed to get conn to %s:%d.", host, port);
+        int ret = send_req_to_osd(msger, &osdmap->osds[i], (cceph_msg_header*)req, log_id);
+        if (ret == 0) {
+            success_count++;
+        } else {
             failed_count++;
-            continue;
         }
-        LOG(LL_INFO, log_id, "get conn_id %d for %s:%d.", conn_id, host, port);
-
-        int ret = cceph_messenger_send_msg(msger, conn_id, (cceph_msg_header*)req, log_id);
-        if (ret != 0) {
-            LOG(LL_WARN, log_id, "failed to send req to conn %d.", conn_id);
-            failed_count++;
-            continue;
-        }
-
-        LOG(LL_INFO, log_id, "send req to conn_id %d success.", conn_id);
-        success_count++;
     }
 
     //TODO: this should be a opinion of the poll
@@ -170,10 +179,10 @@ extern int cceph_client_write_obj(cceph_client* client,
     LOG(LL_DEBUG, log_id, "Send req success, success %d, failed %d.",
             success_count, failed_count);
 
-    int ret = cceph_client_add_wait_req(client, req, log_id);
+    int ret = add_req_to_wait_list(client, (cceph_msg_header*)req, log_id);
     LOG(LL_DEBUG, log_id, "Add req to wait list.");
 
-    ret = cceph_client_wait_for_req(client, req, log_id);
+    ret = wait_for_req(client, (cceph_msg_header*)req, log_id);
     LOG(LL_INFO, log_id, "req finished, ret %d.", ret);
 
     return ret;
