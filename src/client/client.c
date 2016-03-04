@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <pthread.h>
 
 #include "include/errno.h"
 
@@ -106,18 +107,6 @@ extern int cceph_client_init(cceph_client *client) {
     return ret;
 }
 
-static int add_req_to_wait_list(cceph_client *client, cceph_msg_header *req, int64_t log_id) {
-    assert(log_id, client != NULL);
-    assert(log_id, req != NULL);
-
-    return 0;
-}
-static int wait_for_req(cceph_client *client, cceph_msg_header *req, int64_t log_id) {
-    assert(log_id, client != NULL);
-    assert(log_id, req != NULL);
-
-    return 0;
-}
 static int send_req_to_osd(cceph_messenger* msger, cceph_osd_id *osd, cceph_msg_header* req, int64_t log_id) {
     assert(log_id, msger != NULL);
     assert(log_id, osd != NULL);
@@ -143,12 +132,38 @@ static int send_req_to_osd(cceph_messenger* msger, cceph_osd_id *osd, cceph_msg_
     LOG(LL_INFO, log_id, "send req to conn_id %d success.", conn_id);
     return 0;
 }
+static int add_req_to_wait_list(cceph_client *client, cceph_msg_header *req, int req_count, int64_t log_id) {
+    assert(log_id, client != NULL);
+    assert(log_id, req != NULL);
+
+    cceph_client_wait_req *wait_req = (cceph_client_wait_req*)malloc(sizeof(cceph_client_wait_req));
+    wait_req->req = req;
+    wait_req->req_count = req_count;
+    wait_req->ack_count = 0;
+    wait_req->commit_count = 0;
+
+    pthread_mutex_lock(&client->wait_req_lock);
+    cceph_list_add(&wait_req->list_node, &client->wait_req_list.list_node);
+    pthread_mutex_unlock(&client->wait_req_lock);
+
+    return 0;
+}
+static int wait_for_req(cceph_client *client, cceph_msg_header *req, int64_t log_id) {
+    assert(log_id, client != NULL);
+    assert(log_id, req != NULL);
+
+    return 0;
+}
 extern int cceph_client_write_obj(cceph_client* client,
                      char* oid, int64_t offset, int64_t length, char* data) {
-    //TODO: check param
-
     int64_t log_id = cceph_log_new_id();
 
+    assert(log_id, client != NULL);
+    assert(log_id, client->state == CCEPH_CLIENT_STATE_NORMAL);
+    assert(log_id, oid != NULL);
+    assert(log_id, data != NULL);
+
+    //TODO: we need client_id and req_id;
     cceph_msg_write_obj_req *req = cceph_msg_write_obj_req_new();
     req->header.op = CCEPH_MSG_OP_WRITE;
     req->header.log_id = log_id;
@@ -179,7 +194,7 @@ extern int cceph_client_write_obj(cceph_client* client,
     LOG(LL_DEBUG, log_id, "Send req success, success %d, failed %d.",
             success_count, failed_count);
 
-    int ret = add_req_to_wait_list(client, (cceph_msg_header*)req, log_id);
+    int ret = add_req_to_wait_list(client, (cceph_msg_header*)req, osdmap->osd_count, log_id);
     LOG(LL_DEBUG, log_id, "Add req to wait list.");
 
     ret = wait_for_req(client, (cceph_msg_header*)req, log_id);
