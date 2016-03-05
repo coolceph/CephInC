@@ -18,5 +18,7 @@ TEST(client, initial_client) {
 
     int ret = cceph_client_init(client);
     EXPECT_EQ(0, ret);
+    EXPECT_EQ(0, client->client_id);
+    EXPECT_EQ(0, cceph_atomic_get(&client->req_id));
     EXPECT_EQ(CCEPH_CLIENT_STATE_NORMAL, client->state);
 }

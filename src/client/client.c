@@ -91,6 +91,9 @@ extern int cceph_client_init(cceph_client *client) {
     int64_t log_id = cceph_log_new_id();
     LOG(LL_INFO, log_id, "log id for cceph_client_init: %lld.", log_id);
 
+    client->client_id = 0; //TODO: client should get its id from mon
+    cceph_atomic_set(&client->req_id, 0);
+
     cceph_list_head_init(&client->wait_req_list.list_node);
     pthread_mutex_init(&client->wait_req_lock, NULL);
     pthread_cond_init(&client->wait_req_cond, NULL);
@@ -163,10 +166,11 @@ extern int cceph_client_write_obj(cceph_client* client,
     assert(log_id, oid != NULL);
     assert(log_id, data != NULL);
 
-    //TODO: we need client_id and req_id;
     cceph_msg_write_obj_req *req = cceph_msg_write_obj_req_new();
     req->header.op = CCEPH_MSG_OP_WRITE;
     req->header.log_id = log_id;
+    req->client_id = client->client_id;
+    req->req_id = cceph_atomic_add(&client->req_id, 1);
     req->oid = oid;
     req->offset = offset;
     req->length = length;
@@ -195,6 +199,7 @@ extern int cceph_client_write_obj(cceph_client* client,
             success_count, failed_count);
 
     int ret = add_req_to_wait_list(client, (cceph_msg_header*)req, osdmap->osd_count, log_id);
+    assert(log_id, ret == 0);
     LOG(LL_DEBUG, log_id, "Add req to wait list.");
 
     ret = wait_for_req(client, (cceph_msg_header*)req, log_id);
