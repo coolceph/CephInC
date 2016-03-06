@@ -58,4 +58,7 @@ extern int cceph_client_read_obj(cceph_client* client, int64_t log_id,
 extern int cceph_client_delete_obj(cceph_client* client, int64_t log_id,
                       char* oid);
 
+extern int TEST_add_req_to_wait_list(cceph_client *client,
+        cceph_msg_header *req, int req_count, int64_t log_id);
+
 #endif
