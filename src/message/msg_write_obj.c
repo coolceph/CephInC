@@ -11,7 +11,7 @@
 
 #include "message/io.h"
 
-extern cceph_msg_write_obj_req* cceph_msg_write_obj_new() {
+extern cceph_msg_write_obj_req* cceph_msg_write_obj_req_new() {
     cceph_msg_write_obj_req* req = malloc(sizeof(cceph_msg_write_obj_req));
     bzero(req, sizeof(cceph_msg_write_obj_req));
     req->header.op = CCEPH_MSG_OP_WRITE;

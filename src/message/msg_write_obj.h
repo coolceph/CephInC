@@ -17,7 +17,7 @@ typedef struct {
     char* data;
 } cceph_msg_write_obj_req;
 
-extern cceph_msg_write_obj_req* cceph_msg_write_obj_new();
+extern cceph_msg_write_obj_req* cceph_msg_write_obj_req_new();
 extern int cceph_msg_write_obj_req_free(cceph_msg_write_obj_req** req, int64_t log_id);
 extern int cceph_msg_write_obj_req_recv(int fd, cceph_msg_write_obj_req* req, int64_t log_id);
 extern int cceph_msg_write_obj_req_send(int fd, cceph_msg_write_obj_req* req, int64_t log_id);

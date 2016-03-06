@@ -199,7 +199,7 @@ TEST(message_messenger, cceph_messenger_send_msg) {
 //This is used by the TEST_listen_thread_func
 //The TEST_listen_thread_func is used both by send_and_recv & send_and_recv_with_messenger_client tests
 cceph_msg_write_obj_req* get_cceph_msg_write_obj_req() {
-    cceph_msg_write_obj_req *req = cceph_msg_write_obj_new();
+    cceph_msg_write_obj_req *req = cceph_msg_write_obj_req_new();
     EXPECT_NE((cceph_msg_write_obj_req*)NULL, req);
 
     req->header.log_id = 1000;

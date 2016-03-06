@@ -47,7 +47,7 @@ typedef struct {
 extern cceph_client *cceph_client_new(cceph_osdmap* osdmap);
 extern int cceph_client_init(cceph_client *client);
 
-extern int cceph_client_write_obj(cceph_osdmap* osdmap, int64_t log_id,
+extern int cceph_client_write_obj(cceph_client* client,
                      char* oid, int64_t offset, int64_t length, char* data);
 
 extern int cceph_client_read_obj(cceph_client* client, int64_t log_id,

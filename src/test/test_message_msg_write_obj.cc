@@ -8,7 +8,7 @@ extern "C" {
 #include "test/mock_message_io.h"
 
 TEST(message_cceph_msg_write_obj_req, cceph_msg_write_obj_new) {
-    cceph_msg_write_obj_req *msg = cceph_msg_write_obj_new();
+    cceph_msg_write_obj_req *msg = cceph_msg_write_obj_req_new();
     EXPECT_NE((cceph_msg_write_obj_req*)NULL, msg);
     EXPECT_EQ(CCEPH_MSG_OP_WRITE, msg->header.op);
     EXPECT_EQ(0, msg->header.log_id);
@@ -16,14 +16,14 @@ TEST(message_cceph_msg_write_obj_req, cceph_msg_write_obj_new) {
     EXPECT_EQ((char*)NULL, msg->data);
 }
 TEST(message_cceph_msg_write_obj_req, cceph_msg_write_obj_req_free) {
-    cceph_msg_write_obj_req *msg = cceph_msg_write_obj_new();
+    cceph_msg_write_obj_req *msg = cceph_msg_write_obj_req_new();
     cceph_msg_write_obj_req_free(&msg, 122);
     EXPECT_EQ((cceph_msg_write_obj_req*)NULL, msg);
 }
 TEST(message_cceph_msg_write_obj_req, cceph_msg_write_obj_req_recv) {
     attach_message_io_funcs();
 
-    cceph_msg_write_obj_req *msg = cceph_msg_write_obj_new();
+    cceph_msg_write_obj_req *msg = cceph_msg_write_obj_req_new();
     int ret = cceph_msg_write_obj_req_recv(1, msg, 122);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(32, msg->client_id);

@@ -126,7 +126,7 @@ static cceph_msg_header* cceph_messenger_read_msg(
     switch (header.op) {
         case CCEPH_MSG_OP_WRITE:
             {
-                cceph_msg_write_obj_req *msg = cceph_msg_write_obj_new(log_id);
+                cceph_msg_write_obj_req *msg = cceph_msg_write_obj_req_new(log_id);
                 ret = cceph_msg_write_obj_req_recv(fd, msg, log_id);
                 if (ret != 0) cceph_msg_write_obj_req_free(&msg, log_id);
                 message = (cceph_msg_header*)msg;
