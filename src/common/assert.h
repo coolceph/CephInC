@@ -1,8 +1,7 @@
 #ifndef CCEPH_ASSERT_H
 #define CCEPH_ASSERT_H
 
-#include "include/types.h"
-#include "include/int_types.h"
+#include "common/types.h"
 
 extern void __cceph_assert_fail(int64_t log_id, const char *assertion, 
                                 const char *file, int line, const char *function);

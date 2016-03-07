@@ -1,6 +1,7 @@
 extern "C" {
-#include "include/errno.h"
+#include "common/errno.h"
 #include "common/log.h"
+
 #include "message/messenger.h"
 #include "message/server_messenger.h"
 #include "message/msg_write_obj.h"

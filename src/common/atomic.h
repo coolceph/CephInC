@@ -1,8 +1,7 @@
 #ifndef CCEPH_ATOMIC_H_
 #define CCEPH_ATOMIC_H_
 
-#include "include/int_types.h"
-#include "include/types.h"
+#include "common/types.h"
 
 #define LOCK "lock ; "
 

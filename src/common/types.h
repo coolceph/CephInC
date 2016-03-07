@@ -1,7 +1,6 @@
 #ifndef CCEPH_TYPES_H
 #define CCEPH_TYPES_H
 
-#include <include/int_types.h>
 #include <netinet/in.h>
 
 enum cceph_entity_type {

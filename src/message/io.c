@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include "include/errno.h"
+#include "common/errno.h"
 
 static int cceph_recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id);
 

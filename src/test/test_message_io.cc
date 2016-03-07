@@ -1,5 +1,5 @@
 extern "C" {
-#include "include/errno.h"
+#include "common/errno.h"
 #include "message/io.h"
 }
 
@@ -8,8 +8,8 @@ extern "C" {
 #include "bhook.h"
 #include "gtest/gtest.h"
 
-char* sys_func_name_recv = (char*)"recv";
-char* sys_func_name_send = (char*)"send";
+char* fname_recv = (char*)"recv";
+char* fname_send = (char*)"send";
 char* fname_cceph_recv_from_conn = (char*)"cceph_recv_from_conn";
 
 ssize_t MOCK_cceph_recv_from_conn_recv_normal(int sockfd, void *buf, size_t len, int flags) {
@@ -60,19 +60,19 @@ TEST(message_io, cceph_recv_from_conn) {
     int64_t log_id = 1;
 
     //Case: conn normal
-    attach_and_enable_func(sys_func_name_recv, (void*)&MOCK_cceph_recv_from_conn_recv_normal);
+    attach_and_enable_func(fname_recv, (void*)&MOCK_cceph_recv_from_conn_recv_normal);
     EXPECT_EQ(size, TEST_cceph_recv_from_conn(data_fd, buf, size, log_id));
-    detach_func(sys_func_name_recv);
+    detach_func(fname_recv);
 
     //Case: conn closed
-    attach_and_enable_func(sys_func_name_recv, (void*)&MOCK_cceph_recv_from_conn_recv_closed);
+    attach_and_enable_func(fname_recv, (void*)&MOCK_cceph_recv_from_conn_recv_closed);
     EXPECT_EQ(CCEPH_ERR_CONN_CLOSED, TEST_cceph_recv_from_conn(data_fd, buf, size, log_id));
-    detach_func(sys_func_name_recv);
+    detach_func(fname_recv);
 
     //Case: conn again
-    attach_and_enable_func(sys_func_name_recv, (void*)&MOCK_cceph_recv_from_conn_recv_again);
+    attach_and_enable_func(fname_recv, (void*)&MOCK_cceph_recv_from_conn_recv_again);
     EXPECT_EQ(size, TEST_cceph_recv_from_conn(data_fd, buf, size, log_id));
-    detach_func(sys_func_name_recv);
+    detach_func(fname_recv);
 }
 
 int MOCK_recv_int8_cceph_recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id) {
@@ -212,22 +212,22 @@ ssize_t MOCK_send_int8_send_fail2(int socket, const void *buffer, size_t length,
 }
 TEST(message_io, send_int8) {
     //Case: normal
-    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_int8_send_succ);
+    attach_and_enable_func(fname_send, (void*)&MOCK_send_int8_send_succ);
     int ret = cceph_send_int8(1, 37, 122);
     EXPECT_EQ(0, ret);
-    detach_func(sys_func_name_send);
+    detach_func(fname_send);
 
     //Case: incomplete send
-    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_int8_send_fail1);
+    attach_and_enable_func(fname_send, (void*)&MOCK_send_int8_send_fail1);
     ret = cceph_send_int8(1, 37, 122);
     EXPECT_EQ(-1, ret);
-    detach_func(sys_func_name_send);
+    detach_func(fname_send);
 
     //Case: failed when send
-    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_int8_send_fail2);
+    attach_and_enable_func(fname_send, (void*)&MOCK_send_int8_send_fail2);
     ret = cceph_send_int8(1, 37, 122);
     EXPECT_EQ(-1, ret);
-    detach_func(sys_func_name_send);
+    detach_func(fname_send);
 }
 
 ssize_t MOCK_send_string_send_succ(int socket, const void *buffer, size_t length, int flags) {
@@ -282,20 +282,20 @@ ssize_t MOCK_send_string_send_fail2(int socket, const void *buffer, size_t lengt
 }
 TEST(message_io, send_string) {
     //Case: normal
-    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_string_send_succ);
+    attach_and_enable_func(fname_send, (void*)&MOCK_send_string_send_succ);
     int ret = cceph_send_string(1, (char*)"cceph", 122);
     EXPECT_EQ(0, ret);
-    detach_func(sys_func_name_send);
+    detach_func(fname_send);
 
     //Case: failed when read length;
-    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_string_send_fail1);
+    attach_and_enable_func(fname_send, (void*)&MOCK_send_string_send_fail1);
     ret = cceph_send_string(1, (char*)"cceph", 122);
     EXPECT_EQ(-1, ret);
-    detach_func(sys_func_name_send);
+    detach_func(fname_send);
 
     //Case: failed when read string;
-    attach_and_enable_func(sys_func_name_send, (void*)&MOCK_send_string_send_fail2);
+    attach_and_enable_func(fname_send, (void*)&MOCK_send_string_send_fail2);
     ret = cceph_send_string(1, (char*)"cceph", 122);
     EXPECT_EQ(-1, ret);
-    detach_func(sys_func_name_send);
+    detach_func(fname_send);
 }
