@@ -207,7 +207,11 @@ extern int cceph_client_write_obj(cceph_client* client,
     return ret;
 }
 
-int TEST_add_req_to_wait_list(cceph_client *client,
+int TEST_cceph_client_add_req_to_wait_list(cceph_client *client,
         cceph_msg_header *req, int req_count, int64_t log_id) {
     return add_req_to_wait_list(client, req, req_count, log_id);
+}
+int TEST_cceph_client_send_req_to_osd(cceph_messenger* msger,
+        cceph_osd_id *osd, cceph_msg_header* req, int64_t log_id) {
+    return send_req_to_osd(msger, osd, req, log_id);
 }
