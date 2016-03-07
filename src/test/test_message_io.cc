@@ -1,5 +1,5 @@
 extern "C" {
-#include "include/errno.h"
+#include "common/errno.h"
 #include "message/io.h"
 }
 

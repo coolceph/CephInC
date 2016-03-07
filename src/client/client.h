@@ -3,10 +3,8 @@
 
 #include <pthread.h>
 
-#include "include/types.h"
-#include "include/int_types.h"
-
 #include "common/list.h"
+#include "common/types.h"
 
 #include "message/messenger.h"
 #include "message/msg_write_obj.h"

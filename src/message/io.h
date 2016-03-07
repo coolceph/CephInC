@@ -1,7 +1,7 @@
 #ifndef CCEPH_MESSAGE_IO_H
 #define CCEPH_MESSAGE_IO_H
 
-#include "include/types.h"
+#include "common/types.h"
 #include "common/log.h"
 
 #define CCEPH_SEND_FIELD(name, type, value)                                       \

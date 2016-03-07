@@ -10,9 +10,8 @@
 #include <netinet/in.h>
 #include <pthread.h>
 
-#include "include/errno.h"
-
 #include "common/assert.h"
+#include "common/errno.h"
 #include "common/log.h"
 
 #include "message/io.h"
