@@ -9,7 +9,7 @@ extern "C" {
 char* fname_cceph_messenger_get_conn = (char*)"cceph_messenger_get_conn";
 char* fname_cceph_messenger_send_msg = (char*)"cceph_messenger_send_msg";
 
-TEST(client, new_client_client) {
+TEST(client, cceph_client_new) {
     cceph_osdmap osdmap;
     cceph_client *client = cceph_client_new(&osdmap);
     EXPECT_NE((cceph_client*)NULL, client);
@@ -17,7 +17,7 @@ TEST(client, new_client_client) {
     EXPECT_EQ(&osdmap, client->osdmap);
     EXPECT_EQ(client->state, CCEPH_CLIENT_STATE_UNKNOWN);
 }
-TEST(client, initial_client) {
+TEST(client, cceph_client_init) {
     cceph_osdmap osdmap;
     cceph_client *client = cceph_client_new(&osdmap);
 

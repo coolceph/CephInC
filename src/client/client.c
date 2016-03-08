@@ -150,10 +150,41 @@ static int add_req_to_wait_list(cceph_client *client, cceph_msg_header *req, int
 
     return 0;
 }
+//If finished, remove the wait_req from the list and return it, else return NULL;
+//Caller must hold client->wait_req_lock
+static cceph_client_wait_req *is_req_finished(cceph_client *client, cceph_msg_header *req, int64_t log_id) {
+    assert(log_id, client != NULL);
+    assert(log_id, req != NULL);
+
+    struct cceph_list_head *pos;
+    cceph_client_wait_req *wait_req = NULL;
+    cceph_list_for_each(pos, &(client->wait_req_list.list_node)) {
+        wait_req = cceph_list_entry(pos, cceph_client_wait_req, list_node);
+        //TODO: judge if the req is finished
+    }
+
+    return wait_req;
+}
 static int wait_for_req(cceph_client *client, cceph_msg_header *req, int64_t log_id) {
     assert(log_id, client != NULL);
     assert(log_id, req != NULL);
 
+    cceph_client_wait_req* wait_req = NULL;
+    while (wait_req == NULL) {
+        pthread_mutex_lock(&client->wait_req_lock);
+        wait_req = is_req_finished(client, req, log_id);
+        if (wait_req != NULL) {
+            pthread_mutex_unlock(&client->wait_req_lock);
+            break;
+        }
+
+        pthread_cond_wait(&client->wait_req_cond, &client->wait_req_lock);
+        wait_req = is_req_finished(client, req, log_id);
+        pthread_mutex_unlock(&client->wait_req_lock);
+    }
+
+    LOG(LL_INFO, log_id, "req finished, req_count %d, ack_count %d, commit_count %d.",
+            wait_req->req_count, wait_req->ack_count, wait_req->commit_count);
     return 0;
 }
 extern int cceph_client_write_obj(cceph_client* client,
@@ -202,7 +233,7 @@ extern int cceph_client_write_obj(cceph_client* client,
     LOG(LL_DEBUG, log_id, "Add req to wait list.");
 
     ret = wait_for_req(client, (cceph_msg_header*)req, log_id);
-    LOG(LL_INFO, log_id, "req finished, ret %d.", ret);
+    LOG(LL_INFO, log_id, "req %ld finished, ret %d.", req->req_id, ret);
 
     return ret;
 }
