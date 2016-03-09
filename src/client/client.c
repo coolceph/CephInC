@@ -158,12 +158,26 @@ static cceph_client_wait_req *is_req_finished(cceph_client *client, cceph_msg_he
 
     struct cceph_list_head *pos;
     cceph_client_wait_req *wait_req = NULL;
+    cceph_client_wait_req *result = NULL;
     cceph_list_for_each(pos, &(client->wait_req_list.list_node)) {
         wait_req = cceph_list_entry(pos, cceph_client_wait_req, list_node);
-        //TODO: judge if the req is finished
+        if (wait_req->req != req) {
+            continue;
+        }
+
+        if (wait_req->commit_count > 0) {
+            result = wait_req;
+            break;
+        }
+
+        //This should be an option of poll
+        if (wait_req->ack_count > wait_req->req_count / 2) {
+            result = wait_req;
+            break;
+        }
     }
 
-    return wait_req;
+    return result;
 }
 static int wait_for_req(cceph_client *client, cceph_msg_header *req, int64_t log_id) {
     assert(log_id, client != NULL);
