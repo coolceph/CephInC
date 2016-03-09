@@ -11,6 +11,7 @@
 #include <pthread.h>
 
 #include "common/assert.h"
+#include "common/atomic.h"
 #include "common/errno.h"
 #include "common/log.h"
 
@@ -91,7 +92,7 @@ extern int cceph_client_init(cceph_client *client) {
     LOG(LL_INFO, log_id, "log id for cceph_client_init: %lld.", log_id);
 
     client->client_id = 0; //TODO: client should get its id from mon
-    cceph_atomic_set(&client->req_id, 0);
+    cceph_atomic_set64(&client->req_id, 0);
 
     cceph_list_head_init(&client->wait_req_list.list_node);
     pthread_mutex_init(&client->wait_req_lock, NULL);
@@ -214,7 +215,7 @@ extern int cceph_client_write_obj(cceph_client* client,
     req->header.op = CCEPH_MSG_OP_WRITE;
     req->header.log_id = log_id;
     req->client_id = client->client_id;
-    req->req_id = cceph_atomic_add(&client->req_id, 1);
+    req->req_id = cceph_atomic_add64(&client->req_id, 1);
     req->oid = oid;
     req->offset = offset;
     req->length = length;
