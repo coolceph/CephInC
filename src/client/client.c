@@ -219,6 +219,9 @@ static cceph_client_wait_req *is_req_finished(cceph_client *client, cceph_msg_he
             break;
         }
     }
+    if (wait_req != NULL) {
+        cceph_list_delete(&wait_req->list_node);
+    }
 
     return result;
 }
@@ -242,6 +245,8 @@ static int wait_for_req(cceph_client *client, cceph_msg_header *req, int64_t log
 
     LOG(LL_INFO, log_id, "req finished, req_count %d, ack_count %d, commit_count %d.",
             wait_req->req_count, wait_req->ack_count, wait_req->commit_count);
+
+    free(wait_req);
     return 0;
 }
 extern int cceph_client_write_obj(cceph_client* client,
