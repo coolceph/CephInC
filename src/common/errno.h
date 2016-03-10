@@ -8,5 +8,6 @@
 #define CCEPH_ERR_WRITE_CONN_ERR    (-1003)
 #define CCEPH_ERR_UNKNOWN_OP        (-1004)
 #define CCEPH_ERR_NOT_ENOUGH_SERVER (-1005)
+#define CCEPH_ERR_WRONG_CLIENT_ID   (-1006)
 
 #endif

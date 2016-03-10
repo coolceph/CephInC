@@ -28,7 +28,49 @@ static int do_object_write_ack(cceph_client *client,
     assert(log_id, messenger != NULL);
     assert(log_id, conn_id > 0);
 
-    return 0;
+    if (ack->client_id != client->client_id) {
+        LOG(LL_ERROR, log_id, "client %d reviced a write obj ack which not belong to it but client %d",
+                client->client_id, ack->client_id);
+        return CCEPH_ERR_WRONG_CLIENT_ID;
+    }
+
+    struct cceph_list_head *pos;
+    cceph_client_wait_req *wait_req = NULL;
+    cceph_msg_write_obj_req *write_req = NULL;
+    pthread_mutex_lock(&client->wait_req_lock);
+    cceph_list_for_each(pos, &(client->wait_req_list.list_node)) {
+        wait_req = cceph_list_entry(pos, cceph_client_wait_req, list_node);
+        if (wait_req->req->op != CCEPH_MSG_OP_WRITE) {
+            continue;
+        }
+
+        write_req = (cceph_msg_write_obj_req*)wait_req->req;
+        if (write_req->req_id != ack->req_id) {
+            write_req = NULL;
+            continue;
+        }
+
+        //TODO: from which osd?
+
+        wait_req->ack_count++;
+
+        LOG(LL_INFO, log_id, "req %ld has receive a ack. req_count %d, ack_count %d, commit_count %d",
+                write_req->req_id, wait_req->req_count, wait_req->ack_count, wait_req->commit_count);
+        break;
+    }
+
+    if (write_req == NULL) {
+        LOG(LL_INFO, log_id, "req %ld is not found from wait_list, maybe already finished, "
+                "the req is from osd.?.", ack->req_id); //TODO: need osd.id here
+    } else if (wait_req->ack_count > wait_req->req_count / 2) {
+        //TODO: it should be a option of pool
+        LOG(LL_INFO, log_id, "req %ld has receive enough ack, it is finished.", ack->req_id);
+        pthread_cond_signal(&client->wait_req_cond);
+    }
+
+    pthread_mutex_lock(&client->wait_req_lock);
+
+    return CCEPH_OK;
 }
 
 static int client_process_message(
