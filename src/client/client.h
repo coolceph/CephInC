@@ -36,7 +36,7 @@ typedef struct {
     cceph_messenger *messenger;
 
     int32_t client_id;
-    cceph_atomic_t req_id;
+    cceph_atomic64_t req_id;
     int state;
 
     cceph_client_wait_req  wait_req_list;

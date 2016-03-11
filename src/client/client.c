@@ -11,6 +11,7 @@
 #include <pthread.h>
 
 #include "common/assert.h"
+#include "common/atomic.h"
 #include "common/errno.h"
 #include "common/log.h"
 
@@ -27,7 +28,49 @@ static int do_object_write_ack(cceph_client *client,
     assert(log_id, messenger != NULL);
     assert(log_id, conn_id > 0);
 
-    return 0;
+    if (ack->client_id != client->client_id) {
+        LOG(LL_ERROR, log_id, "client %d reviced a write obj ack which not belong to it but client %d",
+                client->client_id, ack->client_id);
+        return CCEPH_ERR_WRONG_CLIENT_ID;
+    }
+
+    struct cceph_list_head *pos;
+    cceph_client_wait_req *wait_req = NULL;
+    cceph_msg_write_obj_req *write_req = NULL;
+    pthread_mutex_lock(&client->wait_req_lock);
+    cceph_list_for_each(pos, &(client->wait_req_list.list_node)) {
+        wait_req = cceph_list_entry(pos, cceph_client_wait_req, list_node);
+        if (wait_req->req->op != CCEPH_MSG_OP_WRITE) {
+            continue;
+        }
+
+        write_req = (cceph_msg_write_obj_req*)wait_req->req;
+        if (write_req->req_id != ack->req_id) {
+            write_req = NULL;
+            continue;
+        }
+
+        //TODO: from which osd?
+
+        wait_req->ack_count++;
+
+        LOG(LL_INFO, log_id, "req %ld has receive a ack. req_count %d, ack_count %d, commit_count %d",
+                write_req->req_id, wait_req->req_count, wait_req->ack_count, wait_req->commit_count);
+        break;
+    }
+
+    if (write_req == NULL) {
+        LOG(LL_INFO, log_id, "req %ld is not found from wait_list, maybe already finished, "
+                "the req is from osd.?.", ack->req_id); //TODO: need osd.id here
+    } else if (wait_req->ack_count > wait_req->req_count / 2) {
+        //TODO: it should be a option of pool
+        LOG(LL_INFO, log_id, "req %ld has receive enough ack, it is finished.", ack->req_id);
+        pthread_cond_signal(&client->wait_req_cond);
+    }
+
+    pthread_mutex_lock(&client->wait_req_lock);
+
+    return CCEPH_OK;
 }
 
 static int client_process_message(
@@ -91,7 +134,7 @@ extern int cceph_client_init(cceph_client *client) {
     LOG(LL_INFO, log_id, "log id for cceph_client_init: %lld.", log_id);
 
     client->client_id = 0; //TODO: client should get its id from mon
-    cceph_atomic_set(&client->req_id, 0);
+    cceph_atomic_set64(&client->req_id, 0);
 
     cceph_list_head_init(&client->wait_req_list.list_node);
     pthread_mutex_init(&client->wait_req_lock, NULL);
@@ -158,12 +201,29 @@ static cceph_client_wait_req *is_req_finished(cceph_client *client, cceph_msg_he
 
     struct cceph_list_head *pos;
     cceph_client_wait_req *wait_req = NULL;
+    cceph_client_wait_req *result = NULL;
     cceph_list_for_each(pos, &(client->wait_req_list.list_node)) {
         wait_req = cceph_list_entry(pos, cceph_client_wait_req, list_node);
-        //TODO: judge if the req is finished
+        if (wait_req->req != req) {
+            continue;
+        }
+
+        if (wait_req->commit_count > 0) {
+            result = wait_req;
+            break;
+        }
+
+        //This should be an option of poll
+        if (wait_req->ack_count > wait_req->req_count / 2) {
+            result = wait_req;
+            break;
+        }
+    }
+    if (wait_req != NULL) {
+        cceph_list_delete(&wait_req->list_node);
     }
 
-    return wait_req;
+    return result;
 }
 static int wait_for_req(cceph_client *client, cceph_msg_header *req, int64_t log_id) {
     assert(log_id, client != NULL);
@@ -185,6 +245,8 @@ static int wait_for_req(cceph_client *client, cceph_msg_header *req, int64_t log
 
     LOG(LL_INFO, log_id, "req finished, req_count %d, ack_count %d, commit_count %d.",
             wait_req->req_count, wait_req->ack_count, wait_req->commit_count);
+
+    free(wait_req);
     return 0;
 }
 extern int cceph_client_write_obj(cceph_client* client,
@@ -200,7 +262,7 @@ extern int cceph_client_write_obj(cceph_client* client,
     req->header.op = CCEPH_MSG_OP_WRITE;
     req->header.log_id = log_id;
     req->client_id = client->client_id;
-    req->req_id = cceph_atomic_add(&client->req_id, 1);
+    req->req_id = cceph_atomic_add64(&client->req_id, 1);
     req->oid = oid;
     req->offset = offset;
     req->length = length;
