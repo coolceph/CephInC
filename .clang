@@ -1,1 +1,6 @@
 -I./src
+-I./module/bhook/include
+-I./module/googletest/googletest/include
+-I/usr/include/c++/4.8.2/
+-I/usr/include/c++/4.8.2/x86_64-redhat-linux/
+-I/usr/include/c++/4.8.2/x86_64-redhat-linux/bits/
