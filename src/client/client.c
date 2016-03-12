@@ -29,11 +29,12 @@ static int do_object_write_ack(cceph_client *client,
     assert(log_id, conn_id > 0);
 
     if (ack->client_id != client->client_id) {
-        LOG(LL_ERROR, log_id, "client %d reviced a write obj ack which not belong to it but client %d",
+        LOG(LL_ERROR, log_id, "client %d reviced a write obj ack which not belong to it but client %d.",
                 client->client_id, ack->client_id);
         return CCEPH_ERR_WRONG_CLIENT_ID;
     }
 
+    //Add the corresponseding wait_req->ack_count
     struct cceph_list_head *pos;
     cceph_client_wait_req *wait_req = NULL;
     cceph_msg_write_obj_req *write_req = NULL;
@@ -44,6 +45,7 @@ static int do_object_write_ack(cceph_client *client,
             continue;
         }
 
+        assert(log_id, write_req == NULL);
         write_req = (cceph_msg_write_obj_req*)wait_req->req;
         if (write_req->req_id != ack->req_id) {
             write_req = NULL;
@@ -51,11 +53,11 @@ static int do_object_write_ack(cceph_client *client,
         }
 
         //TODO: from which osd?
-
         wait_req->ack_count++;
 
         LOG(LL_INFO, log_id, "req %ld has receive a ack. req_count %d, ack_count %d, commit_count %d",
                 write_req->req_id, wait_req->req_count, wait_req->ack_count, wait_req->commit_count);
+
         break;
     }
 
@@ -122,6 +124,7 @@ extern cceph_client *cceph_client_new(cceph_osdmap* osdmap) {
         client = NULL;
         return NULL;
     }
+	client->messenger->context = client;
 
     client->osdmap = osdmap;
     client->state  = CCEPH_CLIENT_STATE_UNKNOWN;
@@ -213,7 +216,7 @@ static cceph_client_wait_req *is_req_finished(cceph_client *client, cceph_msg_he
             break;
         }
 
-        //This should be an option of poll
+        //TODO: This should be an option of poll
         if (wait_req->ack_count > wait_req->req_count / 2) {
             result = wait_req;
             break;
@@ -307,4 +310,15 @@ int TEST_cceph_client_add_req_to_wait_list(cceph_client *client,
 int TEST_cceph_client_send_req_to_osd(cceph_messenger* msger,
         cceph_osd_id *osd, cceph_msg_header* req, int64_t log_id) {
     return send_req_to_osd(msger, osd, req, log_id);
+}
+int TEST_cceph_client_do_object_write_ack(cceph_client *client,
+        cceph_messenger* messenger, cceph_conn_id_t conn_id, cceph_msg_write_obj_ack* ack) {
+    return do_object_write_ack(client, messenger, conn_id, ack);
+}
+int TEST_cceph_client_process_message(
+        cceph_messenger* messenger,
+        cceph_conn_id_t conn_id,
+        cceph_msg_header* message,
+        void* context) {
+    return client_process_message(messenger, conn_id, message, context);
 }

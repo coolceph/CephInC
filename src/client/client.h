@@ -61,4 +61,13 @@ extern int TEST_cceph_client_add_req_to_wait_list(cceph_client *client,
 extern int TEST_cceph_client_send_req_to_osd(cceph_messenger* msger,
         cceph_osd_id *osd, cceph_msg_header* req, int64_t log_id);
 
+extern int TEST_cceph_client_do_object_write_ack(cceph_client *client,
+        cceph_messenger* messenger, cceph_conn_id_t conn_id, cceph_msg_write_obj_ack* ack);
+
+extern int TEST_cceph_client_process_message(
+        cceph_messenger* messenger,
+        cceph_conn_id_t conn_id,
+        cceph_msg_header* message,
+        void* context);
+
 #endif

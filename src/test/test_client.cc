@@ -6,6 +6,8 @@ extern "C" {
 #include "bhook.h"
 #include "gtest/gtest.h"
 
+#include <pthread.h>
+
 char* fname_cceph_messenger_get_conn = (char*)"cceph_messenger_get_conn";
 char* fname_cceph_messenger_send_msg = (char*)"cceph_messenger_send_msg";
 
@@ -62,7 +64,7 @@ struct test_client_send_req_to_osd_param_type {
     bool MOCK_cceph_messenger_get_conn_called;
     bool MOCK_cceph_messenger_send_msg_called;
 } test_client_send_req_to_osd_param;
-cceph_conn_id_t MOCK_cceph_messenger_get_conn(
+cceph_conn_id_t MOCK__send_req_to_osd__cceph_messenger_get_conn(
         cceph_messenger* messenger, const char* host, int port, int64_t log_id) {
     EXPECT_EQ(test_client_send_req_to_osd_param.msger, messenger);
     EXPECT_STREQ(test_client_send_req_to_osd_param.host, host);
@@ -74,7 +76,7 @@ cceph_conn_id_t MOCK_cceph_messenger_get_conn(
     test_client_send_req_to_osd_param.MOCK_cceph_messenger_get_conn_called = true;
     return conn_id;
 }
-int MOCK_cceph_messenger_send_msg(
+int MOCK__send_req_to_osd__cceph_messenger_send_msg(
         cceph_messenger* messenger, cceph_conn_id_t conn_id,
         cceph_msg_header* msg, int64_t log_id) {
     EXPECT_EQ(test_client_send_req_to_osd_param.msger, messenger);
@@ -102,8 +104,8 @@ TEST(client, send_req_to_osd) {
     test_client_send_req_to_osd_param.MOCK_cceph_messenger_get_conn_called = false;
     test_client_send_req_to_osd_param.MOCK_cceph_messenger_send_msg_called = false;
 
-    attach_and_enable_func_lib(fname_cceph_messenger_get_conn, (void*)&MOCK_cceph_messenger_get_conn);
-    attach_and_enable_func_lib(fname_cceph_messenger_send_msg, (void*)&MOCK_cceph_messenger_send_msg);
+    attach_and_enable_func_lib(fname_cceph_messenger_get_conn, (void*)&MOCK__send_req_to_osd__cceph_messenger_get_conn);
+    attach_and_enable_func_lib(fname_cceph_messenger_send_msg, (void*)&MOCK__send_req_to_osd__cceph_messenger_send_msg);
     int ret = TEST_cceph_client_send_req_to_osd(&msger, &osd, &msg, log_id);
     detach_func_lib(fname_cceph_messenger_get_conn);
     detach_func_lib(fname_cceph_messenger_send_msg);
@@ -111,4 +113,111 @@ TEST(client, send_req_to_osd) {
     EXPECT_EQ(0, ret);
     EXPECT_EQ(true, test_client_send_req_to_osd_param.MOCK_cceph_messenger_send_msg_called);
     EXPECT_EQ(true, test_client_send_req_to_osd_param.MOCK_cceph_messenger_get_conn_called);
+}
+
+/* extern int cceph_client_write_obj(cceph_client* client, */
+/*                      char* oid, int64_t offset, int64_t length, char* data) { */
+
+cceph_client* write_obj_client;
+void* write_req_callback_thread_func(void* arg) {
+    int64_t req_id = *((int64_t*)arg);
+    int64_t log_id = req_id;
+
+    cceph_msg_write_obj_ack *ack = cceph_msg_write_obj_ack_new();
+    ack->header.log_id = log_id;
+    ack->client_id     = 0;
+    ack->req_id        = req_id;
+    ack->result        = CCEPH_WRITE_OBJ_ACK_OK;
+
+    cceph_messenger msger;
+    TEST_cceph_client_process_message(&msger, 0, &ack->header, write_obj_client);
+
+    return 0;
+}
+cceph_conn_id_t MOCK__write_obj__cceph_messenger_get_conn(
+        cceph_messenger* messenger, const char* host, int port, int64_t log_id) {
+    EXPECT_NE((cceph_messenger*)NULL, messenger);
+    EXPECT_STREQ("127.0.0.1", host);
+    EXPECT_TRUE(port >= 9000 && port <= 9004);
+    EXPECT_TRUE(log_id == log_id);
+
+    return port;
+}
+int MOCK__write_obj__cceph_messenger_send_msg(
+        cceph_messenger* messenger, cceph_conn_id_t conn_id,
+        cceph_msg_header* msg, int64_t log_id) {
+    EXPECT_NE((cceph_messenger*)NULL, messenger);
+    EXPECT_TRUE(conn_id >= 9000 && conn_id <= 9004);
+    EXPECT_EQ(CCEPH_MSG_OP_WRITE, msg->op);
+    EXPECT_TRUE(log_id == log_id);
+
+    cceph_msg_write_obj_req* req = (cceph_msg_write_obj_req*)msg;
+    EXPECT_STREQ("object_1", req->oid);
+    EXPECT_EQ(0, req->offset);
+    EXPECT_EQ(4096, req->length);
+    EXPECT_EQ(0, req->client_id);
+    EXPECT_TRUE(req->req_id > 0);
+
+    pthread_attr_t thread_attr;
+    pthread_attr_init(&thread_attr);
+    pthread_t callback_thread_id;
+    int ret = pthread_create(&callback_thread_id, &thread_attr, &write_req_callback_thread_func, &req->req_id);
+    EXPECT_EQ(0, ret);
+
+    return 0;
+}
+
+void* write_obj_thread_func(void*) {
+    cceph_client *client = write_obj_client;
+
+    char* oid = (char*)"object_1";
+    int64_t offset = 0;
+    int64_t length = 4096;
+    char data[4096];
+
+    int ret = cceph_client_write_obj(client, oid, offset, length, data);
+    EXPECT_EQ(0, ret);
+    return 0;
+}
+
+TEST(client, cceph_client_write_obj) {
+    attach_and_enable_func_lib(fname_cceph_messenger_get_conn, (void*)&MOCK__write_obj__cceph_messenger_get_conn);
+    attach_and_enable_func_lib(fname_cceph_messenger_send_msg, (void*)&MOCK__write_obj__cceph_messenger_send_msg);
+
+    cceph_osdmap osdmap;
+    osdmap.osds = (cceph_osd_id*)malloc(sizeof(cceph_osd_id) * 5);
+    osdmap.osds[0].host = (char*)"127.0.0.1";
+    osdmap.osds[0].port = 9000;
+    osdmap.osds[1].host = (char*)"127.0.0.1";
+    osdmap.osds[1].port = 9001;
+    osdmap.osds[2].host = (char*)"127.0.0.1";
+    osdmap.osds[2].port = 9002;
+    osdmap.osds[3].host = (char*)"127.0.0.1";
+    osdmap.osds[3].port = 9003;
+    osdmap.osds[4].host = (char*)"127.0.0.1";
+    osdmap.osds[4].port = 9004;
+
+    write_obj_client = cceph_client_new(&osdmap);
+    cceph_client* client = write_obj_client;
+    int ret = cceph_client_init(client);
+    EXPECT_EQ(0, ret);
+
+    //Single Thread
+    write_obj_thread_func(client);
+
+    //Multi Thread
+    int thread_count = 16;
+    pthread_attr_t thread_attr;
+    pthread_attr_init(&thread_attr);
+    pthread_t client_thread_ids[thread_count];
+    for (int i = 0; i < thread_count; i++) {
+        int ret = pthread_create(client_thread_ids + i, &thread_attr, &write_obj_thread_func, client);
+        EXPECT_EQ(0, ret);
+    }
+    for (int i = 0; i < thread_count; i++) {
+        pthread_join(*(client_thread_ids + i), NULL);
+    }
+
+    detach_func_lib(fname_cceph_messenger_get_conn);
+    detach_func_lib(fname_cceph_messenger_send_msg);
 }
