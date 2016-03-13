@@ -130,7 +130,7 @@ void* write_req_callback_thread_func(void* arg) {
     ack->result        = CCEPH_WRITE_OBJ_ACK_OK;
 
     cceph_messenger msger;
-    TEST_cceph_client_process_message(&msger, 0, &ack->header, write_obj_client);
+    TEST_cceph_client_process_message(&msger, req_id, &ack->header, write_obj_client);
 
     return 0;
 }
@@ -185,6 +185,7 @@ TEST(client, cceph_client_write_obj) {
     attach_and_enable_func_lib(fname_cceph_messenger_send_msg, (void*)&MOCK__write_obj__cceph_messenger_send_msg);
 
     cceph_osdmap osdmap;
+    osdmap.osd_count = 5;
     osdmap.osds = (cceph_osd_id*)malloc(sizeof(cceph_osd_id) * 5);
     osdmap.osds[0].host = (char*)"127.0.0.1";
     osdmap.osds[0].port = 9000;

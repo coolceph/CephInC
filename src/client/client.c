@@ -84,12 +84,12 @@ static int client_process_message(
     int64_t log_id = message->log_id;
     assert(log_id, messenger != NULL);
     assert(log_id, message != NULL);
-    assert(log_id, context == NULL);
+    assert(log_id, context != NULL);
 
     cceph_client *client = (cceph_client*)context;
 
     int8_t op = message->op;
-    LOG(LL_NOTICE, log_id, "Porcess message msg from conn %ld, op %d", conn_id, message->op);
+    LOG(LL_NOTICE, log_id, "Process message msg from conn %ld, op %d", conn_id, message->op);
 
     int ret = 0;
     switch (op) {
@@ -101,9 +101,9 @@ static int client_process_message(
     }
 
     if (ret == 0) {
-        LOG(LL_NOTICE, log_id, "Porcess message msg from conn %ld, op %d success.", conn_id, op);
+        LOG(LL_NOTICE, log_id, "Process message msg from conn %ld, op %d success.", conn_id, op);
     } else {
-        LOG(LL_INFO, log_id, "Porcess message msg from conn %ld, op %d failed, errno %d", conn_id, op, ret);
+        LOG(LL_INFO, log_id, "Process message msg from conn %ld, op %d failed, errno %d", conn_id, op, ret);
     }
 
     return ret;
