@@ -70,7 +70,7 @@ static int do_object_write_ack(cceph_client *client,
         pthread_cond_signal(&client->wait_req_cond);
     }
 
-    pthread_mutex_lock(&client->wait_req_lock);
+    pthread_mutex_unlock(&client->wait_req_lock);
 
     return CCEPH_OK;
 }
@@ -222,8 +222,8 @@ static cceph_client_wait_req *is_req_finished(cceph_client *client, cceph_msg_he
             break;
         }
     }
-    if (wait_req != NULL) {
-        cceph_list_delete(&wait_req->list_node);
+    if (result != NULL) {
+        cceph_list_delete(&result->list_node);
     }
 
     return result;
@@ -261,6 +261,9 @@ extern int cceph_client_write_obj(cceph_client* client,
     assert(log_id, oid != NULL);
     assert(log_id, data != NULL);
 
+    cceph_messenger *msger = client->messenger;
+    cceph_osdmap    *osdmap = client->osdmap;
+
     cceph_msg_write_obj_req *req = cceph_msg_write_obj_req_new();
     req->header.op = CCEPH_MSG_OP_WRITE;
     req->header.log_id = log_id;
@@ -271,8 +274,10 @@ extern int cceph_client_write_obj(cceph_client* client,
     req->length = length;
     req->data = data;
 
-    cceph_messenger *msger = client->messenger;
-    cceph_osdmap    *osdmap = client->osdmap;
+    int ret = add_req_to_wait_list(client, (cceph_msg_header*)req, osdmap->osd_count, log_id);
+    assert(log_id, ret == 0);
+    LOG(LL_DEBUG, log_id, "Add req to wait list.");
+
     int failed_count = 0, success_count = 0, i = 0;
     for (i = 0; i < osdmap->osd_count; i++) {
         int ret = send_req_to_osd(msger, &osdmap->osds[i], (cceph_msg_header*)req, log_id);
@@ -287,15 +292,15 @@ extern int cceph_client_write_obj(cceph_client* client,
     if (success_count <= osdmap->osd_count / 2) {
         LOG(LL_ERROR, log_id, "Can't send req to enough servers, success %d, failed %d. ",
                 success_count, failed_count);
+
+        //TODO: remove it from wait_req_list;
+
         return CCEPH_ERR_NOT_ENOUGH_SERVER;
     }
 
     LOG(LL_DEBUG, log_id, "Send req success, success %d, failed %d.",
             success_count, failed_count);
 
-    int ret = add_req_to_wait_list(client, (cceph_msg_header*)req, osdmap->osd_count, log_id);
-    assert(log_id, ret == 0);
-    LOG(LL_DEBUG, log_id, "Add req to wait list.");
 
     ret = wait_for_req(client, (cceph_msg_header*)req, log_id);
     LOG(LL_INFO, log_id, "req %ld finished, ret %d.", req->req_id, ret);
