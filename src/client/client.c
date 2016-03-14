@@ -124,7 +124,7 @@ extern cceph_client *cceph_client_new(cceph_osdmap* osdmap) {
         client = NULL;
         return NULL;
     }
-	client->messenger->context = client;
+	client->messenger->context = (void*)client;
 
     client->osdmap = osdmap;
     client->state  = CCEPH_CLIENT_STATE_UNKNOWN;
@@ -194,6 +194,25 @@ static int add_req_to_wait_list(cceph_client *client, cceph_msg_header *req, int
     cceph_list_add(&wait_req->list_node, &client->wait_req_list.list_node);
     pthread_mutex_unlock(&client->wait_req_lock);
 
+    return 0;
+}
+static int remove_req_from_wait_list(cceph_client* client, cceph_msg_header *req, int64_t log_id) {
+    struct cceph_list_head *pos;
+    cceph_client_wait_req *wait_req = NULL;
+    cceph_client_wait_req *result = NULL;
+    pthread_mutex_lock(&client->wait_req_lock);
+    cceph_list_for_each(pos, &(client->wait_req_list.list_node)) {
+        wait_req = cceph_list_entry(pos, cceph_client_wait_req, list_node);
+        if (wait_req->req == req) {
+            result = wait_req;
+            break;
+        }
+    }
+    if (result != NULL) {
+        cceph_list_delete(&result->list_node);
+    }
+    LOG(LL_INFO, log_id, "Remove req from wait_list, op %d.", wait_req->req->op);
+    pthread_mutex_unlock(&client->wait_req_lock);
     return 0;
 }
 //If finished, remove the wait_req from the list and return it, else return NULL;
@@ -293,7 +312,7 @@ extern int cceph_client_write_obj(cceph_client* client,
         LOG(LL_ERROR, log_id, "Can't send req to enough servers, success %d, failed %d. ",
                 success_count, failed_count);
 
-        //TODO: remove it from wait_req_list;
+        remove_req_from_wait_list(client, (cceph_msg_header*)req, log_id);
 
         return CCEPH_ERR_NOT_ENOUGH_SERVER;
     }
