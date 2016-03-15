@@ -24,6 +24,11 @@ static inline void cceph_list_head_init(struct cceph_list_head *list)
     list->next = list;
 };
 
+static inline int cceph_list_empty(struct cceph_list_head *list)
+{
+    return list->prev == list && list->next == list;
+};
+
 static inline void __cceph_list_add(struct cceph_list_head *new_node,
     struct cceph_list_head *prev, struct cceph_list_head *next)
 {
