@@ -3,10 +3,12 @@ extern "C" {
 #include "client/client.h"
 }
 
+#include <pthread.h>
+
 #include "bhook.h"
 #include "gtest/gtest.h"
 
-#include <pthread.h>
+#include "common/errno.h"
 
 char* fname_cceph_messenger_get_conn = (char*)"cceph_messenger_get_conn";
 char* fname_cceph_messenger_send_msg = (char*)"cceph_messenger_send_msg";
@@ -166,39 +168,74 @@ int MOCK__write_obj__cceph_messenger_send_msg(
 
     return 0;
 }
+int MOCK__write_obj__cceph_messenger_send_msg__failed(
+        cceph_messenger* messenger, cceph_conn_id_t conn_id,
+        cceph_msg_header* msg, int64_t log_id) {
 
-void* write_obj_thread_func(void*) {
-    cceph_client *client = write_obj_client;
+    EXPECT_NE((cceph_messenger*)NULL, messenger);
+    EXPECT_TRUE(conn_id >= 9000 && conn_id <= 9004);
+    EXPECT_EQ(CCEPH_MSG_OP_WRITE, msg->op);
+    EXPECT_TRUE(log_id == log_id);
 
+    cceph_msg_write_obj_req* req = (cceph_msg_write_obj_req*)msg;
+    EXPECT_STREQ("object_1", req->oid);
+    EXPECT_EQ(0, req->offset);
+    EXPECT_EQ(4096, req->length);
+    EXPECT_EQ(0, req->client_id);
+    EXPECT_TRUE(req->req_id > 0);
+
+    return conn_id > 9001 ? CCEPH_ERR_CONN_CLOSED : 0;
+}
+
+int write_obj(cceph_client *client) {
     char* oid = (char*)"object_1";
     int64_t offset = 0;
     int64_t length = 4096;
     char data[4096];
 
-    int ret = cceph_client_write_obj(client, oid, offset, length, data);
+    return cceph_client_write_obj(client, oid, offset, length, data);
+}
+void* write_obj_thread_func(void*) {
+    int ret = write_obj(write_obj_client);
     EXPECT_EQ(0, ret);
     return 0;
 }
 
-TEST(client, cceph_client_write_obj) {
+cceph_osdmap* get_osdmap() {
+    cceph_osdmap *osdmap = (cceph_osdmap*)malloc(sizeof(cceph_osdmap));
+    osdmap->osd_count = 5;
+    osdmap->osds = (cceph_osd_id*)malloc(sizeof(cceph_osd_id) * 5);
+    for (int i = 0; i < osdmap->osd_count; i++) {
+        osdmap->osds[i].host = (char*)"127.0.0.1";
+        osdmap->osds[i].port = 9000 + i;
+    }
+    return osdmap;
+}
+
+TEST(client, cceph_client_write_obj__not_enough_server) {
+    attach_and_enable_func_lib(fname_cceph_messenger_get_conn, (void*)&MOCK__write_obj__cceph_messenger_get_conn);
+    attach_and_enable_func_lib(fname_cceph_messenger_send_msg, (void*)&MOCK__write_obj__cceph_messenger_send_msg__failed);
+
+    cceph_osdmap* osdmap = get_osdmap();
+    write_obj_client = cceph_client_new(osdmap);
+    cceph_client* client = write_obj_client;
+    int ret = cceph_client_init(client);
+    EXPECT_EQ(0, ret);
+
+    ret = write_obj(client);
+    EXPECT_EQ(CCEPH_ERR_NOT_ENOUGH_SERVER, ret);
+    EXPECT_TRUE(cceph_list_empty(&client->wait_req_list.list_node));
+
+    detach_func_lib(fname_cceph_messenger_get_conn);
+    detach_func_lib(fname_cceph_messenger_send_msg);
+}
+
+TEST(client, cceph_client_write_obj__success) {
     attach_and_enable_func_lib(fname_cceph_messenger_get_conn, (void*)&MOCK__write_obj__cceph_messenger_get_conn);
     attach_and_enable_func_lib(fname_cceph_messenger_send_msg, (void*)&MOCK__write_obj__cceph_messenger_send_msg);
 
-    cceph_osdmap osdmap;
-    osdmap.osd_count = 5;
-    osdmap.osds = (cceph_osd_id*)malloc(sizeof(cceph_osd_id) * 5);
-    osdmap.osds[0].host = (char*)"127.0.0.1";
-    osdmap.osds[0].port = 9000;
-    osdmap.osds[1].host = (char*)"127.0.0.1";
-    osdmap.osds[1].port = 9001;
-    osdmap.osds[2].host = (char*)"127.0.0.1";
-    osdmap.osds[2].port = 9002;
-    osdmap.osds[3].host = (char*)"127.0.0.1";
-    osdmap.osds[3].port = 9003;
-    osdmap.osds[4].host = (char*)"127.0.0.1";
-    osdmap.osds[4].port = 9004;
-
-    write_obj_client = cceph_client_new(&osdmap);
+    cceph_osdmap* osdmap = get_osdmap();
+    write_obj_client = cceph_client_new(osdmap);
     cceph_client* client = write_obj_client;
     int ret = cceph_client_init(client);
     EXPECT_EQ(0, ret);
