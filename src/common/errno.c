@@ -1,7 +1,7 @@
 #include "errno.h"
 
-extern const char* errno_str(int errno) {
-    switch (errno) {
+extern const char* errno_str(int err_no) {
+    switch (err_no) {
         case CCEPH_OK:
             return "OK";
         case CCEPH_ERR_CONN_NOT_FOUND:
