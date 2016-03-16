@@ -29,7 +29,7 @@ static int do_object_write_ack(cceph_client *client,
     assert(log_id, conn_id > 0);
 
     if (ack->client_id != client->client_id) {
-        LOG(LL_ERROR, log_id, "client %d reviced a write obj ack which not belong to it but client %d.",
+        LOG(LL_NOTICE, log_id, "client %d reviced a write obj ack which not belong to it but client %d.",
                 client->client_id, ack->client_id);
         return CCEPH_ERR_WRONG_CLIENT_ID;
     }
@@ -101,9 +101,11 @@ static int client_process_message(
     }
 
     if (ret == 0) {
-        LOG(LL_NOTICE, log_id, "Process message msg from conn %ld, op %d success.", conn_id, op);
+        LOG(LL_NOTICE, log_id, "Process message msg from conn %ld, op %d success.",
+                conn_id, op);
     } else {
-        LOG(LL_INFO, log_id, "Process message msg from conn %ld, op %d failed, errno %d", conn_id, op, ret);
+        LOG(LL_INFO, log_id, "Process message msg from conn %ld, op %d failed, errno %d(%s).",
+                conn_id, op, ret, errno_str(ret));
     }
 
     return ret;
@@ -145,7 +147,7 @@ extern int cceph_client_init(cceph_client *client) {
 
     int ret = cceph_messenger_start(client->messenger, log_id);
     if (ret != 0) {
-        LOG(LL_ERROR, log_id, "cceph_messenger_start failed, errno %d.", ret);
+        LOG(LL_ERROR, log_id, "cceph_messenger_start failed, errno %d(%s).", ret, errno_str(ret));
     }
 
     if (ret == 0) {
@@ -166,14 +168,16 @@ static int send_req_to_osd(cceph_messenger* msger, cceph_osd_id *osd, cceph_msg_
 
     cceph_conn_id_t conn_id = cceph_messenger_get_conn(msger, host, port, log_id);
     if (conn_id < 0) {
-        LOG(LL_WARN, log_id, "failed to get conn to %s:%d.", host, port);
+        LOG(LL_WARN, log_id, "failed to get conn to %s:%d, errno %d(%s).",
+                host, port, conn_id, errno_str(conn_id));
         return conn_id;
     }
     LOG(LL_INFO, log_id, "get conn_id %d for %s:%d.", conn_id, host, port);
 
     int ret = cceph_messenger_send_msg(msger, conn_id, (cceph_msg_header*)req, log_id);
     if (ret != 0) {
-        LOG(LL_WARN, log_id, "failed to send req to conn %d.", conn_id);
+        LOG(LL_WARN, log_id, "failed to send req to conn %d, errno %d(%s).",
+                conn_id, ret, errno_str(ret));
         return ret;
     }
 
@@ -309,7 +313,7 @@ extern int cceph_client_write_obj(cceph_client* client,
 
     //TODO: this should be a opinion of the poll
     if (success_count <= osdmap->osd_count / 2) {
-        LOG(LL_ERROR, log_id, "Can't send req to enough servers, success %d, failed %d. ",
+        LOG(LL_ERROR, log_id, "Can't send req to enough servers, success %d, failed %d.",
                 success_count, failed_count);
 
         remove_req_from_wait_list(client, (cceph_msg_header*)req, log_id);

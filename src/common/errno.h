@@ -10,4 +10,6 @@
 #define CCEPH_ERR_NOT_ENOUGH_SERVER (-1005)
 #define CCEPH_ERR_WRONG_CLIENT_ID   (-1006)
 
+extern const char* errno_str(int err_no);
+
 #endif

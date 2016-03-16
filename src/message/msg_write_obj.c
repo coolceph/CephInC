@@ -68,7 +68,7 @@ extern cceph_msg_write_obj_ack* cceph_msg_write_obj_ack_new() {
 }
 extern int cceph_msg_write_obj_ack_free(cceph_msg_write_obj_ack** msg, int64_t log_id) {
     assert(log_id, *msg != NULL);
-    free(*msg); 
+    free(*msg);
     *msg = NULL;
     return 0;
 }

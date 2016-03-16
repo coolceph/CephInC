@@ -13,6 +13,7 @@
 #include <inttypes.h>
 
 #include "common/assert.h"
+#include "common/errno.h"
 #include "common/log.h"
 
 extern cceph_server_messenger* new_cceph_server_messenger(
@@ -24,7 +25,7 @@ extern cceph_server_messenger* new_cceph_server_messenger(
 
     cceph_server_messenger* server_messenger = (cceph_server_messenger*)malloc(sizeof(cceph_server_messenger));
     if (server_messenger == NULL) {
-        LOG(LL_FATAL, log_id, "Malloc cceph_server_messenger failed");
+        LOG(LL_FATAL, log_id, "Malloc cceph_server_messenger failed.");
         return NULL;
     }
 
@@ -50,7 +51,7 @@ static int bind_and_listen(cceph_server_messenger *server_messenger, int64_t log
 
     int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (listen_fd < 0) {
-        LOG(LL_ERROR, log_id, "initial socket for port %d failed: %d", port, listen_fd);
+        LOG(LL_ERROR, log_id, "Initial socket for port %d failed, errno %d.", port, listen_fd);
         return listen_fd;
     }
 
@@ -65,14 +66,14 @@ static int bind_and_listen(cceph_server_messenger *server_messenger, int64_t log
     //bind sockfd & addr
     int ret = bind(listen_fd, (struct sockaddr*)&my_addr, sizeof(struct sockaddr_in));
     if (ret == -1) {
-        LOG(LL_ERROR, log_id, "bind to port %d failed: %d", port, ret);
+        LOG(LL_ERROR, log_id, "Bind to port %d failed, errno %d.", port, ret);
         return ret;
     }
 
     //listen
     ret = listen(listen_fd, 5);
     if (ret == -1) {
-        LOG(LL_ERROR, log_id, "listen to port %d failed: %d", port, ret);
+        LOG(LL_ERROR, log_id, "Listen to port %d failed, errno %d.", port, ret);
         return ret;
     }
 
@@ -96,12 +97,13 @@ static int bind_and_listen(cceph_server_messenger *server_messenger, int64_t log
                                  "(host=%s, port=%s).", com_fd, hbuf, sbuf);
         } else {
             LOG(LL_ERROR, log_id, "Accepted connection on descriptor %d,"
-                                  "But getnameinfo failed %d", com_fd, ret);
+                                  "But getnameinfo failed %d.", com_fd, ret);
         }
 
         cceph_conn_id_t conn_id = cceph_messenger_add_conn(messenger, hbuf, atoi(sbuf), com_fd, log_id);
         if (conn_id < 0) {
-            LOG(LL_ERROR, log_id, "Call cceph_messenger_add_conn failed, fd %d.", com_fd);
+            LOG(LL_ERROR, log_id, "Call cceph_messenger_add_conn failed, fd %d, errno %d(%s).",
+                    com_fd, conn_id, errno_str(conn_id));
             break;
         }
     }
@@ -114,7 +116,8 @@ extern int cceph_server_messenger_start(
     if (ret == 0) {
         LOG(LL_INFO, log_id, "start messenger for server_messenger success.");
     } else {
-        LOG(LL_ERROR, log_id, "start messenger for server_messenger failed: %d.", ret);
+        LOG(LL_ERROR, log_id, "start messenger for server_messenger failed. errno %d(%s).",
+                ret, errno_str(ret));
         return ret;
     }
 
