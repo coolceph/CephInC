@@ -22,6 +22,7 @@ extern cceph_server_messenger* new_cceph_server_messenger(
         int64_t log_id) {
 
     assert(log_id, messenger != NULL);
+    assert(log_id, messenger->state == CCEPH_MESSENGER_STATE_UNKNOWN);
 
     cceph_server_messenger* server_messenger = (cceph_server_messenger*)malloc(sizeof(cceph_server_messenger));
     if (server_messenger == NULL) {

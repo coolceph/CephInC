@@ -55,6 +55,7 @@ int MOCK_process_message(cceph_messenger* msger, cceph_conn_id_t conn_id, cceph_
 TEST(message_messenger, cceph_messenger_new) {
     cceph_messenger* messenger = cceph_messenger_new(&MOCK_process_message, NULL, 1);
     EXPECT_NE(messenger, (cceph_messenger*)NULL);
+    EXPECT_EQ(CCEPH_MESSENGER_STATE_UNKNOWN, messenger->state);
 
     EXPECT_TRUE(messenger->epoll_fd > 0);
     EXPECT_TRUE(messenger->wake_thread_pipe_fd[0] > 0);
@@ -110,6 +111,7 @@ int MOCK_cceph_messenger_add_conn_epoll_ctl(int epfd, int op, int fd, struct epo
 }
 TEST(message_messenger, cceph_messenger_add_conn) {
     cceph_messenger* messenger = cceph_messenger_new(&MOCK_process_message, NULL, 1);
+    messenger->state = CCEPH_MESSENGER_STATE_NORMAL;
 
     attach_and_enable_func(fname_epoll_ctl, (void*)&MOCK_cceph_messenger_add_conn_epoll_ctl);
 
@@ -174,6 +176,7 @@ int MOCK_cceph_messenger_send_msg_cceph_messenger_close_conn(cceph_messenger* ms
 TEST(message_messenger, cceph_messenger_send_msg) {
     cceph_msg_header msg;
     cceph_messenger* messenger = cceph_messenger_new(&MOCK_process_message, NULL, 1);
+    messenger->state = CCEPH_MESSENGER_STATE_NORMAL;
     cceph_connection* conn = add_conn(messenger, (char*)"host1", 9001, 1);
     add_conn(messenger, (char*)"host2", 9002, 2);
 

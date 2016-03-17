@@ -311,6 +311,7 @@ extern cceph_messenger* cceph_messenger_new(
         cceph_msg_messengerr msg_messengerr, void* context, int64_t log_id) {
     cceph_messenger* messenger = (cceph_messenger*)malloc(sizeof(cceph_messenger));
     messenger->epoll_fd = -1;
+    messenger->state = CCEPH_MESSENGER_STATE_UNKNOWN;
     messenger->log_id = log_id;
     messenger->msg_process = msg_messengerr;
     messenger->context = context;
@@ -348,10 +349,14 @@ extern cceph_messenger* cceph_messenger_new(
 
 extern int cceph_messenger_start(cceph_messenger* messenger, int64_t log_id) {
 
+    assert(log_id, messenger->state == CCEPH_MESSENGER_STATE_UNKNOWN);
+    messenger->state = CCEPH_MESSENGER_STATE_NORMAL;
+
     //add the wake_thread_pipe_fd to epoll set
     int ret = cceph_messenger_add_conn(messenger, "wake_thread_pipe", 0, messenger->wake_thread_pipe_fd[0], log_id);
     if (ret < 0) {
         LOG(LL_FATAL, log_id, "Add wake_thread_pipe to cceph_messenger, errno %d(%s).", ret, errno_str(ret));
+        messenger->state = CCEPH_MESSENGER_STATE_UNKNOWN;
         return ret;
     }
 
@@ -363,6 +368,7 @@ extern int cceph_messenger_start(cceph_messenger* messenger, int64_t log_id) {
         ret = pthread_create(messenger->thread_ids + i, &thread_attr, &start_epoll, messenger);
         if (ret < 0) {
             LOG(LL_FATAL, log_id, "create start_epoll thread error, errno %d.", ret);
+            messenger->state = CCEPH_MESSENGER_STATE_UNKNOWN;
             return ret;
         }
     }
@@ -370,6 +376,8 @@ extern int cceph_messenger_start(cceph_messenger* messenger, int64_t log_id) {
     return 0;
 }
 extern int cceph_messenger_stop(cceph_messenger* messenger, int64_t log_id) {
+    assert(log_id, messenger->state == CCEPH_MESSENGER_STATE_NORMAL);
+
     int i = 0, ret = 0;
     cceph_messenger_op_t op = CCEPH_MESSENGER_OP_STOP;
     for (i = 0; i < messenger->thread_count; i++) {
@@ -380,11 +388,14 @@ extern int cceph_messenger_stop(cceph_messenger* messenger, int64_t log_id) {
         ret = pthread_join(*(messenger->thread_ids + i), NULL);
         assert(log_id, ret == 0);
     }
+
+    messenger->state = CCEPH_MESSENGER_STATE_DESTORY;
     return 0;
 }
 extern int cceph_messenger_free(cceph_messenger** messenger, int64_t log_id) {
     assert(log_id, *messenger != NULL);
     assert(log_id, (*messenger)->thread_ids != NULL);
+    assert(log_id, (*messenger)->state == CCEPH_MESSENGER_STATE_DESTORY);
 
     free((*messenger)->thread_ids);
     (*messenger)->thread_ids = NULL;
@@ -396,6 +407,10 @@ extern int cceph_messenger_free(cceph_messenger** messenger, int64_t log_id) {
 
 extern cceph_conn_id_t cceph_messenger_add_conn(
         cceph_messenger* messenger, const char* host, int port, int fd, int64_t log_id) {
+    assert(log_id, messenger != NULL);
+    assert(log_id, messenger->state == CCEPH_MESSENGER_STATE_NORMAL);
+    assert(log_id, host != NULL);
+
     //New connection from params
     cceph_connection* conn = (cceph_connection*)malloc(sizeof(cceph_connection));
     conn->id = cceph_atomic_add64(&messenger->next_conn_id, 1);
@@ -428,6 +443,7 @@ extern cceph_conn_id_t cceph_messenger_add_conn(
 extern cceph_conn_id_t cceph_messenger_get_conn(
         cceph_messenger* messenger, const char* host, int port, int64_t log_id) {
     assert(log_id, messenger != NULL);
+    assert(log_id, messenger->state == CCEPH_MESSENGER_STATE_NORMAL);
     assert(log_id, host != NULL);
     assert(log_id, port > 0);
 
@@ -470,8 +486,9 @@ extern cceph_conn_id_t cceph_messenger_get_conn(
 
 extern int cceph_messenger_send_msg(
         cceph_messenger* messenger, cceph_conn_id_t conn_id, cceph_msg_header* msg, int64_t log_id) {
-    assert(log_id, msg != NULL);
     assert(log_id, messenger != NULL);
+    assert(log_id, messenger->state == CCEPH_MESSENGER_STATE_NORMAL);
+    assert(log_id, msg != NULL);
 
     pthread_rwlock_rdlock(&messenger->conn_list_lock);
     cceph_connection* conn = cceph_messenger_get_conn_by_id(messenger, conn_id);

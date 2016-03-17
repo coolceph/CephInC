@@ -8,6 +8,7 @@ extern "C" {
 
 TEST(server_messenger, new_cceph_server_messenger) {
     cceph_messenger cceph_messenger;
+    cceph_messenger.state = CCEPH_MESSENGER_STATE_UNKNOWN;
     int port = 12;
     int64_t log_id = 345;
 

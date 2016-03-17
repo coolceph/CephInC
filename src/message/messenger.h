@@ -32,9 +32,16 @@ typedef int8_t cceph_messenger_op_t;
 #define CCEPH_MESSENGER_OP_UNKOWN  0
 #define CCEPH_MESSENGER_OP_STOP    1
 
+typedef int8_t cceph_messenger_state_t;
+#define CCEPH_MESSENGER_STATE_UNKNOWN  0
+#define CCEPH_MESSENGER_STATE_NORMAL   1
+#define CCEPH_MESSENGER_STATE_DESTORY  2
+
 typedef struct cceph_messenger_ cceph_messenger_;
 struct cceph_messenger_ {
+    cceph_messenger_state_t state;
     int log_id;
+
     int (*msg_process)(struct cceph_messenger_*,
             cceph_conn_id_t, cceph_msg_header*, void*);
     int *context;
