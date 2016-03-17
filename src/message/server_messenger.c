@@ -72,7 +72,7 @@ static int bind_and_listen(cceph_server_messenger *server_messenger, int64_t log
     }
 
     //listen
-    ret = listen(listen_fd, 5);
+    ret = listen(listen_fd, 5); //TODO: Maybe an opinion
     if (ret == -1) {
         LOG(LL_ERROR, log_id, "Listen to port %d failed, errno %d.", port, ret);
         return ret;
@@ -122,7 +122,10 @@ extern int cceph_server_messenger_start(
         return ret;
     }
 
+    //The bind_and_listen will block the thread
     ret = bind_and_listen(server_messenger, log_id);
+
+    //Here means the listen operation is aborted, we should stop the messenger
     ret = cceph_messenger_stop(server_messenger->messenger, log_id);
 
     return ret;

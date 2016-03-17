@@ -1,4 +1,5 @@
 -I./src
+-I../src
 -I./module/bhook/include
 -I./module/googletest/googletest/include
 -I/usr/include/c++/4.8.2/
