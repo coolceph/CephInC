@@ -27,7 +27,7 @@ TEST(message_cceph_msg_write_obj_req, cceph_msg_write_obj_req_recv) {
     int ret = cceph_msg_write_obj_req_recv(1, msg, 122);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(32, msg->client_id);
-    EXPECT_EQ(32, msg->req_id);
+    EXPECT_EQ(64, msg->req_id);
     EXPECT_STREQ(cceph_string, msg->oid);
     EXPECT_EQ(64, msg->offset);
     EXPECT_EQ(strlen(cceph_data), msg->length);
@@ -41,7 +41,7 @@ TEST(message_cceph_msg_write_obj_req, cceph_msg_write_obj_req_send) {
 
     cceph_msg_write_obj_req msg;
     msg.client_id = 32;
-    msg.req_id = 32;
+    msg.req_id = 64;
     msg.oid_size = strlen(cceph_string);
     msg.oid = cceph_string;
     msg.offset = 64;
@@ -74,7 +74,7 @@ TEST(message_cceph_msg_write_obj_ack, cceph_msg_write_obj_ack_recv) {
     int ret = cceph_msg_write_obj_ack_recv(1, msg, 122);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(32, msg->client_id);
-    EXPECT_EQ(32, msg->req_id);
+    EXPECT_EQ(64, msg->req_id);
     EXPECT_EQ(8, msg->result);
 
     detach_message_io_funcs();
@@ -85,7 +85,7 @@ TEST(message_cceph_msg_write_obj_ack, cceph_msg_write_obj_ack_send) {
 
     cceph_msg_write_obj_ack msg;
     msg.client_id = 32;
-    msg.req_id = 32;
+    msg.req_id = 64;
     msg.result = 8;
     int ret = cceph_msg_write_obj_ack_send(1, &msg, 122);
     EXPECT_EQ(0, ret);

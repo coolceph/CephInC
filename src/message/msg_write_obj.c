@@ -40,7 +40,7 @@ extern int cceph_msg_write_obj_req_send(int fd, cceph_msg_write_obj_req* req, in
 
     int ret = 0;
     CCEPH_SEND_FIELD(client_id, int32, req->client_id);
-    CCEPH_SEND_FIELD(req_id, int32, req->req_id);
+    CCEPH_SEND_FIELD(req_id, int64, req->req_id);
     CCEPH_SEND_FIELD(oid, string, req->oid);
     CCEPH_SEND_FIELD(offset, int64, req->offset);
     CCEPH_SEND_DATA_FIELD(data, req->length, req->data);
@@ -53,7 +53,7 @@ extern int cceph_msg_write_obj_req_recv(int fd, cceph_msg_write_obj_req* req, in
 
     int ret = 0;
     CCEPH_RECV_FIELD(client_id, int32, &req->client_id);
-    CCEPH_RECV_FIELD(req_id, int32, &req->req_id);
+    CCEPH_RECV_FIELD(req_id, int64, &req->req_id);
     CCEPH_RECV_STRING_FIELD(oid, &req->oid_size, &req->oid);
     CCEPH_RECV_FIELD(offset, int64, &req->offset);
     CCEPH_RECV_DATA_FIELD(data, &req->length, &req->data);
@@ -77,7 +77,7 @@ extern int cceph_msg_write_obj_ack_recv(int fd, cceph_msg_write_obj_ack* msg, in
     assert(log_id, msg != NULL);
     int ret = 0;
     CCEPH_RECV_FIELD(client_id, int32, &msg->client_id);
-    CCEPH_RECV_FIELD(req_id, int32, &msg->req_id);
+    CCEPH_RECV_FIELD(req_id, int64, &msg->req_id);
     CCEPH_RECV_FIELD(result, int8, &msg->result);
     return 0;
 }
@@ -85,7 +85,7 @@ extern int cceph_msg_write_obj_ack_send(int fd, cceph_msg_write_obj_ack* msg, in
     assert(log_id, msg != NULL);
     int ret = 0;
     CCEPH_SEND_FIELD(client_id, int32, msg->client_id);
-    CCEPH_SEND_FIELD(req_id, int32, msg->req_id);
+    CCEPH_SEND_FIELD(req_id, int64, msg->req_id);
     CCEPH_SEND_FIELD(result, int8, msg->result);
     return 0;
 }

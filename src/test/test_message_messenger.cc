@@ -286,7 +286,7 @@ void* listen_thread_func(void* arg_ptr){
         return NULL;
     }
 
-    //listen sockfd 
+    //listen sockfd
     ret = listen(listen_fd, 5);
     EXPECT_NE(-1, ret);
     if (ret == -1) {
