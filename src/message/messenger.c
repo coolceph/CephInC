@@ -22,7 +22,7 @@
 //caller must has messenger->conn_list_lock
 static cceph_connection* cceph_messenger_get_conn_by_id(
         cceph_messenger* messenger, int id) {
-    struct cceph_list_head *pos;
+    cceph_list_head *pos;
     cceph_connection *conn = NULL;
     cceph_connection *result = NULL;
 
@@ -38,7 +38,7 @@ static cceph_connection* cceph_messenger_get_conn_by_id(
 //caller must has messenger->conn_list_lock
 static cceph_connection* cceph_messenger_get_conn_by_fd(
         cceph_messenger* messenger, int fd) {
-    struct cceph_list_head *pos;
+    cceph_list_head *pos;
     cceph_connection *conn = NULL;
     cceph_connection *result = NULL;
 
@@ -54,7 +54,7 @@ static cceph_connection* cceph_messenger_get_conn_by_fd(
 //caller must has messenger->conn_list_lock
 static cceph_connection* cceph_messenger_get_conn_by_host_and_port(
         cceph_messenger* messenger, const char* host, int port) {
-    struct cceph_list_head *pos;
+    cceph_list_head *pos;
     cceph_connection *conn = NULL;
     cceph_connection *result = NULL;
 

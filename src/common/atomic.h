@@ -5,13 +5,11 @@
 
 #define LOCK "lock ; "
 
-typedef struct
-{
+typedef struct {
     volatile int32_t counter32;
 } cceph_atomic_t;
 
-typedef struct
-{
+typedef struct {
     volatile int64_t counter64;
 } cceph_atomic64_t;
 

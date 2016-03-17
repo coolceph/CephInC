@@ -25,7 +25,7 @@ typedef struct {
 
     pthread_mutex_t lock;
 
-    struct cceph_list_head list_node;
+    cceph_list_head list_node;
 } cceph_connection;
 
 typedef int8_t cceph_messenger_op_t;

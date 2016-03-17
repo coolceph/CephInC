@@ -29,7 +29,7 @@ typedef struct {
     int commit_count;
     int req_count;
 
-    struct cceph_list_head list_node;
+    cceph_list_head list_node;
 } cceph_client_wait_req;
 
 typedef struct {

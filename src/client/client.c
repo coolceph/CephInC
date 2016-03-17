@@ -35,7 +35,7 @@ static int do_object_write_ack(cceph_client *client,
     }
 
     //Add the corresponseding wait_req->ack_count
-    struct cceph_list_head *pos;
+    cceph_list_head *pos;
     cceph_client_wait_req *wait_req = NULL;
     cceph_msg_write_obj_req *write_req = NULL;
     pthread_mutex_lock(&client->wait_req_lock);
@@ -201,7 +201,7 @@ static int add_req_to_wait_list(cceph_client *client, cceph_msg_header *req, int
     return 0;
 }
 static int remove_req_from_wait_list(cceph_client* client, cceph_msg_header *req, int64_t log_id) {
-    struct cceph_list_head *pos;
+    cceph_list_head *pos;
     cceph_client_wait_req *wait_req = NULL;
     cceph_client_wait_req *result = NULL;
     pthread_mutex_lock(&client->wait_req_lock);
@@ -225,7 +225,7 @@ static cceph_client_wait_req *is_req_finished(cceph_client *client, cceph_msg_he
     assert(log_id, client != NULL);
     assert(log_id, req != NULL);
 
-    struct cceph_list_head *pos;
+    cceph_list_head *pos;
     cceph_client_wait_req *wait_req = NULL;
     cceph_client_wait_req *result = NULL;
     cceph_list_for_each(pos, &(client->wait_req_list.list_node)) {

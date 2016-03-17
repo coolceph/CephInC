@@ -43,7 +43,7 @@ TEST(client, add_req_to_wait_list) {
     ret = TEST_cceph_client_add_req_to_wait_list(client, &header, req_count, log_id);
     EXPECT_EQ(0, ret);
 
-    struct cceph_list_head *pos;
+    cceph_list_head *pos;
     cceph_client_wait_req *wait_req = NULL;
     cceph_list_for_each(pos, &(client->wait_req_list.list_node)) {
         wait_req = cceph_list_entry(pos, cceph_client_wait_req, list_node);
