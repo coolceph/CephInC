@@ -6,6 +6,8 @@
 #include "common/assert.h"
 #include "common/types.h"
 
+cceph_option g_cceph_option;
+
 extern int cceph_option_init() {
     bzero(&g_cceph_option, sizeof(cceph_option));
     g_cceph_option.client_msg_workthread_count = 2;
