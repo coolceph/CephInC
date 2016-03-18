@@ -9,7 +9,7 @@
 
 #include "common/errno.h"
 
-static int cceph_recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id);
+int cceph_recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id);
 
 int cceph_send_int8(int fd, int8_t value, int64_t log_id) {
     int ret = send(fd, &value, sizeof(int8_t), 0);
@@ -124,7 +124,7 @@ int cceph_recv_data(int data_fd, int64_t *size, char **data, int64_t log_id) {
     return (ret == *size) ? 0 : (ret < 0 ? ret : -1);
 }
 
-static int cceph_recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id) {
+int cceph_recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id) {
     int total = 0;
     while(size > 0) {
         int count = recv(data_fd, buf, size, 0);
@@ -150,6 +150,6 @@ static int cceph_recv_from_conn(int data_fd, void* buf, size_t size, int64_t log
     return total;
 }
 
-extern int TEST_cceph_recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id) {
+int TEST_cceph_recv_from_conn(int data_fd, void* buf, size_t size, int64_t log_id) {
     return cceph_recv_from_conn(data_fd, buf, size, log_id);
 }

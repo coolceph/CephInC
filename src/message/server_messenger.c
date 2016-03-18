@@ -16,7 +16,7 @@
 #include "common/errno.h"
 #include "common/log.h"
 
-extern cceph_server_messenger* new_cceph_server_messenger(
+cceph_server_messenger* new_cceph_server_messenger(
         cceph_messenger* messenger,
         int port,
         int64_t log_id) {
@@ -36,7 +36,7 @@ extern cceph_server_messenger* new_cceph_server_messenger(
     server_messenger->log_id = log_id;
     return server_messenger;
 }
-extern int free_cceph_server_messenger(
+int free_cceph_server_messenger(
         cceph_server_messenger** server_messenger, int64_t log_id) {
     assert(log_id, *server_messenger != NULL);
 
@@ -46,7 +46,7 @@ extern int free_cceph_server_messenger(
     return 0;
 }
 
-static int bind_and_listen(cceph_server_messenger *server_messenger, int64_t log_id) {
+int bind_and_listen(cceph_server_messenger *server_messenger, int64_t log_id) {
     cceph_messenger* messenger = server_messenger->messenger;
     int port = server_messenger->port;
 
@@ -111,7 +111,7 @@ static int bind_and_listen(cceph_server_messenger *server_messenger, int64_t log
     return 0;
 }
 
-extern int cceph_server_messenger_start(
+int cceph_server_messenger_start(
         cceph_server_messenger *server_messenger, int64_t log_id) {
     int ret = cceph_messenger_start(server_messenger->messenger, log_id);
     if (ret == 0) {
@@ -130,14 +130,14 @@ extern int cceph_server_messenger_start(
 
     return ret;
 }
-extern int cceph_server_messenger_stop(
+int cceph_server_messenger_stop(
         cceph_server_messenger *server_messenger, int64_t log_id) {
     //TODO: Do we actually need it?
     assert(log_id, server_messenger != NULL);
     return 0;
 }
 
-extern cceph_messenger* cceph_server_messenger_get_messenger(
+cceph_messenger* cceph_server_messenger_get_messenger(
         cceph_server_messenger *server_messenger) {
     return server_messenger->messenger;
 }

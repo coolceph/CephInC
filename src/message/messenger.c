@@ -20,7 +20,7 @@
 #include "message/msg_write_obj.h"
 
 //caller must has messenger->conn_list_lock
-static cceph_connection* cceph_messenger_get_conn_by_id(
+cceph_connection* cceph_messenger_get_conn_by_id(
         cceph_messenger* messenger, int id) {
     cceph_list_head *pos;
     cceph_connection *conn = NULL;
@@ -36,7 +36,7 @@ static cceph_connection* cceph_messenger_get_conn_by_id(
     return result;
 }
 //caller must has messenger->conn_list_lock
-static cceph_connection* cceph_messenger_get_conn_by_fd(
+cceph_connection* cceph_messenger_get_conn_by_fd(
         cceph_messenger* messenger, int fd) {
     cceph_list_head *pos;
     cceph_connection *conn = NULL;
@@ -52,7 +52,7 @@ static cceph_connection* cceph_messenger_get_conn_by_fd(
     return result;
 }
 //caller must has messenger->conn_list_lock
-static cceph_connection* cceph_messenger_get_conn_by_host_and_port(
+cceph_connection* cceph_messenger_get_conn_by_host_and_port(
         cceph_messenger* messenger, const char* host, int port) {
     cceph_list_head *pos;
     cceph_connection *conn = NULL;
@@ -68,7 +68,7 @@ static cceph_connection* cceph_messenger_get_conn_by_host_and_port(
     return result;
 }
 
-extern int cceph_messenger_close_conn(
+int cceph_messenger_close_conn(
         cceph_messenger* messenger, cceph_conn_id_t id, int64_t log_id) {
     pthread_rwlock_wrlock(&messenger->conn_list_lock);
     cceph_connection* conn = cceph_messenger_get_conn_by_id(messenger, id);
@@ -94,13 +94,13 @@ extern int cceph_messenger_close_conn(
     return 0;
 }
 
-static int is_conn_err(struct epoll_event event) {
+int is_conn_err(struct epoll_event event) {
     return (event.events & EPOLLERR)
            || (event.events & EPOLLHUP)
            || !(event.events & EPOLLIN);
 }
 
-static cceph_msg_header* cceph_messenger_read_msg(
+cceph_msg_header* cceph_messenger_read_msg(
         cceph_messenger *messenger, cceph_conn_id_t conn_id, int fd, int64_t log_id) {
     LOG(LL_INFO, log_id, "Read Message from conn_id %ld, fd %d.", conn_id, fd);
 
@@ -168,7 +168,7 @@ static cceph_msg_header* cceph_messenger_read_msg(
     message->log_id = header.log_id;
     return message;
 }
-static int write_message(cceph_connection* conn, cceph_msg_header* msg, int64_t log_id) {
+int write_message(cceph_connection* conn, cceph_msg_header* msg, int64_t log_id) {
     int fd = conn->fd;
     cceph_conn_id_t conn_id = conn->id;
 
@@ -217,14 +217,14 @@ static int write_message(cceph_connection* conn, cceph_msg_header* msg, int64_t 
 
     return 0;
 }
-static int wait_for_next_msg(cceph_messenger* messenger, int fd) {
+int wait_for_next_msg(cceph_messenger* messenger, int fd) {
     struct epoll_event ctl_event;
     ctl_event.data.fd = fd;
     ctl_event.events = EPOLLIN | EPOLLONESHOT;
     return epoll_ctl(messenger->epoll_fd, EPOLL_CTL_MOD, fd, &ctl_event);
 }
 
-static void* start_epoll(void* arg) {
+void* start_epoll(void* arg) {
     cceph_messenger* messenger = (cceph_messenger*)arg;
     int64_t log_id = messenger->log_id;
     assert(log_id, messenger->epoll_fd != -1);
@@ -307,7 +307,7 @@ static void* start_epoll(void* arg) {
     return NULL;
 }
 
-extern cceph_messenger* cceph_messenger_new(
+cceph_messenger* cceph_messenger_new(
         cceph_msg_handler msg_handler, void* context, int work_thread_count, int64_t log_id) {
     cceph_messenger* messenger = (cceph_messenger*)malloc(sizeof(cceph_messenger));
     messenger->epoll_fd = -1;
@@ -347,7 +347,7 @@ extern cceph_messenger* cceph_messenger_new(
     return messenger;
 }
 
-extern int cceph_messenger_start(cceph_messenger* messenger, int64_t log_id) {
+int cceph_messenger_start(cceph_messenger* messenger, int64_t log_id) {
 
     assert(log_id, messenger->state == CCEPH_MESSENGER_STATE_UNKNOWN);
     messenger->state = CCEPH_MESSENGER_STATE_NORMAL;
@@ -375,7 +375,7 @@ extern int cceph_messenger_start(cceph_messenger* messenger, int64_t log_id) {
 
     return 0;
 }
-extern int cceph_messenger_stop(cceph_messenger* messenger, int64_t log_id) {
+int cceph_messenger_stop(cceph_messenger* messenger, int64_t log_id) {
     assert(log_id, messenger->state == CCEPH_MESSENGER_STATE_NORMAL);
 
     int i = 0, ret = 0;
@@ -392,7 +392,7 @@ extern int cceph_messenger_stop(cceph_messenger* messenger, int64_t log_id) {
     messenger->state = CCEPH_MESSENGER_STATE_DESTORY;
     return 0;
 }
-extern int cceph_messenger_free(cceph_messenger** messenger, int64_t log_id) {
+int cceph_messenger_free(cceph_messenger** messenger, int64_t log_id) {
     assert(log_id, *messenger != NULL);
     assert(log_id, (*messenger)->thread_ids != NULL);
     assert(log_id, (*messenger)->state == CCEPH_MESSENGER_STATE_DESTORY);
@@ -405,7 +405,7 @@ extern int cceph_messenger_free(cceph_messenger** messenger, int64_t log_id) {
     return 0;
 }
 
-extern cceph_conn_id_t cceph_messenger_add_conn(
+cceph_conn_id_t cceph_messenger_add_conn(
         cceph_messenger* messenger, const char* host, int port, int fd, int64_t log_id) {
     assert(log_id, messenger != NULL);
     assert(log_id, messenger->state == CCEPH_MESSENGER_STATE_NORMAL);
@@ -440,7 +440,7 @@ extern cceph_conn_id_t cceph_messenger_add_conn(
     LOG(LL_NOTICE, log_id, "New conn %s:%d, fd %d.", host, port, fd);
     return conn->id;
 }
-extern cceph_conn_id_t cceph_messenger_get_conn(
+cceph_conn_id_t cceph_messenger_get_conn(
         cceph_messenger* messenger, const char* host, int port, int64_t log_id) {
     assert(log_id, messenger != NULL);
     assert(log_id, messenger->state == CCEPH_MESSENGER_STATE_NORMAL);
@@ -484,7 +484,7 @@ extern cceph_conn_id_t cceph_messenger_get_conn(
     return conn_id;
 }
 
-extern int cceph_messenger_send_msg(
+int cceph_messenger_send_msg(
         cceph_messenger* messenger, cceph_conn_id_t conn_id, cceph_msg_header* msg, int64_t log_id) {
     assert(log_id, messenger != NULL);
     assert(log_id, messenger->state == CCEPH_MESSENGER_STATE_NORMAL);
@@ -522,15 +522,15 @@ extern int cceph_messenger_send_msg(
     return 0;
 }
 
-extern cceph_connection* TEST_cceph_messenger_get_conn_by_id(
+cceph_connection* TEST_cceph_messenger_get_conn_by_id(
         cceph_messenger* messenger, int id) {
     return cceph_messenger_get_conn_by_id(messenger, id);
 }
-extern cceph_connection* TEST_cceph_messenger_get_conn_by_fd(
+cceph_connection* TEST_cceph_messenger_get_conn_by_fd(
         cceph_messenger* messenger, int fd) {
     return cceph_messenger_get_conn_by_fd(messenger, fd);
 }
-extern cceph_connection* TEST_cceph_messenger_get_conn_by_host_and_port(
+cceph_connection* TEST_cceph_messenger_get_conn_by_host_and_port(
         cceph_messenger* messenger, const char* host, int port) {
     return cceph_messenger_get_conn_by_host_and_port(messenger, host, port);
 }

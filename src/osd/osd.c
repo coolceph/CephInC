@@ -12,7 +12,7 @@
 
 #include "message/msg_write_obj.h"
 
-static int io_write_object(const char* oid,
+int io_write_object(const char* oid,
         int64_t offset, int64_t length,
         const char* data,
         int64_t log_id) {
@@ -52,7 +52,7 @@ static int io_write_object(const char* oid,
 //TODO: The write process is not so simply by our design, this is just a demo
 //TODO: We should define/impl the object_store/transaction first before impl the write process
 //TODO: Aslo the client behavier should be consisent with the osd
-static int do_object_write_req(cceph_messenger* messenger, cceph_conn_id_t conn_id, cceph_msg_write_obj_req* req) {
+int do_object_write_req(cceph_messenger* messenger, cceph_conn_id_t conn_id, cceph_msg_write_obj_req* req) {
     int64_t log_id = req->header.log_id;
 
     int32_t client_id = req->client_id;
@@ -101,7 +101,7 @@ static int do_object_write_req(cceph_messenger* messenger, cceph_conn_id_t conn_
     return ret;
 }
 
-extern int cceph_osd_process_message(
+int cceph_osd_process_message(
         cceph_messenger* messenger,
         cceph_conn_id_t conn_id,
         cceph_msg_header* message,

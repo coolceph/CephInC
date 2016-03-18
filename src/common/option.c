@@ -8,7 +8,7 @@
 
 cceph_option g_cceph_option;
 
-extern int cceph_option_init() {
+int cceph_option_init() {
     bzero(&g_cceph_option, sizeof(cceph_option));
     g_cceph_option.client_msg_workthread_count = 2;
     g_cceph_option.client_debug_check_duplicate_req_when_ack = 1;
@@ -17,7 +17,7 @@ extern int cceph_option_init() {
     g_cceph_option.osd_reply_write_commit_to_client = 1;
     return 0;
 }
-extern int cceph_option_load(const char* option_path, int64_t log_id) {
+int cceph_option_load(const char* option_path, int64_t log_id) {
     assert(log_id, option_path != NULL);
     return 0;
 }
