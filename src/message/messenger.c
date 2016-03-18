@@ -308,14 +308,14 @@ static void* start_epoll(void* arg) {
 }
 
 extern cceph_messenger* cceph_messenger_new(
-        cceph_msg_handler msg_handler, void* context, int64_t log_id) {
+        cceph_msg_handler msg_handler, void* context, int work_thread_count, int64_t log_id) {
     cceph_messenger* messenger = (cceph_messenger*)malloc(sizeof(cceph_messenger));
     messenger->epoll_fd = -1;
     messenger->state = CCEPH_MESSENGER_STATE_UNKNOWN;
     messenger->log_id = log_id;
     messenger->msg_process = msg_handler;
     messenger->context = context;
-    messenger->thread_count = 2; //TODO: we need a opinion
+    messenger->thread_count = work_thread_count;
     messenger->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * messenger->thread_count);
     cceph_atomic_set64(&messenger->next_conn_id, 1);
 

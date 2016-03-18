@@ -14,6 +14,7 @@
 #include "common/atomic.h"
 #include "common/errno.h"
 #include "common/log.h"
+#include "common/option.h"
 
 #include "message/io.h"
 #include "message/messenger.h"
@@ -119,7 +120,8 @@ extern cceph_client *cceph_client_new(cceph_osdmap* osdmap) {
         return NULL;
     }
 
-    client->messenger = cceph_messenger_new(&client_process_message, client, log_id);
+    int msg_work_thread_count = g_cceph_option.client_msg_workthread_count;
+    client->messenger = cceph_messenger_new(&client_process_message, client, msg_work_thread_count, log_id);
     if (client->messenger == NULL) {
         LOG(LL_ERROR, log_id, "Failed to malloc cceph_client->messenger, maybe not enough memory.");
         free(client);
