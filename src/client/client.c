@@ -39,6 +39,7 @@ static int do_object_write_ack(cceph_client *client,
     cceph_list_head *pos;
     cceph_client_wait_req *wait_req = NULL;
     cceph_msg_write_obj_req *write_req = NULL;
+    cceph_msg_write_obj_req *result = NULL;
     pthread_mutex_lock(&client->wait_req_lock);
     cceph_list_for_each(pos, &(client->wait_req_list.list_node)) {
         wait_req = cceph_list_entry(pos, cceph_client_wait_req, list_node);
@@ -46,23 +47,31 @@ static int do_object_write_ack(cceph_client *client,
             continue;
         }
 
-        assert(log_id, write_req == NULL);
         write_req = (cceph_msg_write_obj_req*)wait_req->req;
         if (write_req->req_id != ack->req_id) {
-            write_req = NULL;
             continue;
         }
+
+        if (result != NULL) {
+            LOG(LL_ERROR, log_id, "Found duplicated req in wait_list, req_id %ld.", ack->req_id);
+            continue; //we always use the first req even we found many
+        }
+
+        result = write_req;
 
         //TODO: from which osd?
         wait_req->ack_count++;
 
         LOG(LL_INFO, log_id, "req %ld has receive a ack. req_count %d, ack_count %d, commit_count %d",
-                write_req->req_id, wait_req->req_count, wait_req->ack_count, wait_req->commit_count);
+                result->req_id, wait_req->req_count, wait_req->ack_count, wait_req->commit_count);
 
-        break;
+        if (!g_cceph_option.client_debug_check_duplicate_req_when_ack) {
+            //break after we found the first req
+            break;
+        }
     }
 
-    if (write_req == NULL) {
+    if (result == NULL) {
         LOG(LL_INFO, log_id, "req %ld is not found from wait_list, maybe already finished, "
                 "the req is from osd.?.", ack->req_id); //TODO: need osd.id here
     } else if (wait_req->ack_count > wait_req->req_count / 2) {
