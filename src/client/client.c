@@ -168,7 +168,7 @@ extern int cceph_client_init(cceph_client *client) {
     return ret;
 }
 
-static int send_req_to_osd(cceph_messenger* msger, cceph_osd_id *osd, cceph_msg_header* req, int64_t log_id) {
+static int send_req_to_osd(cceph_messenger* msger, cceph_osd_entity *osd, cceph_msg_header* req, int64_t log_id) {
     assert(log_id, msger != NULL);
     assert(log_id, osd != NULL);
     assert(log_id, osd->host != NULL);
@@ -347,7 +347,7 @@ int TEST_cceph_client_add_req_to_wait_list(cceph_client *client,
     return add_req_to_wait_list(client, req, req_count, log_id);
 }
 int TEST_cceph_client_send_req_to_osd(cceph_messenger* msger,
-        cceph_osd_id *osd, cceph_msg_header* req, int64_t log_id) {
+        cceph_osd_entity *osd, cceph_msg_header* req, int64_t log_id) {
     return send_req_to_osd(msger, osd, req, log_id);
 }
 int TEST_cceph_client_do_object_write_ack(cceph_client *client,

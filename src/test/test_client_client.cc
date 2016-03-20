@@ -93,7 +93,7 @@ int MOCK__send_req_to_osd__cceph_messenger_send_msg(
 TEST(client, send_req_to_osd) {
     cceph_messenger msger;
     cceph_msg_header msg;
-    cceph_osd_id osd;
+    cceph_osd_entity osd;
     osd.host = (char*)"127.0.0.1";
     osd.port = 9000;
     int64_t log_id = 34;
@@ -204,7 +204,7 @@ void* write_obj_thread_func(void*) {
 cceph_osdmap* get_osdmap() {
     cceph_osdmap *osdmap = (cceph_osdmap*)malloc(sizeof(cceph_osdmap));
     osdmap->osd_count = 5;
-    osdmap->osds = (cceph_osd_id*)malloc(sizeof(cceph_osd_id) * 5);
+    osdmap->osds = (cceph_osd_entity*)malloc(sizeof(cceph_osd_entity) * 5);
     for (int i = 0; i < osdmap->osd_count; i++) {
         osdmap->osds[i].host = (char*)"127.0.0.1";
         osdmap->osds[i].port = 9000 + i;

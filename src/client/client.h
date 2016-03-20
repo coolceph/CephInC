@@ -14,16 +14,6 @@
 #define CCEPH_CLIENT_STATE_DESTORY  2
 
 typedef struct {
-    char* host;
-    int   port;
-} cceph_osd_id;
-
-typedef struct {
-    int osd_count;
-    cceph_osd_id* osds;
-} cceph_osdmap;
-
-typedef struct {
     cceph_msg_header *req;
     int ack_count;
     int commit_count;
@@ -60,7 +50,7 @@ extern int cceph_client_delete_obj(cceph_client* client, int64_t log_id,
 extern int TEST_cceph_client_add_req_to_wait_list(cceph_client *client,
         cceph_msg_header *req, int req_count, int64_t log_id);
 extern int TEST_cceph_client_send_req_to_osd(cceph_messenger* msger,
-        cceph_osd_id *osd, cceph_msg_header* req, int64_t log_id);
+        cceph_osd_entity *osd, cceph_msg_header* req, int64_t log_id);
 
 extern int TEST_cceph_client_do_object_write_ack(cceph_client *client,
         cceph_messenger* messenger, cceph_conn_id_t conn_id, cceph_msg_write_obj_ack* ack);
