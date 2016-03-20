@@ -58,8 +58,7 @@ struct cceph_messenger_ {
 };
 
 typedef cceph_messenger_ cceph_messenger;
-typedef int (*cceph_msg_handler)(cceph_messenger*,
-        cceph_conn_id_t, cceph_msg_header*, void*);
+typedef int (*cceph_msg_handler)(cceph_messenger*, cceph_conn_id_t, cceph_msg_header*, void*);
 
 extern cceph_messenger* cceph_messenger_new(
         cceph_msg_handler msg_handler, void* context, int work_thread_count, int64_t log_id);

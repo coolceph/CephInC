@@ -2,6 +2,7 @@
 #define CCEPH_TYPES_H
 
 #include <stdint.h>
+#include <stdlib.h>
 
 typedef int32_t cceph_osd_id_t;
 

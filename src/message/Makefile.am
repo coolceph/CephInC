@@ -6,7 +6,7 @@ libmessage_la_SOURCES =     	  \
 	message/msg_write_obj.c
 
 libmessage_la_ADLDD = \
-	$(LIBCOMMON) 
+	$(LIBCOMMON)
 
 libmessage_la_LIBADD = \
 	-lpthread

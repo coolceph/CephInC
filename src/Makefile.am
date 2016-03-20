@@ -5,14 +5,19 @@ bin_PROGRAMS += cceph_osd
 cceph_osd_LDADD = \
 	$(LIBOSD)     \
 	$(LIBMESSAGE) \
+	$(LIBOS)      \
 	$(LIBCOMMON)
 
 #subdirs
 
 include common/Makefile.am
+
 include message/Makefile.am
+include os/Makefile.am
+
 include osd/Makefile.am
 include client/Makefile.am
+
 include test/Makefile.am
 
 
