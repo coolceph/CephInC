@@ -1,6 +1,6 @@
 libos_la_SOURCES =     	\
 	os/object_store.c	\
-	os/file_store.c
+	os/mem_store.c
 
 libos_la_ADLDD =  \
 	$(LIBCOMMON)
