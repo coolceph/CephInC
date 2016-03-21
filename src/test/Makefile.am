@@ -16,6 +16,11 @@ unittest_common_log_LDADD = $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_common_log_CXXFLAGS = $(UNITTEST_CXXFLAGS)
 check_PROGRAMS += unittest_common_log
 
+unittest_common_option_SOURCES = test/test_common_option.cc
+unittest_common_option_LDADD = $(LIBCOMMON) -lm $(UNITTEST_LDADD)
+unittest_common_option_CXXFLAGS = $(UNITTEST_CXXFLAGS)
+check_PROGRAMS += unittest_common_option
+
 unittest_message_io_SOURCES = test/test_message_io.cc
 unittest_message_io_LDADD = $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_message_io_CXXFLAGS = $(UNITTEST_CXXFLAGS)
@@ -41,13 +46,8 @@ unittest_message_msg_write_obj_LDADD = $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST
 unittest_message_msg_write_obj_CXXFLAGS = $(UNITTEST_CXXFLAGS)
 check_PROGRAMS += unittest_message_msg_write_obj
 
-unittest_client_SOURCES = test/test_client.cc
-unittest_client_LDADD = $(LIBCLIENT) $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
-unittest_client_CXXFLAGS = $(UNITTEST_CXXFLAGS)
-check_PROGRAMS += unittest_client
-
-#unittest_libclient_SOURCES = test/test_libclient.cc
-#unittest_libclient_LDADD = $(LIBCLIENT) $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
-#unittest_libclient_CXXFLAGS = $(UNITTEST_CXXFLAGS)
-#check_PROGRAMS += unittest_libclient
+unittest_client_client_SOURCES = test/test_client_client.cc
+unittest_client_client_LDADD = $(LIBCLIENT) $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
+unittest_client_client_CXXFLAGS = $(UNITTEST_CXXFLAGS)
+check_PROGRAMS += unittest_client_client
 

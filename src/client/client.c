@@ -14,6 +14,7 @@
 #include "common/atomic.h"
 #include "common/errno.h"
 #include "common/log.h"
+#include "common/option.h"
 
 #include "message/io.h"
 #include "message/messenger.h"
@@ -35,9 +36,10 @@ static int do_object_write_ack(cceph_client *client,
     }
 
     //Add the corresponseding wait_req->ack_count
-    struct cceph_list_head *pos;
+    cceph_list_head *pos;
     cceph_client_wait_req *wait_req = NULL;
     cceph_msg_write_obj_req *write_req = NULL;
+    cceph_msg_write_obj_req *result = NULL;
     pthread_mutex_lock(&client->wait_req_lock);
     cceph_list_for_each(pos, &(client->wait_req_list.list_node)) {
         wait_req = cceph_list_entry(pos, cceph_client_wait_req, list_node);
@@ -45,23 +47,31 @@ static int do_object_write_ack(cceph_client *client,
             continue;
         }
 
-        assert(log_id, write_req == NULL);
         write_req = (cceph_msg_write_obj_req*)wait_req->req;
         if (write_req->req_id != ack->req_id) {
-            write_req = NULL;
             continue;
         }
+
+        if (result != NULL) {
+            LOG(LL_ERROR, log_id, "Found duplicated req in wait_list, req_id %ld.", ack->req_id);
+            continue; //we always use the first req even we found many
+        }
+
+        result = write_req;
 
         //TODO: from which osd?
         wait_req->ack_count++;
 
         LOG(LL_INFO, log_id, "req %ld has receive a ack. req_count %d, ack_count %d, commit_count %d",
-                write_req->req_id, wait_req->req_count, wait_req->ack_count, wait_req->commit_count);
+                result->req_id, wait_req->req_count, wait_req->ack_count, wait_req->commit_count);
 
-        break;
+        if (!g_cceph_option.client_debug_check_duplicate_req_when_ack) {
+            //break after we found the first req
+            break;
+        }
     }
 
-    if (write_req == NULL) {
+    if (result == NULL) {
         LOG(LL_INFO, log_id, "req %ld is not found from wait_list, maybe already finished, "
                 "the req is from osd.?.", ack->req_id); //TODO: need osd.id here
     } else if (wait_req->ack_count > wait_req->req_count / 2) {
@@ -119,7 +129,8 @@ extern cceph_client *cceph_client_new(cceph_osdmap* osdmap) {
         return NULL;
     }
 
-    client->messenger = cceph_messenger_new(&client_process_message, client, log_id);
+    int msg_work_thread_count = g_cceph_option.client_msg_workthread_count;
+    client->messenger = cceph_messenger_new(&client_process_message, client, msg_work_thread_count, log_id);
     if (client->messenger == NULL) {
         LOG(LL_ERROR, log_id, "Failed to malloc cceph_client->messenger, maybe not enough memory.");
         free(client);
@@ -157,7 +168,7 @@ extern int cceph_client_init(cceph_client *client) {
     return ret;
 }
 
-static int send_req_to_osd(cceph_messenger* msger, cceph_osd_id *osd, cceph_msg_header* req, int64_t log_id) {
+static int send_req_to_osd(cceph_messenger* msger, cceph_osd_entity *osd, cceph_msg_header* req, int64_t log_id) {
     assert(log_id, msger != NULL);
     assert(log_id, osd != NULL);
     assert(log_id, osd->host != NULL);
@@ -201,7 +212,7 @@ static int add_req_to_wait_list(cceph_client *client, cceph_msg_header *req, int
     return 0;
 }
 static int remove_req_from_wait_list(cceph_client* client, cceph_msg_header *req, int64_t log_id) {
-    struct cceph_list_head *pos;
+    cceph_list_head *pos;
     cceph_client_wait_req *wait_req = NULL;
     cceph_client_wait_req *result = NULL;
     pthread_mutex_lock(&client->wait_req_lock);
@@ -225,7 +236,7 @@ static cceph_client_wait_req *is_req_finished(cceph_client *client, cceph_msg_he
     assert(log_id, client != NULL);
     assert(log_id, req != NULL);
 
-    struct cceph_list_head *pos;
+    cceph_list_head *pos;
     cceph_client_wait_req *wait_req = NULL;
     cceph_client_wait_req *result = NULL;
     cceph_list_for_each(pos, &(client->wait_req_list.list_node)) {
@@ -336,7 +347,7 @@ int TEST_cceph_client_add_req_to_wait_list(cceph_client *client,
     return add_req_to_wait_list(client, req, req_count, log_id);
 }
 int TEST_cceph_client_send_req_to_osd(cceph_messenger* msger,
-        cceph_osd_id *osd, cceph_msg_header* req, int64_t log_id) {
+        cceph_osd_entity *osd, cceph_msg_header* req, int64_t log_id) {
     return send_req_to_osd(msger, osd, req, log_id);
 }
 int TEST_cceph_client_do_object_write_ack(cceph_client *client,

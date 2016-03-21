@@ -1,28 +1,22 @@
 #ifndef CCEPH_TYPES_H
 #define CCEPH_TYPES_H
 
-#include <netinet/in.h>
+#include <stdint.h>
+#include <stdlib.h>
 
-enum cceph_entity_type {
-  CCEPH_CLIENT_ENTITY_TYPE_MON,
-  CCEPH_CLIENT_ENTITY_TYPE_OSD,
-  CCEPH_CLIENT_ENTITY_TYPE_CLIENT
-};
+typedef int32_t cceph_osd_id_t;
 
-struct cceph_entity {
-  enum cceph_entity_type type;
-  int id;
-  struct sockaddr_in addr;
-};
+typedef struct {
+    cceph_osd_id_t id;
 
-struct cceph_osd_map {
-  int osd_count;
-  struct cceph_entity *osds;
-};
+    char* host;
+    int   port;
+} cceph_osd_entity;
 
-struct cceph_cluster_map {
-  struct cceph_entity mon;
-  struct cceph_osd_map osd_map;
-};
+typedef struct {
+    int osd_count;
+    cceph_osd_entity* osds;
+} cceph_osdmap;
+
 
 #endif

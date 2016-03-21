@@ -20,7 +20,7 @@ const char* cceph_str_msg_op(int op) {
     }
 }
 
-extern cceph_msg_header* cceph_msg_header_new(int64_t log_id) {
+cceph_msg_header* cceph_msg_header_new(int64_t log_id) {
     cceph_msg_header* msg = malloc(sizeof(cceph_msg_header));
     assert(log_id, msg != NULL);
 
@@ -28,7 +28,7 @@ extern cceph_msg_header* cceph_msg_header_new(int64_t log_id) {
     msg->log_id = 0;
     return msg;
 }
-extern int cceph_msg_header_free(cceph_msg_header** header, int64_t log_id) {
+int cceph_msg_header_free(cceph_msg_header** header, int64_t log_id) {
     assert(log_id, *header != NULL);
 
     free(*header);
@@ -36,7 +36,7 @@ extern int cceph_msg_header_free(cceph_msg_header** header, int64_t log_id) {
     return 0;
 }
 
-extern int cceph_msg_header_recv(int fd, cceph_msg_header* header, int64_t log_id) {
+int cceph_msg_header_recv(int fd, cceph_msg_header* header, int64_t log_id) {
     assert(log_id, header != NULL);
 
     int ret = 0;
@@ -44,7 +44,7 @@ extern int cceph_msg_header_recv(int fd, cceph_msg_header* header, int64_t log_i
     CCEPH_RECV_FIELD(log_id, int64, &header->log_id);
     return 0;
 }
-extern int cceph_msg_header_send(int fd, cceph_msg_header* header, int64_t log_id) {
+int cceph_msg_header_send(int fd, cceph_msg_header* header, int64_t log_id) {
     assert(log_id, header != NULL);
 
     int ret = 0;

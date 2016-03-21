@@ -25,16 +25,23 @@ typedef struct {
 
     pthread_mutex_t lock;
 
-    struct cceph_list_head list_node;
+    cceph_list_head list_node;
 } cceph_connection;
 
 typedef int8_t cceph_messenger_op_t;
 #define CCEPH_MESSENGER_OP_UNKOWN  0
 #define CCEPH_MESSENGER_OP_STOP    1
 
+typedef int8_t cceph_messenger_state_t;
+#define CCEPH_MESSENGER_STATE_UNKNOWN  0
+#define CCEPH_MESSENGER_STATE_NORMAL   1
+#define CCEPH_MESSENGER_STATE_DESTORY  2
+
 typedef struct cceph_messenger_ cceph_messenger_;
 struct cceph_messenger_ {
+    cceph_messenger_state_t state;
     int log_id;
+
     int (*msg_process)(struct cceph_messenger_*,
             cceph_conn_id_t, cceph_msg_header*, void*);
     int *context;
@@ -51,11 +58,10 @@ struct cceph_messenger_ {
 };
 
 typedef cceph_messenger_ cceph_messenger;
-typedef int (*cceph_msg_messengerr)(cceph_messenger*,
-        cceph_conn_id_t, cceph_msg_header*, void*);
+typedef int (*cceph_msg_handler)(cceph_messenger*, cceph_conn_id_t, cceph_msg_header*, void*);
 
 extern cceph_messenger* cceph_messenger_new(
-        cceph_msg_messengerr msg_messengerr, void* context, int64_t log_id);
+        cceph_msg_handler msg_handler, void* context, int work_thread_count, int64_t log_id);
 extern int cceph_messenger_free(
         cceph_messenger** messenger, int64_t log_id);
 

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <strings.h>
 
-static cceph_atomic64_t cceph_g_log_id = { 0 };
+cceph_atomic64_t cceph_g_log_id = { 0 };
 
 void cceph_log_initial_id(int32_t prefix) {
     srand((unsigned)time(0));

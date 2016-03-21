@@ -7,7 +7,7 @@ typedef struct {
     cceph_msg_header header;
 
     int32_t client_id;
-    int32_t req_id;
+    int64_t req_id;
 
     int16_t oid_size;
     char* oid;
@@ -29,7 +29,7 @@ typedef struct {
     cceph_msg_header header;
 
     int32_t client_id;
-    int32_t req_id;
+    int64_t req_id;
 
     int8_t result;
 } cceph_msg_write_obj_ack;

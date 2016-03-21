@@ -12,7 +12,7 @@
 
 #include "message/msg_write_obj.h"
 
-static int io_write_object(const char* oid,
+int io_write_object(const char* oid,
         int64_t offset, int64_t length,
         const char* data,
         int64_t log_id) {
@@ -52,22 +52,24 @@ static int io_write_object(const char* oid,
 //TODO: The write process is not so simply by our design, this is just a demo
 //TODO: We should define/impl the object_store/transaction first before impl the write process
 //TODO: Aslo the client behavier should be consisent with the osd
-static int do_object_write_req(cceph_messenger* messenger, cceph_conn_id_t conn_id, cceph_msg_write_obj_req* req) {
+int do_object_write_req(cceph_messenger* messenger, cceph_conn_id_t conn_id, cceph_msg_write_obj_req* req) {
     int64_t log_id = req->header.log_id;
 
+    int32_t client_id = req->client_id;
+    int64_t req_id = req->req_id;
     char* oid = req->oid;
-    char* data = req->data;
     int64_t length = req->length;
     int64_t offset = req->offset;
-    int32_t client_id = req->client_id;
-    int32_t req_id = req->req_id;
+    char* data = req->data;
 
-    LOG(LL_INFO, log_id, "do_req_write, oid %s, offset %lu, length %lu.", oid, offset, length);
+    LOG(LL_INFO, log_id, "do_req_write, client_id %d, req_id %ld, oid %s, offset %lu, length %lu.",
+            client_id, req_id, oid, offset, length);
+
     int ret = io_write_object(oid, offset, length, data, log_id);
     if (ret != 0) {
-        LOG(LL_ERROR, log_id, "io_write_object failed for oid %s.", oid);
+        LOG(LL_ERROR, log_id, "io_write_object failed for req_id %ld, errno %d(%s).", req_id, ret, errno_str(ret));
     } else {
-        LOG(LL_INFO, log_id, "io_write_object success for oid %s.", oid);
+        LOG(LL_INFO, log_id, "io_write_object success for req_id %ld.", req_id);
     }
 
     int result = ret == 0 ? CCEPH_WRITE_OBJ_ACK_OK : ret; //TODO: we need more CCEPH_WRITE_OBJ_ACK_*
@@ -84,20 +86,22 @@ static int do_object_write_req(cceph_messenger* messenger, cceph_conn_id_t conn_
     LOG(LL_INFO, log_id, "cceph_msg_write_obj_ack_send to client %d, req_id %d, result %d.", client_id, req_id, result);
     ret = cceph_messenger_send_msg(messenger, conn_id, (cceph_msg_header*)ack, log_id);
     if (ret != 0) {
-        LOG(LL_ERROR, log_id, "cceph_msg_write_obj_ack_send failed for client %d, req_id %d, errno %d.", client_id, req_id, ret);
+        LOG(LL_ERROR, log_id, "cceph_msg_write_obj_ack_send failed for client %d, req_id %d, errno %d(%s).",
+                client_id, req_id, ret, errno_str(ret));
     } else {
-        LOG(LL_INFO, log_id, "cceph_msg_write_obj_ack_send success for client %d, req_id %d.", client_id, req_id);
+        LOG(LL_INFO, log_id, "cceph_msg_write_obj_ack_send success for client %d, req_id %d.",
+                client_id, req_id);
     }
 
-    ret = cceph_msg_write_obj_req_free(&req, log_id);
-    assert(log_id, ret == 0);
-    ret = cceph_msg_write_obj_ack_free(&ack, log_id);
-    assert(log_id, ret == 0);
+    int ret2 = cceph_msg_write_obj_req_free(&req, log_id);
+    assert(log_id, ret2 == 0);
+    ret2 = cceph_msg_write_obj_ack_free(&ack, log_id);
+    assert(log_id, ret2 == 0);
 
-    return 0;
+    return ret;
 }
 
-extern int cceph_osd_process_message(
+int cceph_osd_process_message(
         cceph_messenger* messenger,
         cceph_conn_id_t conn_id,
         cceph_msg_header* message,
@@ -108,7 +112,7 @@ extern int cceph_osd_process_message(
     assert(log_id, context == NULL);
 
     int8_t op = message->op;
-    LOG(LL_NOTICE, log_id, "Porcess message msg from conn %ld, op %d", conn_id, message->op);
+    LOG(LL_NOTICE, log_id, "Porcess message msg from conn %ld, op %d.", conn_id, message->op);
 
     int ret = 0;
     switch (op) {
@@ -120,9 +124,11 @@ extern int cceph_osd_process_message(
     }
 
     if (ret == 0) {
-        LOG(LL_NOTICE, log_id, "Porcess message msg from conn %ld, op %d success.", conn_id, op);
+        LOG(LL_NOTICE, log_id, "Porcess message msg from conn %ld, op %d success.",
+                conn_id, op);
     } else {
-        LOG(LL_INFO, log_id, "Porcess message msg from conn %ld, op %d failed, errno %d", conn_id, op, ret);
+        LOG(LL_INFO, log_id, "Porcess message msg from conn %ld, op %d failed, errno %d(%s).",
+                conn_id, op, ret, errno_str(ret));
     }
 
     return ret;
