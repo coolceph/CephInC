@@ -8,11 +8,10 @@ typedef struct {
 
 extern cceph_mem_store* cceph_mem_store_new(const char* path);
 
-
 extern int cceph_mem_store_mount(
         cceph_object_store* os);
 
-extern int cceph_mem_store_queue_transaction(
+extern int cceph_mem_store_submit_transaction(
         cceph_object_store* os,
         cceph_os_transaction transaction);
 

@@ -11,7 +11,7 @@ extern int cceph_mem_store_mount(
     return 0;
 }
 
-extern int cceph_mem_store_queue_transaction(
+extern int cceph_mem_store_submit_transaction(
         cceph_object_store* os,
         cceph_os_transaction transaction) {
     return 0;

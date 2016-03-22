@@ -9,6 +9,7 @@ cid    = collect_id
 msg    = messeage
 msger  = messenger
 smsger = server_messenger
+trasn  = transaction
 
 
 # Log ID #
