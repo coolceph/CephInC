@@ -1,13 +1,16 @@
 #include "mem_store.h"
 
 
-extern cceph_mem_store* cceph_mem_store_new(const char* path) {
-    return NULL;
+extern cceph_mem_store* cceph_mem_store_new() {
+    cceph_mem_store *store = (cceph_mem_store*)malloc(sizeof(cceph_mem_store));
+    return store;
 }
 
 
 extern int cceph_mem_store_mount(
-        cceph_object_store* os) {
+        cceph_object_store* os,
+        int64_t log_id) {
+    assert(log_id, os != NULL);
     return 0;
 }
 

@@ -6,10 +6,11 @@
 typedef struct {
 } cceph_mem_store;
 
-extern cceph_mem_store* cceph_mem_store_new(const char* path);
+extern cceph_mem_store* cceph_mem_store_new();
 
 extern int cceph_mem_store_mount(
-        cceph_object_store* os);
+        cceph_object_store* os,
+        int64_t log_id);
 
 extern int cceph_mem_store_submit_transaction(
         cceph_object_store* os,
