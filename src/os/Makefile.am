@@ -1,4 +1,5 @@
 libos_la_SOURCES =     	\
+	os/transaction.c    \
 	os/mem_store.c
 
 libos_la_ADLDD =  \

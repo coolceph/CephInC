@@ -1,6 +1,8 @@
 #ifndef CCEPH_OS_TRANSACTION_H
 #define CCEPH_OS_TRANSACTION_H
 
+#include "common/types.h"
+
 typedef int32_t cceph_os_coll_id_t;
 typedef int32_t cceph_os_op_t;
 
@@ -20,7 +22,9 @@ typedef struct {
 } cceph_os_transaction_op;
 
 typedef struct {
-    cceph_os_transaction_op *ops;
+    cceph_os_transaction_op *op_buffer;
+    int32_t                  op_buffer_length;
+    int32_t                  op_buffer_index;
 } cceph_os_transaction;
 
 extern cceph_os_transaction* cceph_os_transaction_new();

@@ -9,6 +9,7 @@
 #define CCEPH_ERR_UNKNOWN_OP        (-1004)
 #define CCEPH_ERR_NOT_ENOUGH_SERVER (-1005)
 #define CCEPH_ERR_WRONG_CLIENT_ID   (-1006)
+#define CCEPH_ERR_NO_ENOUGH_MEM     (-1007)
 
 extern const char* errno_str(int err_no);
 
