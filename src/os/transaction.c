@@ -49,7 +49,7 @@ int cceph_os_transactio_check_op_buffer_size(cceph_os_transaction *tran, int64_t
 }
 
 int cceph_os_write(cceph_os_transaction* tran,
-        cceph_os_coll_id_t  coll_id,
+        cceph_os_coll_id_t  cid,
         const char*         oid,
         int64_t             offset,
         int64_t             length,
@@ -68,7 +68,8 @@ int cceph_os_write(cceph_os_transaction* tran,
     }
 
     cceph_os_transaction_op *op = tran->op_buffer + tran->op_buffer_index;
-    op->coll_id = coll_id;
+    op->op      = CCEPH_OS_OP_WRITE;
+    op->cid     = cid;
     op->oid     = oid;
     op->offset  = offset;
     op->length  = length;

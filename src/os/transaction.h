@@ -14,7 +14,7 @@ typedef int32_t cceph_os_op_t;
 typedef struct {
     int64_t             log_id;
     cceph_os_op_t       op;
-    cceph_os_coll_id_t  coll_id;
+    cceph_os_coll_id_t  cid;
     const char*         oid;
     int64_t             offset;
     int64_t             length;
@@ -30,7 +30,7 @@ typedef struct {
 extern cceph_os_transaction* cceph_os_transaction_new();
 
 extern int cceph_os_write(cceph_os_transaction* tran,
-        cceph_os_coll_id_t  coll_id,
+        cceph_os_coll_id_t  cid,
         const char*         oid,
         int64_t             offset,
         int64_t             length,
