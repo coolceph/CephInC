@@ -6,11 +6,11 @@
 #define CCEPH_LIST_POISON1  ((char *) 0x00100100 + CCEPH_LIST_POISON_POINTER_DELTA)
 #define CCEPH_LIST_POISON2  ((char *) 0x00200200 + CCEPH_LIST_POISON_POINTER_DELTA)
 
-#define cceph_list_offsetof(type, member)  (size_t)(&((type*)0)->member)
+#define cceph_offsetof(type, member)  (size_t)(&((type*)0)->member)
 
-#define cceph_list_container_of(ptr, type, member) ({              \
-        const typeof(((type *)0)->member)*__mptr = (ptr);          \
-    (type *)((char *)__mptr - cceph_list_offsetof(type, member)); })
+#define cceph_container_of(ptr, type, member) ({                         \
+        const typeof(((type *)0)->member)*__mptr = (ptr);                \
+        (type *)((char *)__mptr - cceph_list_offsetof(type, member)); })
 
 typedef struct cceph_list_head_ cceph_list_head_;
 struct cceph_list_head_ {
