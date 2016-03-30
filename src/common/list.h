@@ -10,7 +10,7 @@
 
 #define cceph_container_of(ptr, type, member) ({                         \
         const typeof(((type *)0)->member)*__mptr = (ptr);                \
-        (type *)((char *)__mptr - cceph_list_offsetof(type, member)); })
+        (type *)((char *)__mptr - cceph_offsetof(type, member)); })
 
 typedef struct cceph_list_head_ cceph_list_head_;
 struct cceph_list_head_ {
@@ -64,7 +64,7 @@ static inline void cceph_list_move_tail(cceph_list_head *list, cceph_list_head *
 };
 
 #define cceph_list_entry(ptr, type, member) \
-    cceph_list_container_of(ptr, type, member)
+    cceph_container_of(ptr, type, member)
 
 #define cceph_list_first_entry(ptr, type, member) \
     cceph_list_entry((ptr)->next, type, member)

@@ -91,6 +91,8 @@ static inline struct page * rb_insert_page_cache(struct inode * inode,
 -----------------------------------------------------------------------
 */
 
+#include <stdlib.h>
+
 #ifndef	_CCEPH_RBTREE_H
 #define	_CCEPH_RBTREE_H
 
@@ -111,7 +113,7 @@ typedef struct {
 
 #define cceph_rb_parent(r)     ((cceph_rb_node *)((r)->rb_parent_color & ~3))
 #define cceph_rb_color(r)      ((r)->rb_parent_color & 1)
-#define cceph_rb_is_red(r)     (!rb_color(r))
+#define cceph_rb_is_red(r)     (!cceph_rb_color(r))
 #define cceph_rb_is_black(r)   cceph_rb_color(r)
 #define cceph_rb_set_red(r)    do { (r)->rb_parent_color &= ~1; } while (0)
 #define cceph_rb_set_black(r)  do { (r)->rb_parent_color |= 1; } while (0)
