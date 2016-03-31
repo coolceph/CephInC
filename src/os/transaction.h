@@ -2,8 +2,8 @@
 #define CCEPH_OS_TRANSACTION_H
 
 #include "common/types.h"
+#include "os/coll_id.h"
 
-typedef int32_t cceph_os_coll_id_t;
 typedef int32_t cceph_os_op_t;
 
 #define CCEPH_OS_OP_NOOP    0
