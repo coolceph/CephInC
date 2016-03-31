@@ -1,7 +1,7 @@
 /*
   Red Black Trees
   (C) 1999  Andrea Arcangeli <andrea@suse.de>
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -110,6 +110,12 @@ typedef struct cceph_rb_node_ cceph_rb_node;
 typedef struct {
 	cceph_rb_node *rb_node;
 } cceph_rb_root;
+
+#define cceph_offsetof(type, member)  (size_t)(&((type*)0)->member)
+
+#define cceph_container_of(ptr, type, member) ({                         \
+        const typeof(((type *)0)->member)*__mptr = (ptr);                \
+        (type *)((char *)__mptr - cceph_offsetof(type, member)); })
 
 #define cceph_rb_parent(r)     ((cceph_rb_node *)((r)->rb_parent_color & ~3))
 #define cceph_rb_color(r)      ((r)->rb_parent_color & 1)
