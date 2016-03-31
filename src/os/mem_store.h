@@ -3,7 +3,11 @@
 
 #include "os/object_store.h"
 
-typedef void* cceph_mem_store;
+#include "common/rbtree.h"
+
+typedef struct {
+    cceph_rb_root coll_tree;
+} cceph_mem_store;
 
 extern cceph_os_funcs* cceph_mem_store_get_funcs();
 
