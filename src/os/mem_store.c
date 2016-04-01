@@ -7,22 +7,7 @@
 #include "common/rbtree.h"
 #include "common/types.h"
 
-typedef struct {
-    char* oid;
-    char* data;
-    int64_t length;
-
-    cceph_rb_node node;
-} cceph_mem_store_object_node;
-
-typedef struct {
-    cceph_os_coll_id_t cid;
-    cceph_rb_root objects;
-
-    cceph_rb_node node;
-} cceph_mem_store_coll_node;
-
-static cceph_mem_store_coll_node* cceph_mem_store_coll_node_search(
+cceph_mem_store_coll_node* cceph_mem_store_coll_node_search(
         cceph_rb_root*     root,
         cceph_os_coll_id_t cid) {
     cceph_rb_node *node = root->rb_node;
@@ -42,7 +27,7 @@ static cceph_mem_store_coll_node* cceph_mem_store_coll_node_search(
     return NULL;
 }
 
-static int cceph_mem_store_coll_node_insert(
+int cceph_mem_store_coll_node_insert(
         cceph_rb_root *root,
         cceph_mem_store_coll_node *node) {
 
@@ -83,7 +68,7 @@ cceph_os_funcs* cceph_mem_store_get_funcs() {
 
 cceph_mem_store* cceph_mem_store_new() {
     cceph_mem_store *store = (cceph_mem_store*)malloc(sizeof(cceph_mem_store));
-    store->coll_tree = CCEPH_RB_ROOT;
+    store->colls = CCEPH_RB_ROOT;
     return store;
 }
 
@@ -110,4 +95,16 @@ int cceph_mem_store_read_object(
         char*               data,
         int64_t             log_id) {
     return 0;
+}
+
+cceph_mem_store_coll_node* TEST_cceph_mem_store_coll_node_search(
+        cceph_rb_root*     root,
+        cceph_os_coll_id_t cid) {
+    return cceph_mem_store_coll_node_search(root, cid);
+}
+
+int TEST_cceph_mem_store_coll_node_insert(
+        cceph_rb_root *root,
+        cceph_mem_store_coll_node *node) {
+    return cceph_mem_store_coll_node_insert(root, node);
 }

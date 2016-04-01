@@ -56,6 +56,11 @@ unittest_os_transaction_LDADD = $(LIBOS) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_os_transaction_CXXFLAGS = $(UNITTEST_CXXFLAGS)
 check_PROGRAMS += unittest_os_transaction
 
+unittest_os_mem_store_SOURCES = test/test_os_mem_store.cc
+unittest_os_mem_store_LDADD = $(LIBOS) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
+unittest_os_mem_store_CXXFLAGS = $(UNITTEST_CXXFLAGS)
+check_PROGRAMS += unittest_os_mem_store
+
 unittest_client_client_SOURCES = test/test_client_client.cc
 unittest_client_client_LDADD = $(LIBCLIENT) $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_client_client_CXXFLAGS = $(UNITTEST_CXXFLAGS)
