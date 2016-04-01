@@ -351,29 +351,29 @@ cceph_rb_node *cceph_rb_prev(const cceph_rb_node *node) {
 }
 
 void cceph_rb_replace_node(
-        cceph_rb_node *victim,
-        cceph_rb_node *new,
+        cceph_rb_node *victim_node,
+        cceph_rb_node *new_node,
         cceph_rb_root *root) {
 
-	cceph_rb_node *parent = cceph_rb_parent(victim);
+	cceph_rb_node *parent = cceph_rb_parent(victim_node);
 
 	/* Set the surrounding nodes to point to the replacement */
 	if (parent) {
-		if (victim == parent->rb_left) {
-			parent->rb_left = new;
+		if (victim_node == parent->rb_left) {
+			parent->rb_left = new_node;
         } else {
-			parent->rb_right = new;
+			parent->rb_right = new_node;
         }
 	} else {
-		root->rb_node = new;
+		root->rb_node = new_node;
 	}
-	if (victim->rb_left) {
-		cceph_rb_set_parent(victim->rb_left, new);
+	if (victim_node->rb_left) {
+		cceph_rb_set_parent(victim_node->rb_left, new_node);
     }
-	if (victim->rb_right) {
-		cceph_rb_set_parent(victim->rb_right, new);
+	if (victim_node->rb_right) {
+		cceph_rb_set_parent(victim_node->rb_right, new_node);
     }
 
 	/* Copy the pointers/colour from the victim to the replacement */
-	*new = *victim;
+	*new_node = *victim_node;
 }

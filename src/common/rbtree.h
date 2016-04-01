@@ -149,8 +149,8 @@ extern cceph_rb_node *cceph_rb_last(const cceph_rb_root *);
 
 /* Fast replacement of a single node without remove/rebalance/add/rebalance */
 extern void cceph_rb_replace_node(
-        cceph_rb_node *victim,
-        cceph_rb_node *new,
+        cceph_rb_node *victim_node,
+        cceph_rb_node *new_node,
         cceph_rb_root *root);
 
 static inline void cceph_rb_link_node(
