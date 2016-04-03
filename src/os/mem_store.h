@@ -53,4 +53,12 @@ extern int TEST_cceph_mem_store_coll_node_insert(
         cceph_rb_root *root,
         cceph_mem_store_coll_node *node);
 
+extern cceph_mem_store_object_node* TEST_cceph_mem_store_object_node_search(
+        cceph_rb_root*     root,
+        const char*        oid);
+
+extern int TEST_cceph_mem_store_object_node_insert(
+        cceph_rb_root               *root,
+        cceph_mem_store_object_node *node);
+
 #endif
