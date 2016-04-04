@@ -37,4 +37,13 @@ extern int cceph_os_write(cceph_os_transaction* tran,
         const char*         data,
         int64_t             log_id);
 
+extern int cceph_os_tran_get_op_count(
+        cceph_os_transaction* tran,
+        int64_t               log_id);
+
+extern cceph_os_transaction_op* cceph_os_tran_get_op(
+        cceph_os_transaction* tran,
+        int32_t               index,
+        int64_t               log_id);
+
 #endif

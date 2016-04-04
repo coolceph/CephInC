@@ -27,6 +27,8 @@ TEST(os_transaction, cceph_os_write) {
         int ret = cceph_os_write(tran,
                 cid + i, oid, offset + i, length + i, data, log_id + i);
 
+        EXPECT_EQ(i + 1, cceph_os_tran_get_op_count(tran, log_id));
+
         int buffer_length = (i + 1) / CCEPH_OS_TRAN_OP_LIST_SIZE;
         buffer_length += (i + 1) % CCEPH_OS_TRAN_OP_LIST_SIZE > 0 ? 1 : 0;
         buffer_length *= CCEPH_OS_TRAN_OP_LIST_SIZE;
@@ -36,6 +38,17 @@ TEST(os_transaction, cceph_os_write) {
         EXPECT_EQ(buffer_length, tran->op_buffer_length);
 
         cceph_os_transaction_op *op = tran->op_buffer + i;
+        EXPECT_EQ(CCEPH_OS_OP_WRITE , op->op);
+        EXPECT_EQ(cid + i , op->cid);
+        EXPECT_EQ(offset + i , op->offset);
+        EXPECT_EQ(length + i , op->length);
+        EXPECT_EQ(log_id + i , op->log_id);
+        EXPECT_EQ(data , op->data);
+        EXPECT_STREQ(oid , op->oid);
+    }
+
+    for (int i = 0; i < CCEPH_OS_TRAN_OP_LIST_SIZE * 3; i++) {
+        cceph_os_transaction_op *op = cceph_os_tran_get_op(tran, i, log_id);
         EXPECT_EQ(CCEPH_OS_OP_WRITE , op->op);
         EXPECT_EQ(cid + i , op->cid);
         EXPECT_EQ(offset + i , op->offset);

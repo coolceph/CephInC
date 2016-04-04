@@ -80,3 +80,24 @@ int cceph_os_write(cceph_os_transaction* tran,
     return 0;
 }
 
+int cceph_os_tran_get_op_count(
+        cceph_os_transaction* tran,
+        int64_t               log_id) {
+    assert(log_id, tran != NULL);
+    return tran->op_buffer_index;
+}
+
+cceph_os_transaction_op* cceph_os_tran_get_op(
+        cceph_os_transaction* tran,
+        int32_t               index,
+        int64_t               log_id) {
+    assert(log_id, tran != NULL);
+
+    //Out of range
+    if (index >= tran->op_buffer_index) {
+        return NULL;
+    }
+
+    return (cceph_os_transaction_op*)(tran->op_buffer + index);
+
+}
