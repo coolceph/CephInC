@@ -1,12 +1,14 @@
 #ifndef CCEPH_MEM_STORE_H
 #define CCEPH_MEM_STORE_H
 
-#include "os/object_store.h"
+#include <pthread.h>
 
 #include "common/rbtree.h"
+#include "os/object_store.h"
 
 typedef struct {
     cceph_rb_root colls;
+    pthread_mutex_t lock;
 } cceph_mem_store;
 
 typedef struct {
@@ -33,9 +35,9 @@ extern int cceph_mem_store_mount(
         int64_t              log_id);
 
 extern int cceph_mem_store_submit_transaction(
-        cceph_object_store*  os,
-        cceph_os_transaction transaction,
-        int64_t              log_id);
+        cceph_object_store*   os,
+        cceph_os_transaction* transaction,
+        int64_t               log_id);
 
 extern int cceph_mem_store_read_object(
         cceph_object_store*  os,

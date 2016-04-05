@@ -11,7 +11,9 @@
 #define CCEPH_ERR_WRONG_CLIENT_ID        (-1006)
 #define CCEPH_ERR_NO_ENOUGH_MEM          (-1007)
 #define CCEPH_ERR_COLL_ALREADY_EXIST     (-1008)
-#define CCEPH_ERR_OBJECT_ALREADY_EXIST   (-1009)
+#define CCEPH_ERR_COLL_NOT_EXIST         (-1009)
+#define CCEPH_ERR_OBJECT_ALREADY_EXIST   (-1010)
+#define CCEPH_ERR_UNKNOWN_OS_OP          (-1011)
 
 extern const char* errno_str(int err_no);
 

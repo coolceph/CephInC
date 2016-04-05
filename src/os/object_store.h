@@ -11,9 +11,9 @@ typedef int (*cceph_os_mount_func)(
         int64_t             log_id);
 
 typedef int (*cceph_os_submit_transaction_func)(
-        cceph_object_store*  os,
-        cceph_os_transaction transaction,
-        int64_t              log_id);
+        cceph_object_store*   os,
+        cceph_os_transaction* transaction,
+        int64_t               log_id);
 
 typedef int (*cceph_os_read_object_func)(
         cceph_object_store*  os,

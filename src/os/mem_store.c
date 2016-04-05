@@ -4,6 +4,7 @@
 
 #include "common/assert.h"
 #include "common/errno.h"
+#include "common/log.h"
 #include "common/rbtree.h"
 #include "common/types.h"
 
@@ -117,6 +118,7 @@ cceph_os_funcs* cceph_mem_store_get_funcs() {
 cceph_mem_store* cceph_mem_store_new() {
     cceph_mem_store *store = (cceph_mem_store*)malloc(sizeof(cceph_mem_store));
     store->colls = CCEPH_RB_ROOT;
+    pthread_mutex_init(&(store->lock), NULL);
     return store;
 }
 
@@ -128,11 +130,84 @@ int cceph_mem_store_mount(
     return 0;
 }
 
+int cceph_mem_store_do_op_write(
+        cceph_mem_store*         os,
+        cceph_os_transaction_op* op,
+        int64_t                  log_id) {
+
+    assert(log_id, os != NULL);
+    assert(log_id, op != NULL);
+
+    //TODO: Log here
+    cceph_mem_store_coll_node *cnode = cceph_mem_store_coll_node_search(
+            &os->colls, op->cid);
+
+    if (cnode == NULL) {
+        //TODO: log here
+        return CCEPH_ERR_COLL_NOT_EXIST;
+    }
+
+    return CCEPH_OK;
+}
+
+int cceph_mem_store_do_op(
+        cceph_mem_store*         os,
+        cceph_os_transaction_op* op,
+        int64_t                  log_id) {
+
+    assert(log_id, os != NULL);
+    assert(log_id, op != NULL);
+
+    int ret = 0;
+    switch(op->op) {
+        case CCEPH_OS_OP_NOOP:
+            //TODO: log here
+            ret = 0;
+            break;
+        case CCEPH_OS_OP_WRITE:
+            ret = cceph_mem_store_do_op_write(os, op, log_id);
+            break;
+        default:
+            ret = CCEPH_ERR_UNKNOWN_OS_OP;
+    }
+
+    if (ret == CCEPH_OK) {
+        //TODO: log here
+    } else {
+        //TODO: log here
+    }
+
+    return ret;
+}
+
+
 int cceph_mem_store_submit_transaction(
-        cceph_object_store*  os,
-        cceph_os_transaction transaction,
-        int64_t              log_id) {
-    return 0;
+        cceph_object_store*   os,
+        cceph_os_transaction* tran,
+        int64_t               log_id) {
+
+    assert(log_id, os != NULL);
+    assert(log_id, tran != NULL);
+
+    cceph_mem_store* mem_store = (cceph_mem_store*)os;
+    int op_count = cceph_os_tran_get_op_count(tran, log_id);
+
+    LOG(LL_INFO, log_id, "Submit transaction with %d ops.", op_count);
+    pthread_mutex_lock(&mem_store->lock);
+
+    int ret = 0;
+    int i = 0;
+    for (i = 0; i < op_count; i++) {
+        cceph_os_transaction_op* op = cceph_os_tran_get_op(tran, i, log_id);
+        ret = cceph_mem_store_do_op(mem_store, op, log_id);
+        if (ret != CCEPH_OK) {
+            break;
+        }
+    }
+
+    pthread_mutex_unlock(&mem_store->lock);
+    LOG(LL_INFO, log_id, "Transaction executed with %d/%d ops done.", i + 1, op_count);
+    return ret;
 }
 
 int cceph_mem_store_read_object(
