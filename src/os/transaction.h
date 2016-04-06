@@ -3,11 +3,7 @@
 
 #include "common/types.h"
 #include "os/coll_id.h"
-
-typedef int32_t cceph_os_op_t;
-
-#define CCEPH_OS_OP_NOOP    0
-#define CCEPH_OS_OP_WRITE   1
+#include "os/op.h"
 
 #define CCEPH_OS_TRAN_OP_LIST_SIZE 8
 

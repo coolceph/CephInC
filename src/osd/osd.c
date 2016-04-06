@@ -67,7 +67,7 @@ int do_object_write_req(cceph_messenger* messenger, cceph_conn_id_t conn_id, cce
 
     int ret = io_write_object(oid, offset, length, data, log_id);
     if (ret != 0) {
-        LOG(LL_ERROR, log_id, "io_write_object failed for req_id %ld, errno %d(%s).", req_id, ret, errno_str(ret));
+        LOG(LL_ERROR, log_id, "io_write_object failed for req_id %ld, errno %d(%s).", req_id, ret, cceph_errno_str(ret));
     } else {
         LOG(LL_INFO, log_id, "io_write_object success for req_id %ld.", req_id);
     }
@@ -87,7 +87,7 @@ int do_object_write_req(cceph_messenger* messenger, cceph_conn_id_t conn_id, cce
     ret = cceph_messenger_send_msg(messenger, conn_id, (cceph_msg_header*)ack, log_id);
     if (ret != 0) {
         LOG(LL_ERROR, log_id, "cceph_msg_write_obj_ack_send failed for client %d, req_id %d, errno %d(%s).",
-                client_id, req_id, ret, errno_str(ret));
+                client_id, req_id, ret, cceph_errno_str(ret));
     } else {
         LOG(LL_INFO, log_id, "cceph_msg_write_obj_ack_send success for client %d, req_id %d.",
                 client_id, req_id);
@@ -128,7 +128,7 @@ int cceph_osd_process_message(
                 conn_id, op);
     } else {
         LOG(LL_INFO, log_id, "Porcess message msg from conn %ld, op %d failed, errno %d(%s).",
-                conn_id, op, ret, errno_str(ret));
+                conn_id, op, ret, cceph_errno_str(ret));
     }
 
     return ret;

@@ -104,7 +104,7 @@ int bind_and_listen(cceph_server_messenger *server_messenger, int64_t log_id) {
         cceph_conn_id_t conn_id = cceph_messenger_add_conn(messenger, hbuf, atoi(sbuf), com_fd, log_id);
         if (conn_id < 0) {
             LOG(LL_ERROR, log_id, "Call cceph_messenger_add_conn failed, fd %d, errno %d(%s).",
-                    com_fd, conn_id, errno_str(conn_id));
+                    com_fd, conn_id, cceph_errno_str(conn_id));
             break;
         }
     }
@@ -118,7 +118,7 @@ int cceph_server_messenger_start(
         LOG(LL_INFO, log_id, "start messenger for server_messenger success.");
     } else {
         LOG(LL_ERROR, log_id, "start messenger for server_messenger failed. errno %d(%s).",
-                ret, errno_str(ret));
+                ret, cceph_errno_str(ret));
         return ret;
     }
 

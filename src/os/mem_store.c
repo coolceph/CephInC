@@ -161,7 +161,6 @@ int cceph_mem_store_do_op(
     int ret = 0;
     switch(op->op) {
         case CCEPH_OS_OP_NOOP:
-            //TODO: log here
             ret = 0;
             break;
         case CCEPH_OS_OP_WRITE:
@@ -172,9 +171,12 @@ int cceph_mem_store_do_op(
     }
 
     if (ret == CCEPH_OK) {
-        //TODO: log here
+        LOG(LL_INFO, log_id, "do_op %s(%d) success.",
+                op->op, cceph_os_op_to_str(op->op));
     } else {
-        //TODO: log here
+        LOG(LL_ERROR, log_id, "do_op %s(%d) failed, errno %d(%s).",
+                op->op, cceph_os_op_to_str(op->op),
+                ret, cceph_errno_str(ret));
     }
 
     return ret;

@@ -115,7 +115,7 @@ static int client_process_message(
                 conn_id, op);
     } else {
         LOG(LL_INFO, log_id, "Process message msg from conn %ld, op %d failed, errno %d(%s).",
-                conn_id, op, ret, errno_str(ret));
+                conn_id, op, ret, cceph_errno_str(ret));
     }
 
     return ret;
@@ -158,7 +158,7 @@ extern int cceph_client_init(cceph_client *client) {
 
     int ret = cceph_messenger_start(client->messenger, log_id);
     if (ret != 0) {
-        LOG(LL_ERROR, log_id, "cceph_messenger_start failed, errno %d(%s).", ret, errno_str(ret));
+        LOG(LL_ERROR, log_id, "cceph_messenger_start failed, errno %d(%s).", ret, cceph_errno_str(ret));
     }
 
     if (ret == 0) {
@@ -180,7 +180,7 @@ static int send_req_to_osd(cceph_messenger* msger, cceph_osd_entity *osd, cceph_
     cceph_conn_id_t conn_id = cceph_messenger_get_conn(msger, host, port, log_id);
     if (conn_id < 0) {
         LOG(LL_WARN, log_id, "failed to get conn to %s:%d, errno %d(%s).",
-                host, port, conn_id, errno_str(conn_id));
+                host, port, conn_id, cceph_errno_str(conn_id));
         return conn_id;
     }
     LOG(LL_INFO, log_id, "get conn_id %d for %s:%d.", conn_id, host, port);
@@ -188,7 +188,7 @@ static int send_req_to_osd(cceph_messenger* msger, cceph_osd_entity *osd, cceph_
     int ret = cceph_messenger_send_msg(msger, conn_id, (cceph_msg_header*)req, log_id);
     if (ret != 0) {
         LOG(LL_WARN, log_id, "failed to send req to conn %d, errno %d(%s).",
-                conn_id, ret, errno_str(ret));
+                conn_id, ret, cceph_errno_str(ret));
         return ret;
     }
 

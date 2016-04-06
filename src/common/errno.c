@@ -1,6 +1,6 @@
 #include "errno.h"
 
-const char* errno_str(int err_no) {
+const char* cceph_errno_str(int err_no) {
     switch (err_no) {
         case CCEPH_OK:
             return "OK";

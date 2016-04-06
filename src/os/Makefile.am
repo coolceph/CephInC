@@ -1,5 +1,6 @@
 libos_la_SOURCES =     	\
 	os/coll_id.c        \
+	os/op.c             \
 	os/transaction.c    \
 	os/mem_store.c
 
