@@ -177,7 +177,7 @@ int cceph_mem_store_mount(
         int64_t             log_id) {
     //MemStore don't need mount
     assert(log_id, os != NULL);
-    return 0;
+    return CCEPH_OK;
 }
 
 int cceph_mem_store_do_op_write(
@@ -260,10 +260,10 @@ int cceph_mem_store_do_op(
     assert(log_id, os != NULL);
     assert(log_id, op != NULL);
 
-    int ret = 0;
+    int ret = CCEPH_OK;
     switch(op->op) {
         case CCEPH_OS_OP_NOOP:
-            ret = 0;
+            ret = CCEPH_OK;
             break;
         case CCEPH_OS_OP_WRITE:
             ret = cceph_mem_store_do_op_write(os, op, log_id);
@@ -298,7 +298,7 @@ int cceph_mem_store_submit_transaction(
     LOG(LL_INFO, log_id, "Submit transaction with %d ops.", op_count);
     pthread_mutex_lock(&mem_store->lock);
 
-    int ret = 0;
+    int ret = CCEPH_OK;
     int i = 0;
     for (i = 0; i < op_count; i++) {
         cceph_os_transaction_op* op = cceph_os_tran_get_op(tran, i, log_id);
@@ -320,7 +320,7 @@ int cceph_mem_store_read_object(
         int64_t             length,
         char*               data,
         int64_t             log_id) {
-    return 0;
+    return CCEPH_OK;
 }
 
 cceph_mem_store_coll_node* TEST_cceph_mem_store_coll_node_search(

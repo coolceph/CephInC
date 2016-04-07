@@ -52,7 +52,7 @@ int cceph_os_transactio_check_op_buffer_size(cceph_os_transaction *tran, int64_t
     }
 
     memcpy(tran->op_buffer, old_op_buffer, sizeof(cceph_os_transaction_op) * old_op_length);
-    return 0;
+    return CCEPH_OK;
 }
 
 int cceph_os_write(cceph_os_transaction* tran,
@@ -70,7 +70,7 @@ int cceph_os_write(cceph_os_transaction* tran,
     assert(log_id, data != NULL);
 
     int ret = cceph_os_transactio_check_op_buffer_size(tran, log_id);
-    if (ret != 0) {
+    if (ret != CCEPH_OK) {
         return ret;
     }
 
@@ -84,7 +84,7 @@ int cceph_os_write(cceph_os_transaction* tran,
     op->log_id  = log_id;
 
     tran->op_buffer_index++;
-    return 0;
+    return CCEPH_OK;
 }
 
 int cceph_os_tran_get_op_count(
