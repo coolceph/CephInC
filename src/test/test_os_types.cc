@@ -1,5 +1,5 @@
 extern "C" {
-#include "os/coll_id.h"
+#include "os/types.h"
 }
 
 #include "gtest/gtest.h"

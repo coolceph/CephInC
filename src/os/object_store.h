@@ -2,7 +2,10 @@
 #define CCEPH_OBJECT_STORE_H
 
 #include "common/types.h"
+
+#include "os/types.h"
 #include "os/transaction.h"
+
 typedef void* cceph_object_store;
 
 typedef int (*cceph_os_mount_func)(

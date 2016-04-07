@@ -2,8 +2,7 @@
 #define CCEPH_OS_TRANSACTION_H
 
 #include "common/types.h"
-#include "os/coll_id.h"
-#include "os/op.h"
+#include "os/types.h"
 
 #define CCEPH_OS_TRAN_OP_LIST_SIZE 8
 
