@@ -63,4 +63,8 @@ extern int TEST_cceph_mem_store_object_node_insert(
         cceph_rb_root               *root,
         cceph_mem_store_object_node *node);
 
+extern int TEST_cceph_mem_store_object_node_new(
+        cceph_mem_store_object_node** node,
+        const char*                   oid,
+        int64_t                       log_id);
 #endif

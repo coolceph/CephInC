@@ -22,12 +22,19 @@ TEST(os_mem_store, cceph_mem_store_coll_node) {
 
 TEST(os_mem_store, cceph_mem_store_object_node) {
     cceph_rb_root root = CCEPH_RB_ROOT;
+    char oid[256];
     for (int i = 0; i < 1000; i++) {
-        cceph_mem_store_object_node *node = new cceph_mem_store_object_node();
-        node->oid = (char*)malloc(sizeof(char) * 256);
-        bzero(node->oid, 256);
-        sprintf(node->oid, "%d", i);
-        int ret = TEST_cceph_mem_store_object_node_insert(&root, node);
+        bzero(oid, 256);
+        sprintf(oid, "%d", i);
+
+        cceph_mem_store_object_node *node = NULL;
+        int ret = TEST_cceph_mem_store_object_node_new(&node, oid, 0);
+        EXPECT_EQ(CCEPH_OK, ret);
+        EXPECT_STREQ(oid, node->oid);
+        EXPECT_EQ(NULL, node->data);
+        EXPECT_EQ(0, node->length);
+
+        ret = TEST_cceph_mem_store_object_node_insert(&root, node);
         EXPECT_EQ(CCEPH_OK, ret);
     }
 

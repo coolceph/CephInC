@@ -106,5 +106,4 @@ cceph_os_transaction_op* cceph_os_tran_get_op(
     }
 
     return (cceph_os_transaction_op*)(tran->op_buffer + index);
-
 }

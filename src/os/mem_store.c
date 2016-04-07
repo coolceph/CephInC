@@ -8,6 +8,52 @@
 #include "common/rbtree.h"
 #include "common/types.h"
 
+int cceph_mem_store_object_node_new(
+        cceph_mem_store_object_node** node,
+        const char*                   oid,
+        int64_t                       log_id) {
+    assert(log_id, node != NULL);
+    assert(log_id, oid != NULL);
+
+    *node = (cceph_mem_store_object_node*)malloc(sizeof(cceph_mem_store_object_node));
+    if (*node == NULL) {
+        return CCEPH_ERR_NO_ENOUGH_MEM;
+    }
+
+    int oid_length = strlen(oid) + 1;
+    (*node)->oid = (char*)malloc(sizeof(char) * oid_length);
+    if ((*node)->oid == NULL) {
+        return CCEPH_ERR_NO_ENOUGH_MEM;
+    }
+    bzero((*node)->oid, oid_length);
+    strcpy((*node)->oid, oid);
+
+    (*node)->data = NULL;
+    (*node)->length = 0;
+
+    return CCEPH_OK;
+}
+
+int cceph_mem_store_object_node_free(
+        cceph_mem_store_object_node** node,
+        int64_t                       log_id) {
+    assert(log_id, node != NULL);
+    assert(log_id, *node != NULL);
+
+    cceph_mem_store_object_node* onode = *node;
+    if (onode->oid != NULL) {
+        free(onode->oid);
+        onode->oid = NULL;
+    }
+    if (onode->data != NULL) {
+        free(onode->data);
+        onode->data = NULL;
+    }
+    onode->length = 0;
+
+    return CCEPH_OK;
+}
+
 cceph_mem_store_object_node* cceph_mem_store_object_node_search(
         cceph_rb_root*     root,
         const char*        oid) {
@@ -137,15 +183,67 @@ int cceph_mem_store_do_op_write(
 
     assert(log_id, os != NULL);
     assert(log_id, op != NULL);
+    assert(log_id, op->oid != NULL);
+    assert(log_id, op->offset >= 0);
+    assert(log_id, op->length >= 0);
+    if (op->length > 0) {
+        //Touch may not have a data
+        assert(log_id, op->data != NULL);
+    }
 
-    //TODO: Log here
+    LOG(LL_INFO, log_id, "Execute write op, cid %d, oid %s, offset %ld, length %ld, log_id %ld.",
+            op->cid, op->oid, op->offset, op->length, op->log_id);
+
+    log_id = op->log_id; //We will use op's log_id from here
+
     cceph_mem_store_coll_node *cnode = cceph_mem_store_coll_node_search(
             &os->colls, op->cid);
-
     if (cnode == NULL) {
-        //TODO: log here
+        LOG(LL_ERROR, log_id, "Execute write op failed, since cid %d not existed.", op->cid);
         return CCEPH_ERR_COLL_NOT_EXIST;
     }
+
+    cceph_mem_store_object_node *onode = cceph_mem_store_object_node_search(
+            &cnode->objects, op->oid);
+    if (onode == NULL) {
+        int ret = cceph_mem_store_object_node_new(&onode, op->oid, log_id);
+        if (ret != CCEPH_OK) {
+            return ret;
+        }
+        ret = cceph_mem_store_object_node_insert(&cnode->objects, onode);
+        if (ret != CCEPH_OK) {
+            cceph_mem_store_object_node_free(&onode, log_id);
+            return ret;
+        }
+    }
+
+    //Is a touch operation?
+    if (op->length == 0) {
+        return CCEPH_OK;
+    }
+
+    assert(log_id, strcmp(op->oid, onode->oid) == 0);
+    if (onode->length < op->offset + op->length) {
+        //We don't have enough space, we should expend the data
+        int64_t new_length = op->offset + op->length;
+        char*   new_data   = (char*)malloc(sizeof(char) * new_length);
+        if (new_data == NULL) {
+            return CCEPH_ERR_NO_ENOUGH_MEM;
+        }
+
+        //cp old data to new data;
+        bzero(new_data, new_length);
+        memcpy(new_data, onode->data, onode->length);
+
+        char* old_data = onode->data;
+        onode->data    = new_data;
+        onode->length  = new_length;
+
+        free(old_data);
+    }
+
+    //Write op
+    memcpy(onode->data + op->offset, op->data, op->length);
 
     return CCEPH_OK;
 }
@@ -181,7 +279,6 @@ int cceph_mem_store_do_op(
 
     return ret;
 }
-
 
 int cceph_mem_store_submit_transaction(
         cceph_object_store*   os,
@@ -243,4 +340,10 @@ int TEST_cceph_mem_store_object_node_insert(
         cceph_rb_root               *root,
         cceph_mem_store_object_node *node) {
     return cceph_mem_store_object_node_insert(root, node);
+}
+int TEST_cceph_mem_store_object_node_new(
+        cceph_mem_store_object_node** node,
+        const char*                   oid,
+        int64_t                       log_id) {
+    return cceph_mem_store_object_node_new(node, oid, log_id);
 }

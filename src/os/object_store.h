@@ -14,6 +14,7 @@ typedef int (*cceph_os_submit_transaction_func)(
         cceph_os_transaction* transaction,
         int64_t               log_id);
 
+//if length <= 0 or length >= object->length, read the whole content
 typedef int (*cceph_os_read_object_func)(
         cceph_object_store*  os,
         const char*          oid,
