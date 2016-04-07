@@ -66,8 +66,10 @@ int cceph_os_write(cceph_os_transaction* tran,
     assert(log_id, tran != NULL);
     assert(log_id, oid  != NULL);
     assert(log_id, offset >= 0);
-    assert(log_id, length > 0);
-    assert(log_id, data != NULL);
+    assert(log_id, length >= 0);
+    if (length > 0) {
+        assert(log_id, data != NULL);
+    }
 
     int ret = cceph_os_transactio_check_op_buffer_size(tran, log_id);
     if (ret != CCEPH_OK) {
