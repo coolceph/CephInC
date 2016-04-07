@@ -165,11 +165,21 @@ cceph_os_funcs* cceph_mem_store_get_funcs() {
     return os_funcs;
 }
 
-cceph_mem_store* cceph_mem_store_new() {
-    cceph_mem_store *store = (cceph_mem_store*)malloc(sizeof(cceph_mem_store));
-    store->colls = CCEPH_RB_ROOT;
-    pthread_mutex_init(&(store->lock), NULL);
-    return store;
+int cceph_mem_store_new(
+        cceph_mem_store** store,
+        int64_t           log_id) {
+
+    assert(log_id, store  != NULL);
+    assert(log_id, *store == NULL);
+
+    *store = (cceph_mem_store*)malloc(sizeof(cceph_mem_store));
+    if (*store == NULL) {
+        return CCEPH_ERR_NO_ENOUGH_MEM;
+    }
+
+    (*store)->colls = CCEPH_RB_ROOT;
+    pthread_mutex_init(&((*store)->lock), NULL);
+    return CCEPH_OK;
 }
 
 int cceph_mem_store_mount(

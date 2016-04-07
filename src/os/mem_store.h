@@ -28,7 +28,9 @@ typedef struct {
 
 extern cceph_os_funcs* cceph_mem_store_get_funcs();
 
-extern cceph_mem_store* cceph_mem_store_new();
+extern int cceph_mem_store_new(
+        cceph_mem_store** store,
+        int64_t log_id);
 
 extern int cceph_mem_store_mount(
         cceph_object_store*  os,

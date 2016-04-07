@@ -37,7 +37,7 @@ TEST(os_transaction, cceph_os_write) {
         buffer_length += (i + 1) % CCEPH_OS_TRAN_OP_LIST_SIZE > 0 ? 1 : 0;
         buffer_length *= CCEPH_OS_TRAN_OP_LIST_SIZE;
 
-        EXPECT_EQ(0, ret);
+        EXPECT_EQ(CCEPH_OK, ret);
         EXPECT_EQ(i + 1, tran->op_buffer_index);
         EXPECT_EQ(buffer_length, tran->op_buffer_length);
 
