@@ -23,6 +23,8 @@ int cceph_mem_store_object_node_new(
     int oid_length = strlen(oid) + 1;
     (*node)->oid = (char*)malloc(sizeof(char) * oid_length);
     if ((*node)->oid == NULL) {
+        free(*node);
+        *node = NULL;
         return CCEPH_ERR_NO_ENOUGH_MEM;
     }
     bzero((*node)->oid, oid_length);
