@@ -51,7 +51,9 @@ int cceph_mem_store_object_node_free(
         free(onode->data);
         onode->data = NULL;
     }
-    onode->length = 0;
+
+    free(onode);
+    *node = NULL;
 
     return CCEPH_OK;
 }
