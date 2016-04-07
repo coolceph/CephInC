@@ -6,21 +6,28 @@
 #include "common/errno.h"
 #include "common/types.h"
 
-cceph_os_transaction* cceph_os_transaction_new() {
-    cceph_os_transaction* tran = (cceph_os_transaction*)malloc(sizeof(cceph_os_transaction));
-    if (tran == NULL) {
-        return NULL;
+int cceph_os_transaction_new(
+        cceph_os_transaction** tran,
+        int64_t                log_id) {
+    assert(log_id,  tran != NULL);
+    assert(log_id, *tran == NULL);
+
+    *tran = (cceph_os_transaction*)malloc(sizeof(cceph_os_transaction));
+    if (*tran == NULL) {
+        return CCEPH_ERR_NO_ENOUGH_MEM;
     }
 
-    tran->op_buffer = (cceph_os_transaction_op*)malloc(sizeof(cceph_os_transaction_op) * CCEPH_OS_TRAN_OP_LIST_SIZE);
-    if (tran->op_buffer == NULL) {
-        return NULL;
+    (*tran)->op_buffer = (cceph_os_transaction_op*)malloc(sizeof(cceph_os_transaction_op) * CCEPH_OS_TRAN_OP_LIST_SIZE);
+    if ((*tran)->op_buffer == NULL) {
+        free(*tran);
+        *tran = NULL;
+        return CCEPH_ERR_NO_ENOUGH_MEM;
     }
 
-    tran->op_buffer_length = CCEPH_OS_TRAN_OP_LIST_SIZE;
-    tran->op_buffer_index  = 0;
+    (*tran)->op_buffer_length = CCEPH_OS_TRAN_OP_LIST_SIZE;
+    (*tran)->op_buffer_index  = 0;
 
-    return tran;
+    return CCEPH_OK;
 }
 
 int cceph_os_transactio_check_op_buffer_size(cceph_os_transaction *tran, int64_t log_id) {

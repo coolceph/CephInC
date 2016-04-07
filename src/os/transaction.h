@@ -23,15 +23,18 @@ typedef struct {
     int32_t                  op_buffer_index;
 } cceph_os_transaction;
 
-extern cceph_os_transaction* cceph_os_transaction_new();
+extern int cceph_os_transaction_new(
+        cceph_os_transaction** tran,
+        int64_t                log_id);
 
-extern int cceph_os_write(cceph_os_transaction* tran,
-        cceph_os_coll_id_t  cid,
-        const char*         oid,
-        int64_t             offset,
-        int64_t             length,
-        const char*         data,
-        int64_t             log_id);
+extern int cceph_os_write(
+        cceph_os_transaction* tran,
+        cceph_os_coll_id_t    cid,
+        const char*           oid,
+        int64_t               offset,
+        int64_t               length,
+        const char*           data,
+        int64_t               log_id);
 
 extern int cceph_os_tran_get_op_count(
         cceph_os_transaction* tran,

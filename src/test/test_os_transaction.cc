@@ -1,11 +1,14 @@
 extern "C" {
+#include "common/errno.h"
 #include "os/transaction.h"
 }
 
 #include "gtest/gtest.h"
 
 TEST(os_transaction, cceph_os_transaction_new) {
-    cceph_os_transaction *tran= cceph_os_transaction_new();
+    cceph_os_transaction *tran = NULL;
+    int ret = cceph_os_transaction_new(&tran, 0);
+    EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_NE((cceph_os_transaction*)NULL, tran);
     EXPECT_NE((cceph_os_transaction_op*)NULL, tran->op_buffer);
 
@@ -13,8 +16,9 @@ TEST(os_transaction, cceph_os_transaction_new) {
     EXPECT_EQ(0, tran->op_buffer_index);
 }
 TEST(os_transaction, cceph_os_write) {
-    cceph_os_transaction *tran= cceph_os_transaction_new();
-    EXPECT_NE((cceph_os_transaction*)NULL, tran);
+    cceph_os_transaction *tran = NULL;
+    int ret = cceph_os_transaction_new(&tran, 0);
+    EXPECT_EQ(CCEPH_OK, ret);
 
     cceph_os_coll_id_t cid = 1;
     const char* oid = "oid";
