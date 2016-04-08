@@ -55,6 +55,29 @@ int cceph_os_transactio_check_op_buffer_size(cceph_os_transaction *tran, int64_t
     return CCEPH_OK;
 }
 
+extern int cceph_os_touch(
+        cceph_os_transaction* tran,
+        cceph_os_coll_id_t    cid,
+        const char*           oid,
+        int64_t               log_id) {
+    assert(log_id, tran != NULL);
+    assert(log_id, oid  != NULL);
+
+    int ret = cceph_os_transactio_check_op_buffer_size(tran, log_id);
+    if (ret != CCEPH_OK) {
+        return ret;
+    }
+
+    cceph_os_transaction_op *op = tran->op_buffer + tran->op_buffer_index;
+    op->op      = CCEPH_OS_OP_TOUCH;
+    op->cid     = cid;
+    op->oid     = oid;
+    op->log_id  = log_id;
+
+    tran->op_buffer_index++;
+    return CCEPH_OK;
+}
+
 int cceph_os_write(cceph_os_transaction* tran,
         cceph_os_coll_id_t  cid,
         const char*         oid,

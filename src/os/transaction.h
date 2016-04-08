@@ -26,6 +26,13 @@ extern int cceph_os_transaction_new(
         cceph_os_transaction** tran,
         int64_t                log_id);
 
+//if object already existed, do nothing
+extern int cceph_os_touch(
+        cceph_os_transaction* tran,
+        cceph_os_coll_id_t    cid,
+        const char*           oid,
+        int64_t               log_id);
+
 //length == 0 means touch object
 extern int cceph_os_write(
         cceph_os_transaction* tran,
