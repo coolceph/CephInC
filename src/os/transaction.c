@@ -112,6 +112,27 @@ int cceph_os_write(cceph_os_transaction* tran,
     return CCEPH_OK;
 }
 
+extern int cceph_os_create_coll(
+        cceph_os_transaction* tran,
+        cceph_os_coll_id_t    cid,
+        int64_t               log_id) {
+    assert(log_id, tran != NULL);
+    assert(log_id, cid  >= 0);
+
+    int ret = cceph_os_transactio_check_op_buffer_size(tran, log_id);
+    if (ret != CCEPH_OK) {
+        return ret;
+    }
+
+    cceph_os_transaction_op *op = tran->op_buffer + tran->op_buffer_index;
+    op->op      = CCEPH_OS_OP_CREATE_COLL;
+    op->cid     = cid;
+    op->log_id  = log_id;
+
+    tran->op_buffer_index++;
+    return CCEPH_OK;
+}
+
 int cceph_os_tran_get_op_count(
         cceph_os_transaction* tran,
         int64_t               log_id) {
