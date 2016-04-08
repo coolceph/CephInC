@@ -43,6 +43,13 @@ extern int cceph_os_write(
         const char*           data,
         int64_t               log_id);
 
+//If object not existed, return CCEPH_ERR_OBJECT_NOT_EXISTED
+extern int cceph_os_remove(
+        cceph_os_transaction* tran,
+        cceph_os_coll_id_t    cid,
+        const char*           oid,
+        int64_t               log_id);
+
 //If coll existed, do nothing
 extern int cceph_os_create_coll(
         cceph_os_transaction* tran,
