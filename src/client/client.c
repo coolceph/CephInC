@@ -299,7 +299,6 @@ extern int cceph_client_write_obj(cceph_client* client,
     cceph_osdmap    *osdmap = client->osdmap;
 
     cceph_msg_write_obj_req *req = cceph_msg_write_obj_req_new();
-    req->header.op = CCEPH_MSG_OP_WRITE;
     req->header.log_id = log_id;
     req->client_id = client->client_id;
     req->req_id = cceph_atomic_add64(&client->req_id, 1);
