@@ -100,3 +100,21 @@ TEST(os_transaction, cceph_os_create_coll) {
     EXPECT_EQ(cid , op->cid);
     EXPECT_EQ(log_id , op->log_id);
 }
+TEST(os_transaction, cceph_os_remove_coll) {
+    cceph_os_transaction *tran = NULL;
+    int ret = cceph_os_transaction_new(&tran, 0);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    cceph_os_coll_id_t cid = 1;
+    int64_t log_id = 122;
+
+    ret = cceph_os_remove_coll(tran, cid, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_EQ(1, cceph_os_tran_get_op_count(tran, log_id));
+
+    cceph_os_transaction_op *op = cceph_os_tran_get_op(tran, 0, log_id);
+    EXPECT_NE((cceph_os_transaction_op*)NULL, op);
+    EXPECT_EQ(CCEPH_OS_OP_REMOVE_COLL , op->op);
+    EXPECT_EQ(cid , op->cid);
+    EXPECT_EQ(log_id , op->log_id);
+}

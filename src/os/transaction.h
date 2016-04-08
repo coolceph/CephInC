@@ -49,6 +49,12 @@ extern int cceph_os_create_coll(
         cceph_os_coll_id_t    cid,
         int64_t               log_id);
 
+//If coll not existed, return CCEPH_ERR_COLL_NOT_EXISTED
+extern int cceph_os_remove_coll(
+        cceph_os_transaction* tran,
+        cceph_os_coll_id_t    cid,
+        int64_t               log_id);
+
 extern int cceph_os_tran_get_op_count(
         cceph_os_transaction* tran,
         int64_t               log_id);
