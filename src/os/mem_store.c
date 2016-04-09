@@ -54,6 +54,7 @@ int cceph_mem_store_do_op_write(
 
     assert(log_id, os != NULL);
     assert(log_id, op != NULL);
+    assert(log_id, op->cid >= 0);
     assert(log_id, op->oid != NULL);
     assert(log_id, op->offset >= 0);
     assert(log_id, op->length >= 0);
@@ -115,6 +116,41 @@ int cceph_mem_store_do_op_write(
 
     //Write op
     memcpy(onode->data + op->offset, op->data, op->length);
+
+    return CCEPH_OK;
+}
+
+int cceph_mem_store_do_op_remove(
+        cceph_mem_store*         os,
+        cceph_os_transaction_op* op,
+        int64_t                  log_id) {
+
+    assert(log_id, os != NULL);
+    assert(log_id, op != NULL);
+    assert(log_id, op->cid >= 0);
+    assert(log_id, op->oid != NULL);
+
+    LOG(LL_INFO, log_id, "Execute remove op, cid %d, oid %s, log_id %ld.",
+            op->cid, op->oid, op->log_id);
+
+    log_id = op->log_id; //We will use op's log_id from here
+
+    cceph_mem_store_coll_node *cnode = cceph_mem_store_coll_node_search(
+            &os->colls, op->cid);
+    if (cnode == NULL) {
+        LOG(LL_ERROR, log_id, "Execute remove op failed, since cid %d not existed.", op->cid);
+        return CCEPH_ERR_COLL_NOT_EXIST;
+    }
+
+    cceph_mem_store_object_node *onode = cceph_mem_store_object_node_search(
+            &cnode->objects, op->oid);
+    if (onode == NULL) {
+        LOG(LL_ERROR, log_id, "Execute remove op failed, since oid %s not existed.", op->oid);
+        return CCEPH_ERR_OBJECT_NOT_EXIST;
+    }
+
+    cceph_mem_store_object_node_remove(&cnode->objects, onode);
+    cceph_mem_store_object_node_free(&onode, log_id);
 
     return CCEPH_OK;
 }

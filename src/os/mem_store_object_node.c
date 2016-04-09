@@ -102,4 +102,13 @@ int cceph_mem_store_object_node_insert(
     return CCEPH_OK;
 }
 
+int cceph_mem_store_object_node_remove(
+        cceph_rb_root               *root,
+        cceph_mem_store_object_node *node) {
+
+    cceph_rb_erase(node, root);
+
+    return CCEPH_OK;
+}
+
 
