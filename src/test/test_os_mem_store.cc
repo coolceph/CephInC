@@ -42,7 +42,9 @@ TEST(os_mem_store, cceph_mem_store_object_node) {
     for (int i = 0; i < 1000; i++) {
         bzero(key, 256);
         sprintf(key, "%d", i);
-        cceph_mem_store_object_node *node = cceph_mem_store_object_node_search(&root, key);
+        cceph_mem_store_object_node *node = NULL;
+        int ret = cceph_mem_store_object_node_search(&root, key, &node, 0);
+        EXPECT_EQ(CCEPH_OK, ret);
         EXPECT_NE((cceph_mem_store_object_node*)NULL, node);
         EXPECT_STREQ(key, node->oid);
     }

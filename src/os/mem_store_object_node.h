@@ -12,18 +12,6 @@ typedef struct {
     cceph_rb_node node;
 } cceph_mem_store_object_node;
 
-extern cceph_mem_store_object_node* cceph_mem_store_object_node_search(
-        cceph_rb_root*     root,
-        const char*        oid);
-
-extern int cceph_mem_store_object_node_insert(
-        cceph_rb_root               *root,
-        cceph_mem_store_object_node *node);
-
-extern int cceph_mem_store_object_node_remove(
-        cceph_rb_root               *root,
-        cceph_mem_store_object_node *node);
-
 extern int cceph_mem_store_object_node_new(
         cceph_mem_store_object_node** node,
         const char*                   oid,
@@ -33,5 +21,18 @@ extern int cceph_mem_store_object_node_free(
         cceph_mem_store_object_node** node,
         int64_t                       log_id);
 
+extern int cceph_mem_store_object_node_insert(
+        cceph_rb_root               *root,
+        cceph_mem_store_object_node *node);
+
+extern int cceph_mem_store_object_node_remove(
+        cceph_rb_root               *root,
+        cceph_mem_store_object_node *node);
+
+extern int cceph_mem_store_object_node_search(
+        cceph_rb_root*                root,
+        const char*                   oid,
+        cceph_mem_store_object_node** result,
+        int64_t                       log_id);
 
 #endif

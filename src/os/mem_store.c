@@ -75,18 +75,12 @@ int cceph_mem_store_do_op_write(
         return CCEPH_ERR_COLL_NOT_EXIST;
     }
 
-    cceph_mem_store_object_node *onode = cceph_mem_store_object_node_search(
-            &cnode->objects, op->oid);
-    if (onode == NULL) {
-        int ret = cceph_mem_store_object_node_new(&onode, op->oid, log_id);
-        if (ret != CCEPH_OK) {
-            return ret;
-        }
-        ret = cceph_mem_store_object_node_insert(&cnode->objects, onode);
-        if (ret != CCEPH_OK) {
-            cceph_mem_store_object_node_free(&onode, log_id);
-            return ret;
-        }
+    cceph_mem_store_object_node *onode = NULL;
+    int ret = cceph_mem_store_object_node_search(&cnode->objects, op->oid, &onode, NULL);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute remove op failed, oid %s, errno %d(%s).",
+                op->oid, ret, cceph_errno_str(ret));
+        return ret;
     }
 
     //Is a touch operation?
@@ -142,11 +136,12 @@ int cceph_mem_store_do_op_remove(
         return CCEPH_ERR_COLL_NOT_EXIST;
     }
 
-    cceph_mem_store_object_node *onode = cceph_mem_store_object_node_search(
-            &cnode->objects, op->oid);
-    if (onode == NULL) {
-        LOG(LL_ERROR, log_id, "Execute remove op failed, since oid %s not existed.", op->oid);
-        return CCEPH_ERR_OBJECT_NOT_EXIST;
+    cceph_mem_store_object_node *onode = NULL;
+    int ret = cceph_mem_store_object_node_search(&cnode->objects, op->oid, &onode, NULL);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute remove op failed, oid %s, errno %d(%s).",
+                op->oid, ret, cceph_errno_str(ret));
+        return ret;
     }
 
     cceph_mem_store_object_node_remove(&cnode->objects, onode);

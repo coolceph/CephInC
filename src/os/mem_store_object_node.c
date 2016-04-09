@@ -54,26 +54,6 @@ int cceph_mem_store_object_node_free(
     return CCEPH_OK;
 }
 
-cceph_mem_store_object_node* cceph_mem_store_object_node_search(
-        cceph_rb_root*     root,
-        const char*        oid) {
-    cceph_rb_node *node = root->rb_node;
-
-    while (node) {
-        cceph_mem_store_object_node *data = cceph_container_of(node, cceph_mem_store_object_node, node);
-
-        int result = strcmp(oid, data->oid);
-        if (result < 0) {
-            node = node->rb_left;
-        } else if (result > 0) {
-            node = node->rb_right;
-        } else {
-            return data;
-        }
-    }
-    return NULL;
-}
-
 int cceph_mem_store_object_node_insert(
         cceph_rb_root               *root,
         cceph_mem_store_object_node *node) {
@@ -106,9 +86,37 @@ int cceph_mem_store_object_node_remove(
         cceph_rb_root               *root,
         cceph_mem_store_object_node *node) {
 
-    cceph_rb_erase(node, root);
+    cceph_rb_erase(&node->node, root);
 
     return CCEPH_OK;
+}
+
+int cceph_mem_store_object_node_search(
+        cceph_rb_root*                root,
+        const char*                   oid,
+        cceph_mem_store_object_node** result,
+        int64_t                       log_id) {
+
+    assert(log_id, root != NULL);
+    assert(log_id, oid  != NULL);
+    assert(log_id, result != NULL);
+    assert(log_id, *result == NULL);
+
+    cceph_rb_node *node = root->rb_node;
+    while (node) {
+        cceph_mem_store_object_node *data = cceph_container_of(node, cceph_mem_store_object_node, node);
+
+        int ret = strcmp(oid, data->oid);
+        if (ret < 0) {
+            node = node->rb_left;
+        } else if (ret > 0) {
+            node = node->rb_right;
+        } else {
+            *result = data;
+            return CCEPH_OK;
+        }
+    }
+    return CCEPH_ERR_OBJECT_NOT_EXIST;
 }
 
 
