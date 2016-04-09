@@ -132,6 +132,7 @@ int cceph_mem_store_do_op(
         case CCEPH_OS_OP_NOOP:
             ret = CCEPH_OK;
             break;
+        case CCEPH_OS_OP_TOUCH:
         case CCEPH_OS_OP_WRITE:
             ret = cceph_mem_store_do_op_write(os, op, log_id);
             break;
