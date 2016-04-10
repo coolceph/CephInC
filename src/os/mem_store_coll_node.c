@@ -34,8 +34,12 @@ int cceph_mem_store_coll_node_search(
 }
 
 int cceph_mem_store_coll_node_insert(
-        cceph_rb_root *root,
-        cceph_mem_store_coll_node *node) {
+        cceph_rb_root             *root,
+        cceph_mem_store_coll_node *node,
+        int64_t                    log_id) {
+
+    assert(log_id, root != NULL);
+    assert(log_id, node != NULL);
 
     cceph_rb_node **new = &(root->rb_node), *parent = NULL;
 

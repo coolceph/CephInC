@@ -146,7 +146,7 @@ int cceph_mem_store_do_op_remove(
         return ret;
     }
 
-    cceph_mem_store_object_node_remove(&cnode->objects, onode);
+    cceph_mem_store_object_node_remove(&cnode->objects, onode, log_id);
     cceph_mem_store_object_node_free(&onode, log_id);
 
     return CCEPH_OK;

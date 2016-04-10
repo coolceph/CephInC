@@ -8,6 +8,7 @@ int cceph_mem_store_object_node_new(
         cceph_mem_store_object_node** node,
         const char*                   oid,
         int64_t                       log_id) {
+
     assert(log_id, node != NULL);
     assert(log_id, oid != NULL);
 
@@ -35,6 +36,7 @@ int cceph_mem_store_object_node_new(
 int cceph_mem_store_object_node_free(
         cceph_mem_store_object_node** node,
         int64_t                       log_id) {
+
     assert(log_id, node != NULL);
     assert(log_id, *node != NULL);
 
@@ -56,7 +58,11 @@ int cceph_mem_store_object_node_free(
 
 int cceph_mem_store_object_node_insert(
         cceph_rb_root               *root,
-        cceph_mem_store_object_node *node) {
+        cceph_mem_store_object_node *node,
+        int64_t                      log_id) {
+
+    assert(log_id, root != NULL);
+    assert(log_id, node != NULL);
 
     cceph_rb_node **new = &(root->rb_node), *parent = NULL;
 
@@ -84,7 +90,11 @@ int cceph_mem_store_object_node_insert(
 
 int cceph_mem_store_object_node_remove(
         cceph_rb_root               *root,
-        cceph_mem_store_object_node *node) {
+        cceph_mem_store_object_node *node,
+        int64_t                      log_id) {
+
+    assert(log_id, root != NULL);
+    assert(log_id, node != NULL);
 
     cceph_rb_erase(&node->node, root);
 

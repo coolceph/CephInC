@@ -19,5 +19,6 @@ extern int cceph_mem_store_coll_node_search(
 
 extern int cceph_mem_store_coll_node_insert(
         cceph_rb_root             *root,
-        cceph_mem_store_coll_node *node);
+        cceph_mem_store_coll_node *node,
+        int64_t                    log_id);
 #endif

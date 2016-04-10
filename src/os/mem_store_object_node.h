@@ -23,11 +23,13 @@ extern int cceph_mem_store_object_node_free(
 
 extern int cceph_mem_store_object_node_insert(
         cceph_rb_root               *root,
-        cceph_mem_store_object_node *node);
+        cceph_mem_store_object_node *node,
+        int64_t                      log_id);
 
 extern int cceph_mem_store_object_node_remove(
         cceph_rb_root               *root,
-        cceph_mem_store_object_node *node);
+        cceph_mem_store_object_node *node,
+        int64_t                      log_id);
 
 extern int cceph_mem_store_object_node_search(
         cceph_rb_root*                root,

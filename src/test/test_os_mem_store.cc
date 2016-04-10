@@ -10,7 +10,7 @@ TEST(os_mem_store, cceph_mem_store_coll_node) {
     for (int i = 0; i < 1000; i++) {
         cceph_mem_store_coll_node *node = new cceph_mem_store_coll_node();
         node->cid = i;
-        int ret = cceph_mem_store_coll_node_insert(&root, node);
+        int ret = cceph_mem_store_coll_node_insert(&root, node, 0);
         EXPECT_EQ(CCEPH_OK, ret);
     }
     for (int i = 0; i < 1000; i++) {
@@ -36,7 +36,7 @@ TEST(os_mem_store, cceph_mem_store_object_node) {
         EXPECT_EQ(NULL, node->data);
         EXPECT_EQ(0, node->length);
 
-        ret = cceph_mem_store_object_node_insert(&root, node);
+        ret = cceph_mem_store_object_node_insert(&root, node, 0);
         EXPECT_EQ(CCEPH_OK, ret);
     }
 
