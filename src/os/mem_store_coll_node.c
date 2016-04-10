@@ -4,24 +4,33 @@
 #include "common/errno.h"
 #include "os/mem_store_coll_node.h"
 
-cceph_mem_store_coll_node* cceph_mem_store_coll_node_search(
-        cceph_rb_root*     root,
-        cceph_os_coll_id_t cid) {
+int cceph_mem_store_coll_node_search(
+        cceph_rb_root*              root,
+        cceph_os_coll_id_t          cid,
+        cceph_mem_store_coll_node** result,
+        int64_t                     log_id) {
+
+    assert(log_id, root != NULL);
+    assert(log_id, cid >=0);
+    assert(log_id, result != NULL);
+    assert(log_id, *result == NULL);
+
     cceph_rb_node *node = root->rb_node;
 
     while (node) {
         cceph_mem_store_coll_node *data = cceph_container_of(node, cceph_mem_store_coll_node, node);
 
-        int result = cceph_os_coll_id_cmp(cid, data->cid);
-        if (result < 0) {
+        int ret = cceph_os_coll_id_cmp(cid, data->cid);
+        if (ret < 0) {
             node = node->rb_left;
-        } else if (result > 0) {
+        } else if (ret > 0) {
             node = node->rb_right;
         } else {
-            return data;
+            *result = data;
+            return CCEPH_OK;
         }
     }
-    return NULL;
+    return CCEPH_ERR_COLL_NOT_EXIST;
 }
 
 int cceph_mem_store_coll_node_insert(

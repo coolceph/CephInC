@@ -68,17 +68,18 @@ int cceph_mem_store_do_op_write(
 
     log_id = op->log_id; //We will use op's log_id from here
 
-    cceph_mem_store_coll_node *cnode = cceph_mem_store_coll_node_search(
-            &os->colls, op->cid);
-    if (cnode == NULL) {
-        LOG(LL_ERROR, log_id, "Execute write op failed, since cid %d not existed.", op->cid);
+    cceph_mem_store_coll_node *cnode = NULL;
+    int ret = cceph_mem_store_coll_node_search(&os->colls, op->cid, &cnode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute write op failed, search cid %d failed, errno %d(%s).",
+                op->cid, ret, cceph_errno_str(ret));
         return CCEPH_ERR_COLL_NOT_EXIST;
     }
 
     cceph_mem_store_object_node *onode = NULL;
-    int ret = cceph_mem_store_object_node_search(&cnode->objects, op->oid, &onode, NULL);
+    ret = cceph_mem_store_object_node_search(&cnode->objects, op->oid, &onode, log_id);
     if (ret != CCEPH_OK) {
-        LOG(LL_ERROR, log_id, "Execute remove op failed, oid %s, errno %d(%s).",
+        LOG(LL_ERROR, log_id, "Execute write op failed, search oid %d failed, errno %d(%s).",
                 op->oid, ret, cceph_errno_str(ret));
         return ret;
     }
@@ -129,17 +130,18 @@ int cceph_mem_store_do_op_remove(
 
     log_id = op->log_id; //We will use op's log_id from here
 
-    cceph_mem_store_coll_node *cnode = cceph_mem_store_coll_node_search(
-            &os->colls, op->cid);
-    if (cnode == NULL) {
-        LOG(LL_ERROR, log_id, "Execute remove op failed, since cid %d not existed.", op->cid);
+    cceph_mem_store_coll_node *cnode = NULL;
+    int ret = cceph_mem_store_coll_node_search(&os->colls, op->cid, &cnode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute remove op failed, search cid %d failed, errno %d(%s).",
+                op->cid, ret, cceph_errno_str(ret));
         return CCEPH_ERR_COLL_NOT_EXIST;
     }
 
     cceph_mem_store_object_node *onode = NULL;
-    int ret = cceph_mem_store_object_node_search(&cnode->objects, op->oid, &onode, NULL);
+    ret = cceph_mem_store_object_node_search(&cnode->objects, op->oid, &onode, log_id);
     if (ret != CCEPH_OK) {
-        LOG(LL_ERROR, log_id, "Execute remove op failed, oid %s, errno %d(%s).",
+        LOG(LL_ERROR, log_id, "Execute remove op failed, search oid %d failed, errno %d(%s).",
                 op->oid, ret, cceph_errno_str(ret));
         return ret;
     }

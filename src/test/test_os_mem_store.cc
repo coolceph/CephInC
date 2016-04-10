@@ -14,7 +14,9 @@ TEST(os_mem_store, cceph_mem_store_coll_node) {
         EXPECT_EQ(CCEPH_OK, ret);
     }
     for (int i = 0; i < 1000; i++) {
-        cceph_mem_store_coll_node *node = cceph_mem_store_coll_node_search(&root, i);
+        cceph_mem_store_coll_node *node = NULL;
+        int ret = cceph_mem_store_coll_node_search(&root, i, &node, 0);
+        EXPECT_EQ(CCEPH_OK, ret);
         EXPECT_NE((cceph_mem_store_coll_node*)NULL, node);
         EXPECT_EQ(i, node->cid);
     }
