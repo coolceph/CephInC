@@ -106,7 +106,7 @@ int MOCK_cceph_messenger_add_conn_epoll_ctl(int epfd, int op, int fd, struct epo
 	EXPECT_TRUE(epfd > 0);
 	EXPECT_EQ(op, EPOLL_CTL_ADD);
 	EXPECT_EQ(fd, 1);
-	EXPECT_EQ(event->events, EPOLLIN | EPOLLONESHOT);
+	EXPECT_EQ(event->events, (uint32_t)(EPOLLIN | EPOLLONESHOT));
     return 0;
 }
 TEST(message_messenger, cceph_messenger_add_conn) {
@@ -223,7 +223,7 @@ void expect_cceph_msg_write_obj_req(cceph_msg_write_obj_req* req) {
     EXPECT_EQ(1000, req->header.log_id);
     EXPECT_EQ(1001, req->client_id);
     EXPECT_EQ(1002, req->req_id);
-    EXPECT_EQ(strlen((char*)"cceph_oid"), req->oid_size);
+    EXPECT_EQ((int16_t)strlen((char*)"cceph_oid"), req->oid_size);
     EXPECT_STREQ((char*)"cceph_oid", req->oid);
     EXPECT_EQ(0, req->offset);
     EXPECT_EQ(1024, req->length);

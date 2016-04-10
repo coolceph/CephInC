@@ -15,7 +15,7 @@ char* fname_cceph_recv_from_conn = (char*)"cceph_recv_from_conn";
 ssize_t MOCK_cceph_recv_from_conn_recv_normal(int sockfd, void *buf, size_t len, int flags) {
     EXPECT_EQ(1, sockfd);
     EXPECT_TRUE(buf != NULL);
-    EXPECT_EQ(16, len);
+    EXPECT_EQ((size_t)16, len);
     EXPECT_EQ(0, flags);
 
     return len;
@@ -23,7 +23,7 @@ ssize_t MOCK_cceph_recv_from_conn_recv_normal(int sockfd, void *buf, size_t len,
 ssize_t MOCK_cceph_recv_from_conn_recv_closed(int sockfd, void *buf, size_t len, int flags) {
     EXPECT_EQ(1, sockfd);
     EXPECT_TRUE(buf != NULL);
-    EXPECT_EQ(16, len);
+    EXPECT_EQ((size_t)16, len);
     EXPECT_EQ(0, flags);
 
     errno = EAGAIN + 1;
@@ -38,14 +38,14 @@ ssize_t MOCK_cceph_recv_from_conn_recv_again(int sockfd, void *buf, size_t len, 
     EXPECT_EQ(0, flags);
 
     if (call_time == 0) {
-        EXPECT_EQ(16, len);
+        EXPECT_EQ(16, (int)len);
         return 4;
     } else if (call_time == 1) {
-        EXPECT_EQ(16 - 4, len);
+        EXPECT_EQ(16 - 4, (int)len);
         errno = EAGAIN;
         return -1;
     } else if (call_time == 2) {
-        EXPECT_EQ(16 - 4, len);
+        EXPECT_EQ(16 - 4, (int)len);
         return 12;
     }
 
@@ -61,17 +61,17 @@ TEST(message_io, cceph_recv_from_conn) {
 
     //Case: conn normal
     attach_and_enable_func(fname_recv, (void*)&MOCK_cceph_recv_from_conn_recv_normal);
-    EXPECT_EQ(size, TEST_cceph_recv_from_conn(data_fd, buf, size, log_id));
+    EXPECT_EQ(size, (size_t)TEST_cceph_recv_from_conn(data_fd, buf, size, log_id));
     detach_func(fname_recv);
 
     //Case: conn closed
     attach_and_enable_func(fname_recv, (void*)&MOCK_cceph_recv_from_conn_recv_closed);
-    EXPECT_EQ(CCEPH_ERR_CONN_CLOSED, TEST_cceph_recv_from_conn(data_fd, buf, size, log_id));
+    EXPECT_EQ(CCEPH_ERR_CONN_CLOSED, (int)TEST_cceph_recv_from_conn(data_fd, buf, size, log_id));
     detach_func(fname_recv);
 
     //Case: conn again
     attach_and_enable_func(fname_recv, (void*)&MOCK_cceph_recv_from_conn_recv_again);
-    EXPECT_EQ(size, TEST_cceph_recv_from_conn(data_fd, buf, size, log_id));
+    EXPECT_EQ(size, (size_t)TEST_cceph_recv_from_conn(data_fd, buf, size, log_id));
     detach_func(fname_recv);
 }
 
@@ -126,7 +126,7 @@ int MOCK_recv_string_cceph_recv_from_conn_success(int data_fd, void* buf, size_t
         memcpy(buf, &value, size);
         return size;
     } else if (call_time == 1) {
-        EXPECT_EQ(5, size);
+        EXPECT_EQ((size_t)5, size);
         char* value = (char*)"cceph";
         memcpy(buf, value, size);
         return size;
@@ -156,7 +156,7 @@ int MOCK_recv_string_cceph_recv_from_conn_fail2(int data_fd, void* buf, size_t s
         memcpy(buf, &value, size);
         return size;
     } else if (call_time == 1) {
-        EXPECT_EQ(5, size);
+        EXPECT_EQ((size_t)5, size);
         return size - 1;
     }
 
@@ -243,7 +243,7 @@ ssize_t MOCK_send_string_send_succ(int socket, const void *buffer, size_t length
         EXPECT_EQ(5, (*(int16_t*)buffer));
         return length;
     } else if (call_time == 1) {
-        EXPECT_EQ(5, length);
+        EXPECT_EQ((size_t)5, length);
         EXPECT_STREQ((char*)"cceph", (char*)buffer);
         return length;
     }
@@ -272,7 +272,7 @@ ssize_t MOCK_send_string_send_fail2(int socket, const void *buffer, size_t lengt
         EXPECT_EQ(5, (*(int16_t*)buffer));
         return length;
     } else if (call_time == 1) {
-        EXPECT_EQ(5, length);
+        EXPECT_EQ((size_t)5, length);
         EXPECT_STREQ((char*)"cceph", (char*)buffer);
         return length - 1;
     }
