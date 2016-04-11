@@ -30,7 +30,7 @@ TEST(message_cceph_msg_write_obj_req, cceph_msg_write_obj_req_recv) {
     EXPECT_EQ(64, msg->req_id);
     EXPECT_STREQ(cceph_string, msg->oid);
     EXPECT_EQ(64, msg->offset);
-    EXPECT_EQ(strlen(cceph_data), msg->length);
+    EXPECT_EQ((int64_t)strlen(cceph_data), msg->length);
     EXPECT_EQ(0, strncmp(msg->data, cceph_data, strlen(cceph_data)));
 
     detach_message_io_funcs();

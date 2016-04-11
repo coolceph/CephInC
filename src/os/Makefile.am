@@ -1,7 +1,8 @@
-libos_la_SOURCES =     	\
-	os/coll_id.c        \
-	os/op.c             \
-	os/transaction.c    \
+libos_la_SOURCES =                \
+	os/types.c                    \
+	os/transaction.c              \
+	os/mem_store_object_node.c    \
+	os/mem_store_coll_node.c      \
 	os/mem_store.c
 
 libos_la_ADLDD =  \

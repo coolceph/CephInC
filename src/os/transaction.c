@@ -6,78 +6,28 @@
 #include "common/errno.h"
 #include "common/types.h"
 
-cceph_os_transaction* cceph_os_transaction_new() {
-    cceph_os_transaction* tran = (cceph_os_transaction*)malloc(sizeof(cceph_os_transaction));
-    if (tran == NULL) {
-        return NULL;
-    }
+int cceph_os_transaction_new(
+        cceph_os_transaction** tran,
+        int64_t                log_id) {
+    assert(log_id,  tran != NULL);
+    assert(log_id, *tran == NULL);
 
-    tran->op_buffer = (cceph_os_transaction_op*)malloc(sizeof(cceph_os_transaction_op) * CCEPH_OS_TRAN_OP_LIST_SIZE);
-    if (tran->op_buffer == NULL) {
-        return NULL;
-    }
-
-    tran->op_buffer_length = CCEPH_OS_TRAN_OP_LIST_SIZE;
-    tran->op_buffer_index  = 0;
-
-    return tran;
-}
-
-int cceph_os_transactio_check_op_buffer_size(cceph_os_transaction *tran, int64_t log_id) {
-    assert(log_id, tran != NULL);
-    assert(log_id, tran->op_buffer_index <= tran->op_buffer_length);
-
-    //There is still enough space
-    if (tran->op_buffer_index < tran->op_buffer_length) {
-        return 0;
-    }
-
-    assert(log_id, tran->op_buffer_index == tran->op_buffer_length);
-
-    cceph_os_transaction_op *old_op_buffer = tran->op_buffer;
-    int32_t                  old_op_length = tran->op_buffer_length;
-
-    tran->op_buffer_length += CCEPH_OS_TRAN_OP_LIST_SIZE;
-    tran->op_buffer = (cceph_os_transaction_op*)malloc(sizeof(cceph_os_transaction_op) * tran->op_buffer_length);
-    if (tran->op_buffer == NULL) {
-        tran->op_buffer = old_op_buffer;
+    *tran = (cceph_os_transaction*)malloc(sizeof(cceph_os_transaction));
+    if (*tran == NULL) {
         return CCEPH_ERR_NO_ENOUGH_MEM;
     }
 
-    memcpy(tran->op_buffer, old_op_buffer, sizeof(cceph_os_transaction_op) * old_op_length);
-    return 0;
-}
-
-int cceph_os_write(cceph_os_transaction* tran,
-        cceph_os_coll_id_t  cid,
-        const char*         oid,
-        int64_t             offset,
-        int64_t             length,
-        const char*         data,
-        int64_t             log_id) {
-
-    assert(log_id, tran != NULL);
-    assert(log_id, oid  != NULL);
-    assert(log_id, offset >= 0);
-    assert(log_id, length > 0);
-    assert(log_id, data != NULL);
-
-    int ret = cceph_os_transactio_check_op_buffer_size(tran, log_id);
-    if (ret != 0) {
-        return ret;
+    (*tran)->op_buffer = (cceph_os_transaction_op*)malloc(sizeof(cceph_os_transaction_op) * CCEPH_OS_TRAN_OP_LIST_SIZE);
+    if ((*tran)->op_buffer == NULL) {
+        free(*tran);
+        *tran = NULL;
+        return CCEPH_ERR_NO_ENOUGH_MEM;
     }
 
-    cceph_os_transaction_op *op = tran->op_buffer + tran->op_buffer_index;
-    op->op      = CCEPH_OS_OP_WRITE;
-    op->cid     = cid;
-    op->oid     = oid;
-    op->offset  = offset;
-    op->length  = length;
-    op->data    = data;
-    op->log_id  = log_id;
+    (*tran)->op_buffer_length = CCEPH_OS_TRAN_OP_LIST_SIZE;
+    (*tran)->op_buffer_index  = 0;
 
-    tran->op_buffer_index++;
-    return 0;
+    return CCEPH_OK;
 }
 
 int cceph_os_tran_get_op_count(
@@ -99,5 +49,169 @@ cceph_os_transaction_op* cceph_os_tran_get_op(
     }
 
     return (cceph_os_transaction_op*)(tran->op_buffer + index);
-
 }
+
+int cceph_os_transaction_check_op_buffer_size(
+        cceph_os_transaction *tran,
+        int64_t log_id) {
+    assert(log_id, tran != NULL);
+    assert(log_id, tran->op_buffer_index <= tran->op_buffer_length);
+
+    //There is still enough space
+    if (tran->op_buffer_index < tran->op_buffer_length) {
+        return CCEPH_OK;
+    }
+
+    assert(log_id, tran->op_buffer_index == tran->op_buffer_length);
+
+    cceph_os_transaction_op *old_op_buffer = tran->op_buffer;
+    int32_t                  old_op_length = tran->op_buffer_length;
+
+    tran->op_buffer_length += CCEPH_OS_TRAN_OP_LIST_SIZE;
+    tran->op_buffer = (cceph_os_transaction_op*)malloc(sizeof(cceph_os_transaction_op) * tran->op_buffer_length);
+    if (tran->op_buffer == NULL) {
+        tran->op_buffer = old_op_buffer;
+        return CCEPH_ERR_NO_ENOUGH_MEM;
+    }
+
+    memcpy(tran->op_buffer, old_op_buffer, sizeof(cceph_os_transaction_op) * old_op_length);
+    return CCEPH_OK;
+}
+
+int cceph_os_transaction_new_op(
+        cceph_os_transaction*     tran,
+        cceph_os_transaction_op** op,
+        int64_t                   log_id) {
+
+    assert(log_id, tran != NULL);
+    assert(log_id, op   != NULL);
+    assert(log_id, *op  == NULL);
+
+    int ret = cceph_os_transaction_check_op_buffer_size(tran, log_id);
+    if (ret != CCEPH_OK) {
+        return ret;
+    }
+
+    *op = tran->op_buffer + tran->op_buffer_index;
+    tran->op_buffer_index++;
+    return CCEPH_OK;
+}
+
+int cceph_os_touch(
+        cceph_os_transaction* tran,
+        cceph_os_coll_id_t    cid,
+        const char*           oid,
+        int64_t               log_id) {
+
+    assert(log_id, tran != NULL);
+    assert(log_id, oid  != NULL);
+
+    cceph_os_transaction_op *op = NULL;
+    int ret = cceph_os_transaction_new_op(tran, &op, log_id);
+    if (ret != CCEPH_OK) {
+        return ret;
+    }
+
+    op->op      = CCEPH_OS_OP_TOUCH;
+    op->cid     = cid;
+    op->oid     = oid;
+    op->log_id  = log_id;
+
+    return CCEPH_OK;
+}
+
+int cceph_os_write(cceph_os_transaction* tran,
+        cceph_os_coll_id_t  cid,
+        const char*         oid,
+        int64_t             offset,
+        int64_t             length,
+        const char*         data,
+        int64_t             log_id) {
+
+    assert(log_id, tran != NULL);
+    assert(log_id, oid  != NULL);
+    assert(log_id, offset >= 0);
+    assert(log_id, length >= 0);
+    if (length > 0) {
+        assert(log_id, data != NULL);
+    }
+
+    cceph_os_transaction_op *op = NULL;
+    int ret = cceph_os_transaction_new_op(tran, &op, log_id);
+    if (ret != CCEPH_OK) {
+        return ret;
+    }
+
+    op->op      = CCEPH_OS_OP_WRITE;
+    op->cid     = cid;
+    op->oid     = oid;
+    op->offset  = offset;
+    op->length  = length;
+    op->data    = data;
+    op->log_id  = log_id;
+
+    return CCEPH_OK;
+}
+
+int cceph_os_remove(cceph_os_transaction* tran,
+        cceph_os_coll_id_t  cid,
+        const char*         oid,
+        int64_t             log_id) {
+
+    assert(log_id, tran != NULL);
+    assert(log_id, oid  != NULL);
+
+    cceph_os_transaction_op *op = NULL;
+    int ret = cceph_os_transaction_new_op(tran, &op, log_id);
+    if (ret != CCEPH_OK) {
+        return ret;
+    }
+
+    op->op      = CCEPH_OS_OP_REMOVE;
+    op->cid     = cid;
+    op->oid     = oid;
+    op->log_id  = log_id;
+
+    return CCEPH_OK;
+}
+
+int cceph_os_create_coll(
+        cceph_os_transaction* tran,
+        cceph_os_coll_id_t    cid,
+        int64_t               log_id) {
+    assert(log_id, tran != NULL);
+    assert(log_id, cid  >= 0);
+
+    cceph_os_transaction_op *op = NULL;
+    int ret = cceph_os_transaction_new_op(tran, &op, log_id);
+    if (ret != CCEPH_OK) {
+        return ret;
+    }
+
+    op->op      = CCEPH_OS_OP_CREATE_COLL;
+    op->cid     = cid;
+    op->log_id  = log_id;
+
+    return CCEPH_OK;
+}
+
+int cceph_os_remove_coll(
+        cceph_os_transaction* tran,
+        cceph_os_coll_id_t    cid,
+        int64_t               log_id) {
+    assert(log_id, tran != NULL);
+    assert(log_id, cid  >= 0);
+
+    cceph_os_transaction_op *op = NULL;
+    int ret = cceph_os_transaction_new_op(tran, &op, log_id);
+    if (ret != CCEPH_OK) {
+        return ret;
+    }
+
+    op->op      = CCEPH_OS_OP_REMOVE_COLL;
+    op->cid     = cid;
+    op->log_id  = log_id;
+
+    return CCEPH_OK;
+}
+

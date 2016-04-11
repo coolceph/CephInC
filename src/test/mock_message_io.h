@@ -93,7 +93,7 @@ int MOCK_cceph_send_string(int fd, char* value, int64_t log_id) {
 }
 int MOCK_cceph_send_data(int fd, int64_t length, char* value, int64_t log_id) {
     EXPECT_EQ(1, fd);
-    EXPECT_EQ(strlen(cceph_data), length);
+    EXPECT_EQ((int64_t)strlen(cceph_data), length);
     EXPECT_EQ(0, strncmp(value, cceph_data, strlen(cceph_data)));
     EXPECT_EQ(122, log_id);
     return 0;

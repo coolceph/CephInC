@@ -2,7 +2,10 @@
 #define CCEPH_OBJECT_STORE_H
 
 #include "common/types.h"
+
+#include "os/types.h"
 #include "os/transaction.h"
+
 typedef void* cceph_object_store;
 
 typedef int (*cceph_os_mount_func)(
@@ -14,6 +17,7 @@ typedef int (*cceph_os_submit_transaction_func)(
         cceph_os_transaction* transaction,
         int64_t               log_id);
 
+//if length <= 0 or length >= object->length, read the whole content
 typedef int (*cceph_os_read_object_func)(
         cceph_object_store*  os,
         const char*          oid,
