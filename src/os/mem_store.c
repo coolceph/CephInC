@@ -47,6 +47,45 @@ int cceph_mem_store_mount(
     return CCEPH_OK;
 }
 
+int cceph_mem_store_do_op_create_coll(
+        cceph_mem_store*         os,
+        cceph_os_transaction_op* op,
+        int64_t                  log_id) {
+
+    assert(log_id, os != NULL);
+    assert(log_id, op != NULL);
+    assert(log_id, op->cid >= 0);
+
+    LOG(LL_INFO, log_id, "Execute CreateCollection op, cid %d, log_id %ld.", op->cid, op->log_id);
+
+    log_id = op->log_id; //We will use op's log_id from here
+
+    cceph_mem_store_coll_node *cnode = NULL;
+    int ret = cceph_mem_store_coll_node_search(&os->colls, op->cid, &cnode, log_id);
+    if (ret == CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute CreateCollection op failed, cid %d already existed.", op->cid);
+        return CCEPH_ERR_COLL_ALREADY_EXIST;
+    }
+
+    assert(log_id, cnode == NULL);
+    ret = cceph_mem_store_coll_node_new(op->cid, &cnode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute CreateCollection op failed, errno %d(%s).",
+                op->cid, ret, cceph_errno_str(ret));
+        return ret;
+    }
+
+    ret = cceph_mem_store_coll_node_insert(&os->colls, cnode, log_id);
+    if (ret != CCEPH_OK) {
+        cceph_mem_store_coll_node_free(&cnode, log_id);
+        LOG(LL_ERROR, log_id, "Execute CreateCollection op failed, errno %d(%s).",
+                op->cid, ret, cceph_errno_str(ret));
+        return ret;
+    }
+
+    return CCEPH_OK;
+}
+
 int cceph_mem_store_do_op_write(
         cceph_mem_store*         os,
         cceph_os_transaction_op* op,
@@ -76,6 +115,7 @@ int cceph_mem_store_do_op_write(
         return CCEPH_ERR_COLL_NOT_EXIST;
     }
 
+    //TODO: if onode don't existed, create it
     cceph_mem_store_object_node *onode = NULL;
     ret = cceph_mem_store_object_node_search(&cnode->objects, op->oid, &onode, log_id);
     if (ret != CCEPH_OK) {
@@ -165,7 +205,12 @@ int cceph_mem_store_do_op(
         case CCEPH_OS_OP_NOOP:
             ret = CCEPH_OK;
             break;
+        case CCEPH_OS_OP_CREATE_COLL:
+            ret = cceph_mem_store_do_op_create_coll(os, op, log_id);
+            break;
         case CCEPH_OS_OP_TOUCH:
+            ret = cceph_mem_store_do_op_write(os, op, log_id);
+            break;
         case CCEPH_OS_OP_WRITE:
             ret = cceph_mem_store_do_op_write(os, op, log_id);
             break;
