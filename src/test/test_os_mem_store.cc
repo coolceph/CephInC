@@ -30,7 +30,7 @@ TEST(os_mem_store, cceph_mem_store_object_node) {
         sprintf(oid, "%d", i);
 
         cceph_mem_store_object_node *node = NULL;
-        int ret = cceph_mem_store_object_node_new(&node, oid, 0);
+        int ret = cceph_mem_store_object_node_new(oid, &node, 0);
         EXPECT_EQ(CCEPH_OK, ret);
         EXPECT_STREQ(oid, node->oid);
         EXPECT_EQ(NULL, node->data);

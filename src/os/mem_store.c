@@ -115,11 +115,26 @@ int cceph_mem_store_do_op_write(
         return CCEPH_ERR_COLL_NOT_EXIST;
     }
 
-    //TODO: if onode don't existed, create it
     cceph_mem_store_object_node *onode = NULL;
     ret = cceph_mem_store_object_node_search(&cnode->objects, op->oid, &onode, log_id);
-    if (ret != CCEPH_OK) {
-        LOG(LL_ERROR, log_id, "Execute write op failed, search oid %d failed, errno %d(%s).",
+    if (ret == CCEPH_ERR_OBJECT_NOT_EXIST) {
+        //if onode don't existed, create it
+        ret = cceph_mem_store_object_node_new(op->oid, &onode, log_id);
+        if (ret != CCEPH_OK) {
+            LOG(LL_ERROR, log_id, "Execute Write op failed, create object node failed, errno %d(%s).",
+                    ret, cceph_errno_str(ret));
+            return ret;
+        }
+
+        ret = cceph_mem_store_object_node_insert(&cnode->objects, onode, log_id);
+        if (ret != CCEPH_OK) {
+            cceph_mem_store_object_node_free(&onode, log_id);
+            LOG(LL_ERROR, log_id, "Execute Write op failed, insert into coll failed, errno %d(%s).",
+                    ret, cceph_errno_str(ret));
+            return ret;
+        }
+    } else if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute write op failed, search oid %s failed, errno %d(%s).",
                 op->oid, ret, cceph_errno_str(ret));
         return ret;
     }
