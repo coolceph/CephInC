@@ -124,7 +124,7 @@ typedef struct {
 #define cceph_rb_set_red(r)    do { (r)->rb_parent_color &= ~1; } while (0)
 #define cceph_rb_set_black(r)  do { (r)->rb_parent_color |= 1; } while (0)
 
-#define	cceph_rb_entry(ptr, type, member) container_of(ptr, type, member)
+#define	cceph_rb_entry(ptr, type, member) cceph_container_of(ptr, type, member)
 
 static inline void cceph_rb_set_parent(cceph_rb_node *rb, cceph_rb_node *p) {
 	rb->rb_parent_color = (rb->rb_parent_color & 3) | (unsigned long)p;

@@ -16,6 +16,7 @@ extern int cceph_mem_store_coll_node_new(
         cceph_mem_store_coll_node** node,
         int64_t                     log_id);
 
+//This will free all objects in the collection
 extern int cceph_mem_store_coll_node_free(
         cceph_mem_store_coll_node** node,
         int64_t                     log_id);
