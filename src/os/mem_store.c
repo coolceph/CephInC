@@ -86,6 +86,38 @@ int cceph_mem_store_do_op_create_coll(
     return CCEPH_OK;
 }
 
+int cceph_mem_store_do_op_remove_coll(
+        cceph_mem_store*         os,
+        cceph_os_transaction_op* op,
+        int64_t                  log_id) {
+
+    assert(log_id, os != NULL);
+    assert(log_id, op != NULL);
+    assert(log_id, op->cid >= 0);
+
+    LOG(LL_INFO, log_id, "Execute RemoveCollection op, cid %d, log_id %ld.", op->cid, op->log_id);
+
+    log_id = op->log_id; //We will use op's log_id from here
+
+    cceph_mem_store_coll_node *cnode = NULL;
+    int ret = cceph_mem_store_coll_node_search(&os->colls, op->cid, &cnode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute RemoveCollection op failed, cid %d not existed.", op->cid);
+        return CCEPH_ERR_COLL_NOT_EXIST;
+    }
+
+    cceph_rb_erase(&cnode->node, &os->colls);
+
+    ret = cceph_mem_store_coll_node_free(&cnode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute RemoveCollection op failed, errno %d(%s).",
+                op->cid, ret, cceph_errno_str(ret));
+        return ret;
+    }
+
+    return CCEPH_OK;
+}
+
 int cceph_mem_store_do_op_write(
         cceph_mem_store*         os,
         cceph_os_transaction_op* op,
@@ -222,6 +254,9 @@ int cceph_mem_store_do_op(
             break;
         case CCEPH_OS_OP_CREATE_COLL:
             ret = cceph_mem_store_do_op_create_coll(os, op, log_id);
+            break;
+        case CCEPH_OS_OP_REMOVE_COLL:
+            ret = cceph_mem_store_do_op_remove_coll(os, op, log_id);
             break;
         case CCEPH_OS_OP_TOUCH:
             ret = cceph_mem_store_do_op_write(os, op, log_id);
