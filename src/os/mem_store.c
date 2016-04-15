@@ -311,10 +311,67 @@ int cceph_mem_store_submit_transaction(
 
 int cceph_mem_store_read_object(
         cceph_object_store* os,
+        cceph_os_coll_id_t  cid,
         const char*         oid,
         int64_t             offset,
         int64_t             length,
-        char*               data,
+        char**              result_data,
+        int64_t*            result_length,
         int64_t             log_id) {
+
+    assert(log_id, os              != NULL);
+    assert(log_id, oid             != NULL);
+    assert(log_id, offset          >= 0);
+    assert(log_id, result_data     != NULL);
+    assert(log_id, *result_data    == NULL);
+    assert(log_id, result_length   != NULL);
+
+    cceph_mem_store* mem_store = (cceph_mem_store*)os;
+
+    pthread_mutex_lock(&mem_store->lock);
+
+    LOG(LL_INFO, log_id, "Execute read op, cid %d, oid %s, offset %ld, length %ld, log_id %ld.",
+            cid, oid, offset, length, log_id);
+
+    cceph_mem_store_coll_node *cnode = NULL;
+    int ret = cceph_mem_store_coll_node_search(&mem_store->colls, cid, &cnode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute read op failed, search cid %d failed, errno %d(%s).",
+                cid, ret, cceph_errno_str(ret));
+        return CCEPH_ERR_COLL_NOT_EXIST;
+    }
+
+    cceph_mem_store_object_node *onode = NULL;
+    ret = cceph_mem_store_object_node_search(&cnode->objects, oid, &onode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute read op failed, search oid %s failed, errno %d(%s).",
+                oid, ret, cceph_errno_str(ret));
+        return ret;
+    }
+
+    if (onode->length == 0 || onode->length <= offset) {
+        *result_length = 0;
+        return CCEPH_OK;
+    }
+
+    int read_length = length;
+    if (read_length <= 0) {
+        read_length = onode->length;
+    }
+    if (read_length > onode->length - offset) {
+        read_length = onode->length - offset;
+    }
+
+    *result_data = malloc(sizeof(char) * read_length);
+    if (*result_data == NULL) {
+        return CCEPH_ERR_NO_ENOUGH_MEM;
+    }
+
+    memcpy(*result_data, onode->data + offset, read_length);
+
+    *result_length = read_length;
+
+    pthread_mutex_unlock(&mem_store->lock);
+
     return CCEPH_OK;
 }
