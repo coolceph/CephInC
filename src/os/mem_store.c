@@ -270,10 +270,10 @@ int cceph_mem_store_do_op(
 
     if (ret == CCEPH_OK) {
         LOG(LL_INFO, log_id, "do_op %s(%d) success.",
-                op->op, cceph_os_op_to_str(op->op));
+                cceph_os_op_to_str(op->op), op->op);
     } else {
         LOG(LL_ERROR, log_id, "do_op %s(%d) failed, errno %d(%s).",
-                op->op, cceph_os_op_to_str(op->op),
+                cceph_os_op_to_str(op->op), op->op,
                 ret, cceph_errno_str(ret));
     }
 
@@ -296,16 +296,19 @@ int cceph_mem_store_submit_transaction(
 
     int ret = CCEPH_OK;
     int i = 0;
+    int success_count = 0;
     for (i = 0; i < op_count; i++) {
         cceph_os_transaction_op* op = cceph_os_tran_get_op(tran, i, log_id);
         ret = cceph_mem_store_do_op(mem_store, op, log_id);
         if (ret != CCEPH_OK) {
             break;
+        } else {
+            success_count++;
         }
     }
 
     pthread_mutex_unlock(&mem_store->lock);
-    LOG(LL_INFO, log_id, "Transaction executed with %d/%d ops done.", i + 1, op_count);
+    LOG(LL_INFO, log_id, "Transaction executed with %d/%d ops done.", success_count, op_count);
     return ret;
 }
 

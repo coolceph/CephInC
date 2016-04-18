@@ -29,6 +29,22 @@ int cceph_os_transaction_new(
 
     return CCEPH_OK;
 }
+int cceph_os_transaction_free(
+        cceph_os_transaction** tran,
+        int64_t                log_id) {
+
+    assert(log_id,  tran != NULL);
+    assert(log_id, *tran != NULL);
+
+    if ((*tran)->op_buffer != NULL) {
+        free((*tran)->op_buffer);
+        (*tran)->op_buffer = NULL;
+    }
+
+    free(*tran);
+    *tran = NULL;
+    return CCEPH_OK;
+}
 
 int cceph_os_tran_get_op_count(
         cceph_os_transaction* tran,
