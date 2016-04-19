@@ -30,11 +30,13 @@ extern int cceph_mem_store_submit_transaction(
         int64_t               log_id);
 
 extern int cceph_mem_store_read_object(
-        cceph_object_store*  os,
-        const char*          oid,
-        int64_t              offset,
-        int64_t              length,
-        char*                data,
-        int64_t              log_id);
+        cceph_object_store* os,
+        cceph_os_coll_id_t  cid,
+        const char*         oid,
+        int64_t             offset,
+        int64_t             length,
+        int64_t*            result_length,
+        char**              result_data,
+        int64_t             log_id);
 
 #endif

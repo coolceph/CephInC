@@ -26,6 +26,10 @@ extern int cceph_os_transaction_new(
         cceph_os_transaction** tran,
         int64_t                log_id);
 
+extern int cceph_os_transaction_free(
+        cceph_os_transaction** tran,
+        int64_t                log_id);
+
 //if object already existed, do nothing
 extern int cceph_os_touch(
         cceph_os_transaction* tran,
@@ -33,6 +37,7 @@ extern int cceph_os_touch(
         const char*           oid,
         int64_t               log_id);
 
+//if object not exists, create it
 //length == 0 means touch object
 extern int cceph_os_write(
         cceph_os_transaction* tran,
@@ -43,20 +48,20 @@ extern int cceph_os_write(
         const char*           data,
         int64_t               log_id);
 
-//If object not existed, return CCEPH_ERR_OBJECT_NOT_EXISTED
+//if object not existed, return CCEPH_ERR_OBJECT_NOT_EXISTED
 extern int cceph_os_remove(
         cceph_os_transaction* tran,
         cceph_os_coll_id_t    cid,
         const char*           oid,
         int64_t               log_id);
 
-//If coll existed, do nothing
+//if coll existed, do nothing
 extern int cceph_os_create_coll(
         cceph_os_transaction* tran,
         cceph_os_coll_id_t    cid,
         int64_t               log_id);
 
-//If coll not existed, return CCEPH_ERR_COLL_NOT_EXISTED
+//if coll not existed, return CCEPH_ERR_COLL_NOT_EXISTED
 extern int cceph_os_remove_coll(
         cceph_os_transaction* tran,
         cceph_os_coll_id_t    cid,

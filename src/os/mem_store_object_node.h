@@ -13,8 +13,8 @@ typedef struct {
 } cceph_mem_store_object_node;
 
 extern int cceph_mem_store_object_node_new(
-        cceph_mem_store_object_node** node,
         const char*                   oid,
+        cceph_mem_store_object_node** node,
         int64_t                       log_id);
 
 extern int cceph_mem_store_object_node_free(

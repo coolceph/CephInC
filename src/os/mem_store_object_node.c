@@ -5,8 +5,8 @@
 #include "os/mem_store_object_node.h"
 
 int cceph_mem_store_object_node_new(
-        cceph_mem_store_object_node** node,
         const char*                   oid,
+        cceph_mem_store_object_node** node,
         int64_t                       log_id) {
 
     assert(log_id, node != NULL);
