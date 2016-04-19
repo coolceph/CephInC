@@ -1,3 +1,8 @@
+//This file can't be used individually, it is should be included
+//by a concrete ObjectStore such as MemStore.
+//
+//You can see test_os_mem_store as an example.
+
 TEST_F(os, create_and_remove_coll) {
     int64_t log_id = 122;
     cceph_os_coll_id_t cid = 1;
@@ -9,7 +14,7 @@ TEST_F(os, create_and_remove_coll) {
     int ret = funcs->mount(os, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
-    //Create Collection
+    //Create Collection: Success
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = cceph_os_create_coll(tran, cid,  log_id);
@@ -19,13 +24,33 @@ TEST_F(os, create_and_remove_coll) {
     ret = cceph_os_transaction_free(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
-    //Remove Collection
+    //Create Collection: Already Exist
+    ret = cceph_os_transaction_new(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_create_coll(tran, cid,  log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = funcs->submit_transaction(os, tran, log_id);
+    EXPECT_EQ(CCEPH_ERR_COLL_ALREADY_EXIST, ret);
+    ret = cceph_os_transaction_free(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    //Remove Collection: Success
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = cceph_os_remove_coll(tran, cid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_transaction_free(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    //Remove Collection: Not Exist
+    ret = cceph_os_transaction_new(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_remove_coll(tran, cid, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = funcs->submit_transaction(os, tran, log_id);
+    EXPECT_EQ(CCEPH_ERR_COLL_NOT_EXIST, ret);
     ret = cceph_os_transaction_free(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 }
