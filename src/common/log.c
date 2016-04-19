@@ -20,13 +20,14 @@ int64_t cceph_log_new_id() {
    return cceph_atomic_add64(&cceph_g_log_id, 1);
 }
 
-void _cceph_log(int level, int64_t log_id, const char* fmt, ...) {
+void _cceph_log(int level, int64_t log_id, const char* file, int line, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     char buffer[MAX_LOG_ENTRY_LENGTH];
     bzero(buffer, MAX_LOG_ENTRY_LENGTH);
 
     int offset = sprintf(buffer, "[logid %ld]", log_id);
+    offset += sprintf(buffer + offset, "[%s:%d]", file, line);
     offset += vsprintf(buffer + offset, fmt, args);
     offset += sprintf(buffer + offset, "\n");
 
