@@ -341,6 +341,7 @@ int cceph_mem_store_read_object(
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute read op failed, search cid %d failed, errno %d(%s).",
                 cid, ret, cceph_errno_str(ret));
+        pthread_mutex_unlock(&mem_store->lock);
         return CCEPH_ERR_COLL_NOT_EXIST;
     }
 
@@ -349,11 +350,13 @@ int cceph_mem_store_read_object(
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute read op failed, search oid %s failed, errno %d(%s).",
                 oid, ret, cceph_errno_str(ret));
+        pthread_mutex_unlock(&mem_store->lock);
         return ret;
     }
 
     if (onode->length == 0 || onode->length <= offset) {
         *result_length = 0;
+        pthread_mutex_unlock(&mem_store->lock);
         return CCEPH_OK;
     }
 
@@ -367,6 +370,7 @@ int cceph_mem_store_read_object(
 
     *result_data = malloc(sizeof(char) * read_length);
     if (*result_data == NULL) {
+        pthread_mutex_unlock(&mem_store->lock);
         return CCEPH_ERR_NO_ENOUGH_MEM;
     }
 
