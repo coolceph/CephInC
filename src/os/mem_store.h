@@ -35,8 +35,8 @@ extern int cceph_mem_store_read_object(
         const char*         oid,
         int64_t             offset,
         int64_t             length,
-        char**              result_data,
         int64_t*            result_length,
+        char**              result_data,
         int64_t             log_id);
 
 #endif
