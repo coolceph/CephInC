@@ -119,28 +119,28 @@ TEST_F(os, object_touch_and_remove) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(0, result_length);
 
-    /* //Remove Object: Success */
-    /* ret = cceph_os_transaction_new(&tran, log_id); */
-    /* EXPECT_EQ(CCEPH_OK, ret); */
-    /* ret = cceph_os_remove(tran, cid, oid, log_id); */
-    /* EXPECT_EQ(CCEPH_OK, ret); */
-    /* ret = funcs->submit_transaction(os, tran, log_id); */
-    /* EXPECT_EQ(CCEPH_OK, ret); */
-    /* ret = cceph_os_transaction_free(&tran, log_id); */
-    /* EXPECT_EQ(CCEPH_OK, ret); */
+    //Remove Object: Success
+    ret = cceph_os_transaction_new(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_remove(tran, cid, oid, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = funcs->submit_transaction(os, tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_transaction_free(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
 
-    /* //Read Object */
-    /* ret = funcs->read(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id); */
-    /* EXPECT_EQ(CCEPH_ERR_OBJECT_NOT_EXIST, ret); */
-    /* EXPECT_EQ(0, result_length); */
+    //Read Object
+    ret = funcs->read(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
+    EXPECT_EQ(CCEPH_ERR_OBJECT_NOT_EXIST, ret);
+    EXPECT_EQ(0, result_length);
 
-    /* //Remove Object */
-    /* ret = cceph_os_transaction_new(&tran, log_id); */
-    /* EXPECT_EQ(CCEPH_OK, ret); */
-    /* ret = cceph_os_remove(tran, cid, oid, log_id); */
-    /* EXPECT_EQ(CCEPH_OK, ret); */
-    /* ret = funcs->submit_transaction(os, tran, log_id); */
-    /* EXPECT_EQ(CCEPH_ERR_OBJECT_NOT_EXIST, ret); */
-    /* ret = cceph_os_transaction_free(&tran, log_id); */
-    /* EXPECT_EQ(CCEPH_OK, ret); */
+    //Remove Object
+    ret = cceph_os_transaction_new(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_remove(tran, cid, oid, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = funcs->submit_transaction(os, tran, log_id);
+    EXPECT_EQ(CCEPH_ERR_OBJECT_NOT_EXIST, ret);
+    ret = cceph_os_transaction_free(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
 }

@@ -264,6 +264,9 @@ int cceph_mem_store_do_op(
         case CCEPH_OS_OP_WRITE:
             ret = cceph_mem_store_do_op_write(os, op, log_id);
             break;
+        case CCEPH_OS_OP_REMOVE:
+            ret = cceph_mem_store_do_op_remove(os, op, log_id);
+            break;
         default:
             ret = CCEPH_ERR_UNKNOWN_OS_OP;
     }
