@@ -259,6 +259,7 @@ int cceph_mem_store_do_op(
             ret = cceph_mem_store_do_op_remove_coll(os, op, log_id);
             break;
         case CCEPH_OS_OP_TOUCH:
+            op->length = 0; //this means touch
             ret = cceph_mem_store_do_op_write(os, op, log_id);
             break;
         case CCEPH_OS_OP_WRITE:
