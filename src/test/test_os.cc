@@ -219,7 +219,7 @@ TEST_F(os, object_write_and_read) {
     ret = cceph_os_transaction_free(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
-    //Write Object: Offset = 0
+    //Write Object: Offset = 7
     buffer = "cceph_buffer_content";
     length = strlen(buffer);
     offset = 7;
@@ -238,4 +238,24 @@ TEST_F(os, object_write_and_read) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(offset + length, result_length);
     EXPECT_EQ(0, memcmp("\0\0\0\0\0\0\0cceph_buffer_content", result_buffer, result_length));
+
+    //Write Object: Offset = 0
+    buffer = "cceph_buffer_content";
+    length = 7;
+    offset = 0;
+    ret = cceph_os_transaction_new(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_write(tran, cid, oid, offset, length, buffer, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = funcs->submit_transaction(os, tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_transaction_free(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    //Read Object: All Content
+    result_buffer = NULL;
+    ret = funcs->read(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_EQ(7 + strlen(buffer), result_length);
+    EXPECT_EQ(0, memcmp("cceph_bcceph_buffer_content", result_buffer, result_length));
 }
