@@ -147,10 +147,24 @@ TEST_F(os, object_touch_and_remove) {
     EXPECT_EQ(CCEPH_OK, ret);
 }
 
-TEST_F(os, object_write_and_read) {
-    int64_t               log_id        = 122;
-    cceph_os_coll_id_t    cid           = 1;
-    const char*           oid           = "object";
+typedef struct {
+    cceph_object_store*   os;
+    cceph_os_funcs*       funcs;
+    int64_t               log_id;
+    cceph_os_coll_id_t    cid;
+    const char*           oid;
+} write_read_thread_arg;
+
+void write_read_thread_func(void* arg_ptr) {
+
+    write_read_thread_arg *arg = (write_read_thread_arg*)arg_ptr;
+
+    cceph_object_store*   os     = arg->os;
+    cceph_os_funcs*       funcs  = arg->funcs;
+    int64_t               log_id = arg->log_id;
+    cceph_os_coll_id_t    cid    = arg->cid;
+    const char*           oid    = arg->oid;
+
     cceph_os_transaction* tran          = NULL;
     const char*           buffer        = "buffer_content";
     int64_t               offset        = 0;
@@ -158,14 +172,8 @@ TEST_F(os, object_write_and_read) {
     int64_t               result_length = 0;
     char*                 result_buffer = NULL;
 
-    cceph_object_store *os    = GetObjectStore(log_id);
-    cceph_os_funcs     *funcs = GetObjectStoreFuncs();
-
-    int ret = funcs->mount(os, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-
     //Collection Not Existed
-    ret = cceph_os_transaction_new(&tran, log_id);
+    int ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = cceph_os_write(tran, cid, oid, offset, length, buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
@@ -258,4 +266,22 @@ TEST_F(os, object_write_and_read) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(7 + strlen(buffer), result_length);
     EXPECT_EQ(0, memcmp("cceph_bcceph_buffer_content", result_buffer, result_length));
+}
+
+TEST_F(os, object_write_and_read) {
+    int64_t log_id = 122;
+    cceph_object_store *os    = GetObjectStore(log_id);
+    cceph_os_funcs     *funcs = GetObjectStoreFuncs();
+
+    int ret = funcs->mount(os, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    write_read_thread_arg arg;
+    arg.os     = os;
+    arg.funcs  = funcs;
+    arg.log_id = log_id;
+    arg.cid    = 1;
+    arg.oid    = "object";
+
+    write_read_thread_func(&arg);
 }
