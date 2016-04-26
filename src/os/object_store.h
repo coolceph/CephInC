@@ -28,10 +28,28 @@ typedef int (*cceph_os_read_object_func)(
         char**              result_data,
         int64_t             log_id);
 
+typedef int (*cceph_os_read_omap_func)(
+        cceph_object_store* os,
+        cceph_os_coll_id_t  cid,
+        const char*         oid,
+        cceph_rb_root*      omap,
+        int64_t             log_id);
+
+typedef int (*cceph_os_read_omap_key_func)(
+        cceph_object_store* os,
+        cceph_os_coll_id_t  cid,
+        const char*         oid,
+        const char*         key,
+        int32_t*            result_value_length,
+        char**              result_value,
+        int64_t             log_id);
+
 typedef struct {
     cceph_os_mount_func              mount;
     cceph_os_submit_transaction_func submit_transaction;
     cceph_os_read_object_func        read;
+    cceph_os_read_omap_func          read_omap;
+    cceph_os_read_omap_key_func      read_omap_key;
 } cceph_os_funcs;
 
 #endif
