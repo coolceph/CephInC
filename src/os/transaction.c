@@ -113,6 +113,46 @@ int cceph_os_transaction_new_op(
     return CCEPH_OK;
 }
 
+int cceph_os_create_coll(
+        cceph_os_transaction* tran,
+        cceph_os_coll_id_t    cid,
+        int64_t               log_id) {
+    assert(log_id, tran != NULL);
+    assert(log_id, cid  >= 0);
+
+    cceph_os_transaction_op *op = NULL;
+    int ret = cceph_os_transaction_new_op(tran, &op, log_id);
+    if (ret != CCEPH_OK) {
+        return ret;
+    }
+
+    op->op      = CCEPH_OS_OP_CREATE_COLL;
+    op->cid     = cid;
+    op->log_id  = log_id;
+
+    return CCEPH_OK;
+}
+
+int cceph_os_remove_coll(
+        cceph_os_transaction* tran,
+        cceph_os_coll_id_t    cid,
+        int64_t               log_id) {
+    assert(log_id, tran != NULL);
+    assert(log_id, cid  >= 0);
+
+    cceph_os_transaction_op *op = NULL;
+    int ret = cceph_os_transaction_new_op(tran, &op, log_id);
+    if (ret != CCEPH_OK) {
+        return ret;
+    }
+
+    op->op      = CCEPH_OS_OP_REMOVE_COLL;
+    op->cid     = cid;
+    op->log_id  = log_id;
+
+    return CCEPH_OK;
+}
+
 int cceph_os_touch(
         cceph_os_transaction* tran,
         cceph_os_coll_id_t    cid,
@@ -186,46 +226,6 @@ int cceph_os_remove(cceph_os_transaction* tran,
     op->op      = CCEPH_OS_OP_REMOVE;
     op->cid     = cid;
     op->oid     = oid;
-    op->log_id  = log_id;
-
-    return CCEPH_OK;
-}
-
-int cceph_os_create_coll(
-        cceph_os_transaction* tran,
-        cceph_os_coll_id_t    cid,
-        int64_t               log_id) {
-    assert(log_id, tran != NULL);
-    assert(log_id, cid  >= 0);
-
-    cceph_os_transaction_op *op = NULL;
-    int ret = cceph_os_transaction_new_op(tran, &op, log_id);
-    if (ret != CCEPH_OK) {
-        return ret;
-    }
-
-    op->op      = CCEPH_OS_OP_CREATE_COLL;
-    op->cid     = cid;
-    op->log_id  = log_id;
-
-    return CCEPH_OK;
-}
-
-int cceph_os_remove_coll(
-        cceph_os_transaction* tran,
-        cceph_os_coll_id_t    cid,
-        int64_t               log_id) {
-    assert(log_id, tran != NULL);
-    assert(log_id, cid  >= 0);
-
-    cceph_os_transaction_op *op = NULL;
-    int ret = cceph_os_transaction_new_op(tran, &op, log_id);
-    if (ret != CCEPH_OK) {
-        return ret;
-    }
-
-    op->op      = CCEPH_OS_OP_REMOVE_COLL;
-    op->cid     = cid;
     op->log_id  = log_id;
 
     return CCEPH_OK;

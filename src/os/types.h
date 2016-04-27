@@ -5,11 +5,12 @@
 #include "common/rbtree.h"
 
 #define CCEPH_OS_OP_NOOP          0
-#define CCEPH_OS_OP_WRITE         1
-#define CCEPH_OS_OP_TOUCH         2
-#define CCEPH_OS_OP_REMOVE        3
-#define CCEPH_OS_OP_CREATE_COLL   4
-#define CCEPH_OS_OP_REMOVE_COLL   5
+#define CCEPH_OS_OP_CREATE_COLL   1
+#define CCEPH_OS_OP_REMOVE_COLL   2
+#define CCEPH_OS_OP_TOUCH         3
+#define CCEPH_OS_OP_WRITE         4
+#define CCEPH_OS_OP_MAP           5
+#define CCEPH_OS_OP_REMOVE        6
 
 typedef int32_t cceph_os_coll_id_t;
 typedef int32_t cceph_os_op_t;
@@ -21,7 +22,7 @@ typedef struct {
     int32_t value_length;
 
     cceph_rb_node node;
-} cceph_os_omap_node;
+} cceph_os_map_node;
 
 extern const char* cceph_os_op_to_str(int op);
 
