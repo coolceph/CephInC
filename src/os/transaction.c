@@ -209,6 +209,31 @@ int cceph_os_write(cceph_os_transaction* tran,
     return CCEPH_OK;
 }
 
+int cceph_os_map(cceph_os_transaction* tran,
+        cceph_os_coll_id_t  cid,
+        const char*         oid,
+        cceph_rb_root*      map,
+        int64_t             log_id) {
+
+    assert(log_id, tran != NULL);
+    assert(log_id, oid  != NULL);
+    assert(log_id, map  != NULL);
+
+    cceph_os_transaction_op *op = NULL;
+    int ret = cceph_os_transaction_new_op(tran, &op, log_id);
+    if (ret != CCEPH_OK) {
+        return ret;
+    }
+
+    op->op      = CCEPH_OS_OP_WRITE;
+    op->cid     = cid;
+    op->oid     = oid;
+    op->map     = map;
+    op->log_id  = log_id;
+
+    return CCEPH_OK;
+}
+
 int cceph_os_remove(cceph_os_transaction* tran,
         cceph_os_coll_id_t  cid,
         const char*         oid,
