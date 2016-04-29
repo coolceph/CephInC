@@ -82,6 +82,28 @@ TEST(os_transaction, cceph_os_write) {
         EXPECT_STREQ(oid , op->oid);
     }
 }
+TEST(os_transaction, cceph_os_map) {
+    cceph_os_transaction *tran = NULL;
+    int ret = cceph_os_transaction_new(&tran, 0);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    cceph_os_coll_id_t  cid = 1;
+    const char*         oid = "oid";
+    int64_t             log_id = 122;
+    cceph_rb_root       map;
+
+    ret = cceph_os_map(tran, cid, oid, &map, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_EQ(1, cceph_os_tran_get_op_count(tran, log_id));
+
+    cceph_os_transaction_op *op = cceph_os_tran_get_op(tran, 0, log_id);
+    EXPECT_NE((cceph_os_transaction_op*)NULL, op);
+    EXPECT_EQ(CCEPH_OS_OP_MAP , op->op);
+    EXPECT_EQ(cid , op->cid);
+    EXPECT_EQ(&map , op->map);
+    EXPECT_EQ(log_id , op->log_id);
+    EXPECT_STREQ(oid , op->oid);
+}
 TEST(os_transaction, cceph_os_remove) {
     cceph_os_transaction *tran = NULL;
     int ret = cceph_os_transaction_new(&tran, 0);

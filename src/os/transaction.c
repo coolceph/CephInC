@@ -225,7 +225,7 @@ int cceph_os_map(cceph_os_transaction* tran,
         return ret;
     }
 
-    op->op      = CCEPH_OS_OP_WRITE;
+    op->op      = CCEPH_OS_OP_MAP;
     op->cid     = cid;
     op->oid     = oid;
     op->map     = map;
