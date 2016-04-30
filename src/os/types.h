@@ -5,12 +5,13 @@
 #include "common/rbtree.h"
 
 #define CCEPH_OS_OP_NOOP          0
-#define CCEPH_OS_OP_CREATE_COLL   1
-#define CCEPH_OS_OP_REMOVE_COLL   2
-#define CCEPH_OS_OP_TOUCH         3
-#define CCEPH_OS_OP_WRITE         4
-#define CCEPH_OS_OP_MAP           5
-#define CCEPH_OS_OP_REMOVE        6
+#define CCEPH_OS_OP_COLL_CREATE   1
+#define CCEPH_OS_OP_COLL_REMOVE   2
+#define CCEPH_OS_OP_COLL_MAP      3
+#define CCEPH_OS_OP_OBJ_TOUCH     4
+#define CCEPH_OS_OP_OBJ_WRITE     5
+#define CCEPH_OS_OP_OBJ_MAP       6
+#define CCEPH_OS_OP_OBJ_REMOVE    7
 
 typedef int32_t cceph_os_coll_id_t;
 typedef int32_t cceph_os_op_t;

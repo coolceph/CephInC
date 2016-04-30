@@ -14,17 +14,17 @@ const char* cceph_os_op_to_str(int op) {
     switch(op) {
         case CCEPH_OS_OP_NOOP:
             return "NoOp";
-        case CCEPH_OS_OP_CREATE_COLL:
+        case CCEPH_OS_OP_COLL_CREATE:
             return "CollectionCreate";
-        case CCEPH_OS_OP_REMOVE_COLL:
+        case CCEPH_OS_OP_COLL_REMOVE:
             return "CollectionRemove";
-        case CCEPH_OS_OP_TOUCH:
+        case CCEPH_OS_OP_OBJ_TOUCH:
             return "ObjectTouch";
-        case CCEPH_OS_OP_WRITE:
+        case CCEPH_OS_OP_OBJ_WRITE:
             return "ObjectWrite";
-        case CCEPH_OS_OP_MAP:
+        case CCEPH_OS_OP_OBJ_MAP:
             return "ObjectMap";
-        case CCEPH_OS_OP_REMOVE:
+        case CCEPH_OS_OP_OBJ_REMOVE:
             return "ObjectRemove";
         default:
             return "UnknownOp";

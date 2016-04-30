@@ -17,7 +17,7 @@ cceph_os_funcs* cceph_mem_store_get_funcs() {
 
     os_funcs->mount                 = cceph_mem_store_mount;
     os_funcs->submit_transaction    = cceph_mem_store_submit_transaction;
-    os_funcs->read                  = cceph_mem_store_read_object;
+    os_funcs->read_obj              = cceph_mem_store_read_object;
 
     return os_funcs;
 }
@@ -252,20 +252,20 @@ int cceph_mem_store_do_op(
         case CCEPH_OS_OP_NOOP:
             ret = CCEPH_OK;
             break;
-        case CCEPH_OS_OP_CREATE_COLL:
+        case CCEPH_OS_OP_COLL_CREATE:
             ret = cceph_mem_store_do_op_create_coll(os, op, log_id);
             break;
-        case CCEPH_OS_OP_REMOVE_COLL:
+        case CCEPH_OS_OP_COLL_REMOVE:
             ret = cceph_mem_store_do_op_remove_coll(os, op, log_id);
             break;
-        case CCEPH_OS_OP_TOUCH:
+        case CCEPH_OS_OP_OBJ_TOUCH:
             op->length = 0; //this means touch
             ret = cceph_mem_store_do_op_write(os, op, log_id);
             break;
-        case CCEPH_OS_OP_WRITE:
+        case CCEPH_OS_OP_OBJ_WRITE:
             ret = cceph_mem_store_do_op_write(os, op, log_id);
             break;
-        case CCEPH_OS_OP_REMOVE:
+        case CCEPH_OS_OP_OBJ_REMOVE:
             ret = cceph_mem_store_do_op_remove(os, op, log_id);
             break;
         default:

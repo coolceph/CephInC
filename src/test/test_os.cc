@@ -17,7 +17,7 @@ TEST_F(os, coll_create_and_remove) {
     //Create Collection: Success
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_create_coll(tran, cid,  log_id);
+    ret = cceph_os_coll_create(tran, cid,  log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
@@ -27,7 +27,7 @@ TEST_F(os, coll_create_and_remove) {
     //Create Collection: Already Exist
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_create_coll(tran, cid,  log_id);
+    ret = cceph_os_coll_create(tran, cid,  log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_ERR_COLL_ALREADY_EXIST, ret);
@@ -37,7 +37,7 @@ TEST_F(os, coll_create_and_remove) {
     //Remove Collection: Success
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_remove_coll(tran, cid, log_id);
+    ret = cceph_os_coll_remove(tran, cid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
@@ -47,7 +47,7 @@ TEST_F(os, coll_create_and_remove) {
     //Remove Collection: Not Exist
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_remove_coll(tran, cid, log_id);
+    ret = cceph_os_coll_remove(tran, cid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_ERR_COLL_NOT_EXIST, ret);
@@ -72,7 +72,7 @@ TEST_F(os, object_touch_and_remove) {
     //Collection Not Existed
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_touch(tran, cid, oid, log_id);
+    ret = cceph_os_obj_touch(tran, cid, oid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_ERR_COLL_NOT_EXIST, ret);
@@ -82,7 +82,7 @@ TEST_F(os, object_touch_and_remove) {
     //Create Collection
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_create_coll(tran, cid,  log_id);
+    ret = cceph_os_coll_create(tran, cid,  log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
@@ -90,14 +90,14 @@ TEST_F(os, object_touch_and_remove) {
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Read Object
-    ret = funcs->read(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
+    ret = funcs->read_obj(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
     EXPECT_EQ(CCEPH_ERR_OBJECT_NOT_EXIST, ret);
     EXPECT_EQ(0, result_length);
 
     //Touch Object: Success
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_touch(tran, cid, oid, log_id);
+    ret = cceph_os_obj_touch(tran, cid, oid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
@@ -107,7 +107,7 @@ TEST_F(os, object_touch_and_remove) {
     //Touch Object: Already Exist
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_touch(tran, cid, oid, log_id);
+    ret = cceph_os_obj_touch(tran, cid, oid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
@@ -116,14 +116,14 @@ TEST_F(os, object_touch_and_remove) {
 
     //Read Object
     result_buffer = NULL;
-    ret = funcs->read(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
+    ret = funcs->read_obj(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(0, result_length);
 
     //Remove Object: Success
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_remove(tran, cid, oid, log_id);
+    ret = cceph_os_obj_remove(tran, cid, oid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
@@ -132,14 +132,14 @@ TEST_F(os, object_touch_and_remove) {
 
     //Read Object
     result_buffer = NULL;
-    ret = funcs->read(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
+    ret = funcs->read_obj(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
     EXPECT_EQ(CCEPH_ERR_OBJECT_NOT_EXIST, ret);
     EXPECT_EQ(0, result_length);
 
     //Remove Object
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_remove(tran, cid, oid, log_id);
+    ret = cceph_os_obj_remove(tran, cid, oid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_ERR_OBJECT_NOT_EXIST, ret);
@@ -174,7 +174,7 @@ void* write_read_thread_func(void* arg_ptr) {
 
     //Read Object
     result_buffer = NULL;
-    int ret = funcs->read(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
+    int ret = funcs->read_obj(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
     EXPECT_EQ(CCEPH_ERR_OBJECT_NOT_EXIST, ret);
     EXPECT_EQ(0, result_length);
 
@@ -184,7 +184,7 @@ void* write_read_thread_func(void* arg_ptr) {
     offset = 0;
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_write(tran, cid, oid, offset, length, buffer, log_id);
+    ret = cceph_os_obj_write(tran, cid, oid, offset, length, buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
@@ -193,7 +193,7 @@ void* write_read_thread_func(void* arg_ptr) {
 
     //Read Object: All Content
     result_buffer = NULL;
-    ret = funcs->read(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
+    ret = funcs->read_obj(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(length, result_length);
     EXPECT_STREQ(buffer, result_buffer);
@@ -201,7 +201,7 @@ void* write_read_thread_func(void* arg_ptr) {
     //Remove Object
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_remove(tran, cid, oid, log_id);
+    ret = cceph_os_obj_remove(tran, cid, oid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
@@ -214,7 +214,7 @@ void* write_read_thread_func(void* arg_ptr) {
     offset = 7;
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_write(tran, cid, oid, offset, length, buffer, log_id);
+    ret = cceph_os_obj_write(tran, cid, oid, offset, length, buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
@@ -223,7 +223,7 @@ void* write_read_thread_func(void* arg_ptr) {
 
     //Read Object: All Content
     result_buffer = NULL;
-    ret = funcs->read(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
+    ret = funcs->read_obj(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(offset + length, result_length);
     EXPECT_EQ(0, memcmp("\0\0\0\0\0\0\0cceph_buffer_content", result_buffer, result_length));
@@ -234,7 +234,7 @@ void* write_read_thread_func(void* arg_ptr) {
     offset = 0;
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_write(tran, cid, oid, offset, length, buffer, log_id);
+    ret = cceph_os_obj_write(tran, cid, oid, offset, length, buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
@@ -243,7 +243,7 @@ void* write_read_thread_func(void* arg_ptr) {
 
     //Read Object: All Content
     result_buffer = NULL;
-    ret = funcs->read(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
+    ret = funcs->read_obj(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(7 + strlen(buffer), result_length);
     EXPECT_EQ(0, memcmp("cceph_bcceph_buffer_content", result_buffer, result_length));
@@ -276,7 +276,7 @@ TEST_F(os, object_write_and_read) {
     int64_t               length        = strlen(buffer);
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_write(tran, cid, oid, offset, length, buffer, log_id);
+    ret = cceph_os_obj_write(tran, cid, oid, offset, length, buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_ERR_COLL_NOT_EXIST, ret);
@@ -286,7 +286,7 @@ TEST_F(os, object_write_and_read) {
     //Create Collection
     ret = cceph_os_transaction_new(&tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_create_coll(tran, cid,  log_id);
+    ret = cceph_os_coll_create(tran, cid,  log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     ret = funcs->submit_transaction(os, tran, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
@@ -313,7 +313,7 @@ TEST_F(os, object_write_and_read_multithread) {
         //Create Collection
         ret = cceph_os_transaction_new(&tran, log_id);
         EXPECT_EQ(CCEPH_OK, ret);
-        ret = cceph_os_create_coll(tran, i,  log_id);
+        ret = cceph_os_coll_create(tran, i,  log_id);
         EXPECT_EQ(CCEPH_OK, ret);
         ret = funcs->submit_transaction(os, tran, log_id);
         EXPECT_EQ(CCEPH_OK, ret);
@@ -340,7 +340,7 @@ TEST_F(os, object_write_and_read_multithread) {
         //Remove Collection: Success
         ret = cceph_os_transaction_new(&tran, log_id);
         EXPECT_EQ(CCEPH_OK, ret);
-        ret = cceph_os_remove_coll(tran, i, log_id);
+        ret = cceph_os_coll_remove(tran, i, log_id);
         EXPECT_EQ(CCEPH_OK, ret);
         ret = funcs->submit_transaction(os, tran, log_id);
         EXPECT_EQ(CCEPH_OK, ret);
@@ -350,7 +350,7 @@ TEST_F(os, object_write_and_read_multithread) {
         //Remove Collection: Not Exist
         ret = cceph_os_transaction_new(&tran, log_id);
         EXPECT_EQ(CCEPH_OK, ret);
-        ret = cceph_os_remove_coll(tran, i, log_id);
+        ret = cceph_os_coll_remove(tran, i, log_id);
         EXPECT_EQ(CCEPH_OK, ret);
         ret = funcs->submit_transaction(os, tran, log_id);
         EXPECT_EQ(CCEPH_ERR_COLL_NOT_EXIST, ret);

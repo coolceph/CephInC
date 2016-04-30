@@ -24,13 +24,13 @@ TEST(os_transaction, cceph_os_touch) {
     const char* oid = "oid";
     int64_t log_id = 122;
 
-    ret = cceph_os_touch(tran, cid, oid, log_id);
+    ret = cceph_os_obj_touch(tran, cid, oid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(1, cceph_os_tran_get_op_count(tran, log_id));
 
     cceph_os_transaction_op *op = cceph_os_tran_get_op(tran, 0, log_id);
     EXPECT_NE((cceph_os_transaction_op*)NULL, op);
-    EXPECT_EQ(CCEPH_OS_OP_TOUCH , op->op);
+    EXPECT_EQ(CCEPH_OS_OP_OBJ_TOUCH , op->op);
     EXPECT_EQ(cid , op->cid);
     EXPECT_EQ(log_id , op->log_id);
     EXPECT_STREQ(oid , op->oid);
@@ -48,7 +48,7 @@ TEST(os_transaction, cceph_os_write) {
     int64_t log_id = 122;
 
     for (int i = 0; i < CCEPH_OS_TRAN_OP_LIST_SIZE * 3; i++) {
-        int ret = cceph_os_write(tran,
+        int ret = cceph_os_obj_write(tran,
                 cid + i, oid, offset + i, length + i, data, log_id + i);
 
         EXPECT_EQ(i + 1, cceph_os_tran_get_op_count(tran, log_id));
@@ -62,7 +62,7 @@ TEST(os_transaction, cceph_os_write) {
         EXPECT_EQ(buffer_length, tran->op_buffer_length);
 
         cceph_os_transaction_op *op = tran->op_buffer + i;
-        EXPECT_EQ(CCEPH_OS_OP_WRITE , op->op);
+        EXPECT_EQ(CCEPH_OS_OP_OBJ_WRITE , op->op);
         EXPECT_EQ(cid + i , op->cid);
         EXPECT_EQ(offset + i , op->offset);
         EXPECT_EQ(length + i , op->length);
@@ -73,7 +73,7 @@ TEST(os_transaction, cceph_os_write) {
 
     for (int i = 0; i < CCEPH_OS_TRAN_OP_LIST_SIZE * 3; i++) {
         cceph_os_transaction_op *op = cceph_os_tran_get_op(tran, i, log_id);
-        EXPECT_EQ(CCEPH_OS_OP_WRITE , op->op);
+        EXPECT_EQ(CCEPH_OS_OP_OBJ_WRITE , op->op);
         EXPECT_EQ(cid + i , op->cid);
         EXPECT_EQ(offset + i , op->offset);
         EXPECT_EQ(length + i , op->length);
@@ -92,13 +92,13 @@ TEST(os_transaction, cceph_os_map) {
     int64_t             log_id = 122;
     cceph_rb_root       map;
 
-    ret = cceph_os_map(tran, cid, oid, &map, log_id);
+    ret = cceph_os_obj_map(tran, cid, oid, &map, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(1, cceph_os_tran_get_op_count(tran, log_id));
 
     cceph_os_transaction_op *op = cceph_os_tran_get_op(tran, 0, log_id);
     EXPECT_NE((cceph_os_transaction_op*)NULL, op);
-    EXPECT_EQ(CCEPH_OS_OP_MAP , op->op);
+    EXPECT_EQ(CCEPH_OS_OP_OBJ_MAP , op->op);
     EXPECT_EQ(cid , op->cid);
     EXPECT_EQ(&map , op->map);
     EXPECT_EQ(log_id , op->log_id);
@@ -113,13 +113,13 @@ TEST(os_transaction, cceph_os_remove) {
     const char* oid = "oid";
     int64_t log_id = 122;
 
-    ret = cceph_os_remove(tran, cid, oid, log_id);
+    ret = cceph_os_obj_remove(tran, cid, oid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(1, cceph_os_tran_get_op_count(tran, log_id));
 
     cceph_os_transaction_op *op = cceph_os_tran_get_op(tran, 0, log_id);
     EXPECT_NE((cceph_os_transaction_op*)NULL, op);
-    EXPECT_EQ(CCEPH_OS_OP_REMOVE , op->op);
+    EXPECT_EQ(CCEPH_OS_OP_OBJ_REMOVE , op->op);
     EXPECT_EQ(cid , op->cid);
     EXPECT_EQ(log_id , op->log_id);
     EXPECT_STREQ(oid , op->oid);
@@ -133,13 +133,13 @@ TEST(os_transaction, cceph_os_create_coll) {
     cceph_os_coll_id_t cid = 1;
     int64_t log_id = 122;
 
-    ret = cceph_os_create_coll(tran, cid, log_id);
+    ret = cceph_os_coll_create(tran, cid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(1, cceph_os_tran_get_op_count(tran, log_id));
 
     cceph_os_transaction_op *op = cceph_os_tran_get_op(tran, 0, log_id);
     EXPECT_NE((cceph_os_transaction_op*)NULL, op);
-    EXPECT_EQ(CCEPH_OS_OP_CREATE_COLL , op->op);
+    EXPECT_EQ(CCEPH_OS_OP_COLL_CREATE , op->op);
     EXPECT_EQ(cid , op->cid);
     EXPECT_EQ(log_id , op->log_id);
 }
@@ -151,13 +151,13 @@ TEST(os_transaction, cceph_os_remove_coll) {
     cceph_os_coll_id_t cid = 1;
     int64_t log_id = 122;
 
-    ret = cceph_os_remove_coll(tran, cid, log_id);
+    ret = cceph_os_coll_remove(tran, cid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(1, cceph_os_tran_get_op_count(tran, log_id));
 
     cceph_os_transaction_op *op = cceph_os_tran_get_op(tran, 0, log_id);
     EXPECT_NE((cceph_os_transaction_op*)NULL, op);
-    EXPECT_EQ(CCEPH_OS_OP_REMOVE_COLL , op->op);
+    EXPECT_EQ(CCEPH_OS_OP_COLL_REMOVE, op->op);
     EXPECT_EQ(cid , op->cid);
     EXPECT_EQ(log_id , op->log_id);
 }

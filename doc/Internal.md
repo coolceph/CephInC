@@ -5,11 +5,13 @@ osd    = object_storage_daemon
 pg     = placement_group
 oid    = object_id
 pid    = pg_id
-cid    = collect_id
+cid    = collection_id
+tran   = transaction
+coll   = collection
+obj    = object
 msg    = messeage
 msger  = messenger
 smsger = server_messenger
-trasn  = transaction
 
 
 # Log ID #
