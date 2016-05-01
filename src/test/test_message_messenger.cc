@@ -5,6 +5,8 @@ extern "C" {
 #include "message/messenger.h"
 #include "message/server_messenger.h"
 #include "message/msg_write_obj.h"
+
+#include "test/common.h"
 }
 
 #include <arpa/inet.h>
@@ -426,6 +428,9 @@ TEST(message_messenger, send_and_recv) {
     //Single Thread
     send_and_recv_msg(&send_and_recv_msg_arg);
 
+    if (is_full_check("message_messenger_send_and_recv_multithread") == 0) {
+        return;
+    }
     //Multi Thread
     int thread_count = 16;
     pthread_t client_thread_ids[thread_count];
@@ -524,6 +529,9 @@ void* client_thread_func(void* arg) {
     return NULL;
 }
 TEST(message_messenger, send_and_recv_with_messenger_client) {
+    if (is_full_check("message_messenger_send_and_recv_with_messenger_client") == 0) {
+        return;
+    }
     int64_t log_id = 122;
     int port = 19001;
     cceph_messenger* messenger = start_listen_thread(port, log_id);
@@ -563,6 +571,10 @@ void* server_messenger_thread_func(void* arg_ptr){
     return NULL;
 }
 TEST(server_messenger, start_server_messager) {
+    if (is_full_check("server_messenger_start_server_messager") == 0) {
+        return;
+    }
+
     int64_t log_id = 122;
     int port = 19002;
     cceph_messenger* messenger = cceph_messenger_new(&cceph_messenger_server, NULL, 2, log_id);
