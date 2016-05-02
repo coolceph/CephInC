@@ -17,7 +17,7 @@ cceph_os_funcs* cceph_mem_store_get_funcs() {
 
     os_funcs->mount                 = cceph_mem_store_mount;
     os_funcs->submit_transaction    = cceph_mem_store_submit_transaction;
-    os_funcs->read_obj              = cceph_mem_store_read_object;
+    os_funcs->read_obj              = cceph_mem_store_read_obj;
 
     return os_funcs;
 }
@@ -316,7 +316,7 @@ int cceph_mem_store_submit_transaction(
     return ret;
 }
 
-int cceph_mem_store_read_object(
+int cceph_mem_store_read_obj(
         cceph_object_store* os,
         cceph_os_coll_id_t  cid,
         const char*         oid,
