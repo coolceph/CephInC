@@ -47,7 +47,7 @@ int cceph_mem_store_mount(
     return CCEPH_OK;
 }
 
-int cceph_mem_store_do_op_create_coll(
+int cceph_mem_store_do_op_coll_create(
         cceph_mem_store*         os,
         cceph_os_transaction_op* op,
         int64_t                  log_id) {
@@ -86,7 +86,7 @@ int cceph_mem_store_do_op_create_coll(
     return CCEPH_OK;
 }
 
-int cceph_mem_store_do_op_remove_coll(
+int cceph_mem_store_do_op_coll_remove(
         cceph_mem_store*         os,
         cceph_os_transaction_op* op,
         int64_t                  log_id) {
@@ -118,7 +118,7 @@ int cceph_mem_store_do_op_remove_coll(
     return CCEPH_OK;
 }
 
-int cceph_mem_store_do_op_write(
+int cceph_mem_store_do_op_obj_write(
         cceph_mem_store*         os,
         cceph_os_transaction_op* op,
         int64_t                  log_id) {
@@ -202,7 +202,7 @@ int cceph_mem_store_do_op_write(
     return CCEPH_OK;
 }
 
-int cceph_mem_store_do_op_remove(
+int cceph_mem_store_do_op_obj_remove(
         cceph_mem_store*         os,
         cceph_os_transaction_op* op,
         int64_t                  log_id) {
@@ -253,20 +253,20 @@ int cceph_mem_store_do_op(
             ret = CCEPH_OK;
             break;
         case CCEPH_OS_OP_COLL_CREATE:
-            ret = cceph_mem_store_do_op_create_coll(os, op, log_id);
+            ret = cceph_mem_store_do_op_coll_create(os, op, log_id);
             break;
         case CCEPH_OS_OP_COLL_REMOVE:
-            ret = cceph_mem_store_do_op_remove_coll(os, op, log_id);
+            ret = cceph_mem_store_do_op_coll_remove(os, op, log_id);
             break;
         case CCEPH_OS_OP_OBJ_TOUCH:
             op->length = 0; //this means touch
-            ret = cceph_mem_store_do_op_write(os, op, log_id);
+            ret = cceph_mem_store_do_op_obj_write(os, op, log_id);
             break;
         case CCEPH_OS_OP_OBJ_WRITE:
-            ret = cceph_mem_store_do_op_write(os, op, log_id);
+            ret = cceph_mem_store_do_op_obj_write(os, op, log_id);
             break;
         case CCEPH_OS_OP_OBJ_REMOVE:
-            ret = cceph_mem_store_do_op_remove(os, op, log_id);
+            ret = cceph_mem_store_do_op_obj_remove(os, op, log_id);
             break;
         default:
             ret = CCEPH_ERR_UNKNOWN_OS_OP;
