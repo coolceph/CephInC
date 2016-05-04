@@ -5,11 +5,13 @@ osd    = object_storage_daemon
 pg     = placement_group
 oid    = object_id
 pid    = pg_id
-cid    = collect_id
+cid    = collection_id
+tran   = transaction
+coll   = collection
+obj    = object
 msg    = messeage
 msger  = messenger
 smsger = server_messenger
-trasn  = transaction
 
 
 # Log ID #
@@ -23,4 +25,12 @@ Log Prefix is stand for the deamon, it follows the rule DEAMON_TYPE + ENTITY_NUM
 0101: mon.1
 0201: osd.1
 0302: client.2
+
+# Unit Test #
+
+Simple unit tests run fast and cover most functions and cases, this is used for develop.
+Full unit tests cost more time to cover more cases such as multithread cases. When push a new request, full unit test should be passed.
+
+make check will run simple unit tests.
+make fullcheck will run full unit tests.
 

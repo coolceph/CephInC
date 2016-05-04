@@ -17,7 +17,7 @@ cceph_os_funcs* cceph_mem_store_get_funcs() {
 
     os_funcs->mount                 = cceph_mem_store_mount;
     os_funcs->submit_transaction    = cceph_mem_store_submit_transaction;
-    os_funcs->read                  = cceph_mem_store_read_object;
+    os_funcs->read_obj              = cceph_mem_store_read_obj;
 
     return os_funcs;
 }
@@ -47,7 +47,7 @@ int cceph_mem_store_mount(
     return CCEPH_OK;
 }
 
-int cceph_mem_store_do_op_create_coll(
+int cceph_mem_store_do_op_coll_create(
         cceph_mem_store*         os,
         cceph_os_transaction_op* op,
         int64_t                  log_id) {
@@ -86,7 +86,7 @@ int cceph_mem_store_do_op_create_coll(
     return CCEPH_OK;
 }
 
-int cceph_mem_store_do_op_remove_coll(
+int cceph_mem_store_do_op_coll_remove(
         cceph_mem_store*         os,
         cceph_os_transaction_op* op,
         int64_t                  log_id) {
@@ -118,7 +118,7 @@ int cceph_mem_store_do_op_remove_coll(
     return CCEPH_OK;
 }
 
-int cceph_mem_store_do_op_write(
+int cceph_mem_store_do_op_obj_write(
         cceph_mem_store*         os,
         cceph_os_transaction_op* op,
         int64_t                  log_id) {
@@ -202,7 +202,7 @@ int cceph_mem_store_do_op_write(
     return CCEPH_OK;
 }
 
-int cceph_mem_store_do_op_remove(
+int cceph_mem_store_do_op_obj_remove(
         cceph_mem_store*         os,
         cceph_os_transaction_op* op,
         int64_t                  log_id) {
@@ -252,17 +252,21 @@ int cceph_mem_store_do_op(
         case CCEPH_OS_OP_NOOP:
             ret = CCEPH_OK;
             break;
-        case CCEPH_OS_OP_CREATE_COLL:
-            ret = cceph_mem_store_do_op_create_coll(os, op, log_id);
+        case CCEPH_OS_OP_COLL_CREATE:
+            ret = cceph_mem_store_do_op_coll_create(os, op, log_id);
             break;
-        case CCEPH_OS_OP_REMOVE_COLL:
-            ret = cceph_mem_store_do_op_remove_coll(os, op, log_id);
+        case CCEPH_OS_OP_COLL_REMOVE:
+            ret = cceph_mem_store_do_op_coll_remove(os, op, log_id);
             break;
-        case CCEPH_OS_OP_TOUCH:
-            ret = cceph_mem_store_do_op_write(os, op, log_id);
+        case CCEPH_OS_OP_OBJ_TOUCH:
+            op->length = 0; //this means touch
+            ret = cceph_mem_store_do_op_obj_write(os, op, log_id);
             break;
-        case CCEPH_OS_OP_WRITE:
-            ret = cceph_mem_store_do_op_write(os, op, log_id);
+        case CCEPH_OS_OP_OBJ_WRITE:
+            ret = cceph_mem_store_do_op_obj_write(os, op, log_id);
+            break;
+        case CCEPH_OS_OP_OBJ_REMOVE:
+            ret = cceph_mem_store_do_op_obj_remove(os, op, log_id);
             break;
         default:
             ret = CCEPH_ERR_UNKNOWN_OS_OP;
@@ -312,7 +316,7 @@ int cceph_mem_store_submit_transaction(
     return ret;
 }
 
-int cceph_mem_store_read_object(
+int cceph_mem_store_read_obj(
         cceph_object_store* os,
         cceph_os_coll_id_t  cid,
         const char*         oid,
@@ -341,6 +345,7 @@ int cceph_mem_store_read_object(
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute read op failed, search cid %d failed, errno %d(%s).",
                 cid, ret, cceph_errno_str(ret));
+        pthread_mutex_unlock(&mem_store->lock);
         return CCEPH_ERR_COLL_NOT_EXIST;
     }
 
@@ -349,11 +354,13 @@ int cceph_mem_store_read_object(
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute read op failed, search oid %s failed, errno %d(%s).",
                 oid, ret, cceph_errno_str(ret));
+        pthread_mutex_unlock(&mem_store->lock);
         return ret;
     }
 
     if (onode->length == 0 || onode->length <= offset) {
         *result_length = 0;
+        pthread_mutex_unlock(&mem_store->lock);
         return CCEPH_OK;
     }
 
@@ -367,6 +374,7 @@ int cceph_mem_store_read_object(
 
     *result_data = malloc(sizeof(char) * read_length);
     if (*result_data == NULL) {
+        pthread_mutex_unlock(&mem_store->lock);
         return CCEPH_ERR_NO_ENOUGH_MEM;
     }
 

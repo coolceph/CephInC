@@ -18,7 +18,7 @@ typedef int (*cceph_os_submit_transaction_func)(
         int64_t               log_id);
 
 //if length <= 0 or length >= object->length, read the whole content
-typedef int (*cceph_os_read_object_func)(
+typedef int (*cceph_os_read_obj_func)(
         cceph_object_store* os,
         cceph_os_coll_id_t  cid,
         const char*         oid,
@@ -28,10 +28,46 @@ typedef int (*cceph_os_read_object_func)(
         char**              result_data,
         int64_t             log_id);
 
+typedef int (*cceph_os_read_coll_map_func)(
+        cceph_object_store* os,
+        cceph_os_coll_id_t  cid,
+        cceph_rb_root*      map,
+        int64_t             log_id);
+
+typedef int (*cceph_os_read_coll_map_key_func)(
+        cceph_object_store* os,
+        cceph_os_coll_id_t  cid,
+        const char*         key,
+        int32_t*            result_value_length,
+        char**              result_value,
+        int64_t             log_id);
+
+typedef int (*cceph_os_read_obj_map_func)(
+        cceph_object_store* os,
+        cceph_os_coll_id_t  cid,
+        const char*         oid,
+        cceph_rb_root*      map,
+        int64_t             log_id);
+
+typedef int (*cceph_os_read_obj_map_key_func)(
+        cceph_object_store* os,
+        cceph_os_coll_id_t  cid,
+        const char*         oid,
+        const char*         key,
+        int32_t*            result_value_length,
+        char**              result_value,
+        int64_t             log_id);
+
 typedef struct {
-    cceph_os_mount_func              mount;
-    cceph_os_submit_transaction_func submit_transaction;
-    cceph_os_read_object_func        read;
+    cceph_os_mount_func               mount;
+    cceph_os_submit_transaction_func  submit_transaction;
+
+    cceph_os_read_coll_map_func       read_coll_map;
+    cceph_os_read_coll_map_key_func   read_coll_map_key;
+
+    cceph_os_read_obj_func            read_obj;
+    cceph_os_read_obj_map_func        read_obj_map;
+    cceph_os_read_obj_map_key_func    read_obj_map_key;
 } cceph_os_funcs;
 
 #endif

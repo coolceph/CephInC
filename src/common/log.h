@@ -22,14 +22,14 @@
 #define MSG_DEBUG                LL_DEBUG, __FILE__, __LINE__, __FUNCTION__
 
 #define MAX_LOG_ENTRY_LENGTH 1024
-#define LOG(level, log_id, fmt, args...)  {     \
-    _cceph_log(level, log_id, fmt, ##args);     \
-}                                               \
+#define LOG(level, log_id, fmt, args...)  {                         \
+    _cceph_log(level, log_id, __FILE__, __LINE__, fmt, ##args);     \
+}                                                                   \
 
 //#define LOG(level, fmt, args...)  { if (level <= LL_ERROR) { fprintf(stderr, fmt, ##args); fprintf(stderr, "\n"); } else { fprintf(stdout, fmt, ##args); fprintf(stdout, "\n"); } }
 //#define LOGV(level, fmt, args...) if (level <= LOGGER.log_level()) LOGGER.Write(level, __FILE__, __LINE__, __FUNCTION__, fmt, ##args)L
 
-void _cceph_log(int level, int64_t log_id, const char* fmt, ...);
+void _cceph_log(int level, int64_t log_id, const char* file, int length, const char* fmt, ...);
 
 extern void cceph_log_initial_id(int seed);
 extern int64_t cceph_log_new_id();

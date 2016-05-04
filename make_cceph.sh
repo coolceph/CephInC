@@ -1,2 +1,2 @@
 ./autogen.sh
-make check
+make fullcheck

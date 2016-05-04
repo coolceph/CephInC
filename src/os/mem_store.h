@@ -29,7 +29,7 @@ extern int cceph_mem_store_submit_transaction(
         cceph_os_transaction* transaction,
         int64_t               log_id);
 
-extern int cceph_mem_store_read_object(
+extern int cceph_mem_store_read_obj(
         cceph_object_store* os,
         cceph_os_coll_id_t  cid,
         const char*         oid,
