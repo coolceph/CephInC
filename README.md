@@ -1,5 +1,5 @@
 ============================================
-CCeph - a pure c version of ceph
+CephInC - a pure c version of ceph
 ============================================
 
 RADOS
