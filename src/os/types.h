@@ -29,4 +29,17 @@ extern const char* cceph_os_op_to_str(int op);
 
 extern int cceph_os_coll_id_cmp(cceph_os_coll_id_t cid_a, cceph_os_coll_id_t cid_b);
 
+//This method will use the input_tree to update the result_tree
+//The update rule is:
+//  for each key in input_tree
+//      1) if the key is not in result_tree and its input_value is not NULL:
+//         add it to result_tree
+//      2) if the key is in the result_tree and its input_value is not NULL:
+//         update the result_tree to new value
+//      3) if the key is in the result_tree and its input_value is NULL:
+//         remove the key from result_tree
+//      4) if the key is not in result_tree and its input_value is NULL:
+//         do nothing
+extern int cceph_os_map_update(cceph_rb_root* result_tree, cceph_rb_root* input_tree, int64_t log_id);
+
 #endif
