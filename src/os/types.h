@@ -13,8 +13,12 @@
 #define CCEPH_OS_OP_OBJ_MAP       6
 #define CCEPH_OS_OP_OBJ_REMOVE    7
 
-typedef int32_t cceph_os_coll_id_t;
 typedef int32_t cceph_os_op_t;
+typedef int32_t cceph_os_coll_id_t;
+
+extern const char* cceph_os_op_to_str(int op);
+
+extern int cceph_os_coll_id_cmp(cceph_os_coll_id_t cid_a, cceph_os_coll_id_t cid_b);
 
 typedef struct {
     char*   key; //key should be a string
@@ -25,9 +29,32 @@ typedef struct {
     cceph_rb_node node;
 } cceph_os_map_node;
 
-extern const char* cceph_os_op_to_str(int op);
+extern int cceph_os_map_node_new(
+        const char*         key,
+        const char*         data,
+        int                 data_length,
+        cceph_os_map_node** node,
+        int64_t             log_id);
 
-extern int cceph_os_coll_id_cmp(cceph_os_coll_id_t cid_a, cceph_os_coll_id_t cid_b);
+extern int cceph_os_map_node_free(
+        cceph_os_map_node** node,
+        int64_t             log_id);
+
+extern int cceph_os_map_node_insert(
+        cceph_rb_root     *root,
+        cceph_os_map_node *node,
+        int64_t           log_id);
+
+extern int cceph_os_map_node_remove(
+        cceph_rb_root     *root,
+        cceph_os_map_node *node,
+        int64_t           log_id);
+
+extern int cceph_os_map_node_search(
+        cceph_rb_root*      root,
+        const char*         oid,
+        cceph_os_map_node** result,
+        int64_t             log_id);
 
 //This method will use the input_tree to update the result_tree
 //The update rule is:
