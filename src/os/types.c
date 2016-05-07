@@ -124,7 +124,7 @@ int cceph_os_map_node_insert(
         } else if (result > 0) {
             new = &((*new)->rb_right);
         } else {
-            return CCEPH_ERR_OBJECT_ALREADY_EXIST;
+            return CCEPH_ERR_MAP_NODE_ALREADY_EXIST;
         }
     }
 
@@ -174,7 +174,7 @@ int cceph_os_map_node_search(
             return CCEPH_OK;
         }
     }
-    return CCEPH_ERR_COLL_NOT_EXIST;
+    return CCEPH_ERR_MAP_NODE_NOT_EXIST;
 }
 
 int cceph_os_map_update(cceph_rb_root* result_tree, cceph_rb_root* input_tree, int64_t log_id) {

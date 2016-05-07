@@ -21,7 +21,7 @@ extern const char* cceph_os_op_to_str(int op);
 extern int cceph_os_coll_id_cmp(cceph_os_coll_id_t cid_a, cceph_os_coll_id_t cid_b);
 
 typedef struct {
-    char*   key; //key should be a string
+    char*   key;            //key should be a string
 
     char*   value;
     int32_t value_length;
@@ -31,8 +31,8 @@ typedef struct {
 
 extern int cceph_os_map_node_new(
         const char*         key,
-        const char*         data,
-        int                 data_length,
+        const char*         value,
+        int                 value_length,
         cceph_os_map_node** node,
         int64_t             log_id);
 
@@ -41,14 +41,14 @@ extern int cceph_os_map_node_free(
         int64_t             log_id);
 
 extern int cceph_os_map_node_insert(
-        cceph_rb_root     *root,
-        cceph_os_map_node *node,
-        int64_t           log_id);
+        cceph_rb_root       *root,
+        cceph_os_map_node   *node,
+        int64_t             log_id);
 
 extern int cceph_os_map_node_remove(
-        cceph_rb_root     *root,
-        cceph_os_map_node *node,
-        int64_t           log_id);
+        cceph_rb_root       *root,
+        cceph_os_map_node   *node,
+        int64_t             log_id);
 
 extern int cceph_os_map_node_search(
         cceph_rb_root*      root,

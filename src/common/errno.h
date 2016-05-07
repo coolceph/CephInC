@@ -14,7 +14,9 @@
 #define CCEPH_ERR_COLL_NOT_EXIST         (-1009)
 #define CCEPH_ERR_OBJECT_ALREADY_EXIST   (-1010)
 #define CCEPH_ERR_OBJECT_NOT_EXIST       (-1011)
-#define CCEPH_ERR_UNKNOWN_OS_OP          (-1012)
+#define CCEPH_ERR_MAP_NODE_ALREADY_EXIST (-1012)
+#define CCEPH_ERR_MAP_NODE_NOT_EXIST     (-1013)
+#define CCEPH_ERR_UNKNOWN_OS_OP          (-1014)
 
 extern const char* cceph_errno_str(int err_no);
 
