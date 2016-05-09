@@ -4,6 +4,7 @@ extern "C" {
 }
 
 #include "gtest/gtest.h"
+
 TEST(cceph_mem_store, object_node) {
     char                         oid[256];
     int64_t                      log_id     = 122;

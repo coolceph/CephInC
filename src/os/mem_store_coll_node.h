@@ -28,7 +28,12 @@ extern int cceph_mem_store_coll_node_search(
         int64_t                     log_id);
 
 extern int cceph_mem_store_coll_node_insert(
-        cceph_rb_root             *root,
-        cceph_mem_store_coll_node *node,
-        int64_t                    log_id);
+        cceph_rb_root*              root,
+        cceph_mem_store_coll_node*  node,
+        int64_t                     log_id);
+
+extern int cceph_mem_store_coll_node_remove(
+        cceph_rb_root*              root,
+        cceph_mem_store_coll_node*  node,
+        int64_t                     log_id);
 #endif

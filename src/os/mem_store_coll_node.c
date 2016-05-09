@@ -77,10 +77,10 @@ int cceph_mem_store_coll_node_search(
     return CCEPH_ERR_COLL_NOT_EXIST;
 }
 
-int cceph_mem_store_coll_node_insert(
-        cceph_rb_root             *root,
-        cceph_mem_store_coll_node *node,
-        int64_t                    log_id) {
+extern int cceph_mem_store_coll_node_insert(
+        cceph_rb_root*              root,
+        cceph_mem_store_coll_node*  node,
+        int64_t                     log_id) {
 
     assert(log_id, root != NULL);
     assert(log_id, node != NULL);
@@ -105,6 +105,19 @@ int cceph_mem_store_coll_node_insert(
     /* Add new node and rebalance tree. */
     cceph_rb_link_node(&node->node, parent, new);
     cceph_rb_insert_color(&node->node, root);
+
+    return CCEPH_OK;
+}
+
+int cceph_mem_store_coll_node_remove(
+        cceph_rb_root*              root,
+        cceph_mem_store_coll_node*  node,
+        int64_t                     log_id) {
+
+    assert(log_id, root != NULL);
+    assert(log_id, node != NULL);
+
+    cceph_rb_erase(&node->node, root);
 
     return CCEPH_OK;
 }
