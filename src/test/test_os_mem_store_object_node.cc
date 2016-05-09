@@ -4,34 +4,20 @@ extern "C" {
 }
 
 #include "gtest/gtest.h"
+TEST(cceph_mem_store, object_node) {
+    char                         oid[256];
+    int64_t                      log_id     = 122;
+    cceph_rb_root                root       = CCEPH_RB_ROOT;
+    cceph_mem_store_object_node* node       = NULL;
 
-TEST(os_mem_store, cceph_mem_store_object_node_new_and_free) {
-    const char* oid    = "object";
-    int64_t     log_id = 122;
-
-    cceph_mem_store_object_node *node = NULL;
-    int ret = cceph_mem_store_object_node_new(oid, &node, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    EXPECT_NE((cceph_mem_store_object_node*)NULL, node);
-    EXPECT_STREQ(oid, node->oid);
-    EXPECT_EQ(NULL, node->data);
-    EXPECT_EQ(0, node->length);
-
-    ret = cceph_mem_store_object_node_free(&node, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    EXPECT_EQ((cceph_mem_store_object_node*)NULL, node);
-}
-
-TEST(os_mem_store, cceph_mem_store_object_node_insert_and_search) {
-    cceph_rb_root root = CCEPH_RB_ROOT;
-    char oid[256];
     for (int i = 0; i < 1000; i++) {
         bzero(oid, 256);
         sprintf(oid, "%d", i);
 
-        cceph_mem_store_object_node *node = NULL;
-        int ret = cceph_mem_store_object_node_new(oid, &node, 0);
+        node = NULL;
+        int ret = cceph_mem_store_object_node_new(oid, &node, log_id);
         EXPECT_EQ(CCEPH_OK, ret);
+        EXPECT_NE((cceph_mem_store_object_node*)NULL, node);
         EXPECT_STREQ(oid, node->oid);
         EXPECT_EQ(NULL, node->data);
         EXPECT_EQ(0, node->length);
@@ -39,15 +25,26 @@ TEST(os_mem_store, cceph_mem_store_object_node_insert_and_search) {
         ret = cceph_mem_store_object_node_insert(&root, node, 0);
         EXPECT_EQ(CCEPH_OK, ret);
     }
-
-    char key[256];
     for (int i = 0; i < 1000; i++) {
-        bzero(key, 256);
-        sprintf(key, "%d", i);
-        cceph_mem_store_object_node *node = NULL;
-        int ret = cceph_mem_store_object_node_search(&root, key, &node, 0);
+        bzero(oid, 256);
+        sprintf(oid, "%d", i);
+
+        node = NULL;
+        int ret = cceph_mem_store_object_node_search(&root, oid, &node, 0);
         EXPECT_EQ(CCEPH_OK, ret);
         EXPECT_NE((cceph_mem_store_object_node*)NULL, node);
-        EXPECT_STREQ(key, node->oid);
+        EXPECT_STREQ(oid, node->oid);
+        EXPECT_EQ(NULL, node->data);
+        EXPECT_EQ(0, node->length);
+
+        ret = cceph_mem_store_object_node_remove(&root, node, 0);
+        EXPECT_EQ(CCEPH_OK, ret);
+
+        ret = cceph_mem_store_object_node_free(&node, 0);
+        EXPECT_EQ(CCEPH_OK, ret);
+        EXPECT_EQ((cceph_mem_store_object_node*)NULL, node);
+
+        ret = cceph_mem_store_object_node_search(&root, oid, &node, 0);
+        EXPECT_EQ(CCEPH_ERR_OBJECT_NOT_EXIST, ret);
     }
 }
