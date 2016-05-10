@@ -106,7 +106,12 @@ int cceph_mem_store_do_op_coll_remove(
         return CCEPH_ERR_COLL_NOT_EXIST;
     }
 
-    cceph_rb_erase(&cnode->node, &os->colls);
+    ret = cceph_mem_store_coll_node_remove(&os->colls, cnode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute RemoveCollection op failed, can't remove from mem_store, errno %d(%s).",
+                op->cid, ret, cceph_errno_str(ret));
+        return ret;
+    }
 
     ret = cceph_mem_store_coll_node_free(&cnode, log_id);
     if (ret != CCEPH_OK) {
