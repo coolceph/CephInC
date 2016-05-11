@@ -5,23 +5,23 @@ extern "C" {
 
 #include "gtest/gtest.h"
 
-TEST(os_transaction, cceph_os_transaction_new) {
-    cceph_os_transaction *tran = NULL;
-    int ret = cceph_os_transaction_new(&tran, 0);
+TEST(os_tran, cceph_os_tran_new) {
+    cceph_os_tran* tran = NULL;
+    int ret = cceph_os_tran_new(&tran, 0);
     EXPECT_EQ(CCEPH_OK, ret);
-    EXPECT_NE((cceph_os_transaction*)NULL, tran);
-    EXPECT_NE((cceph_os_transaction_op*)NULL, tran->op_buffer);
+    EXPECT_NE((cceph_os_tran*)NULL, tran);
+    EXPECT_NE((cceph_os_tran_op*)NULL, tran->op_buffer);
 
     EXPECT_EQ(CCEPH_OS_TRAN_OP_LIST_SIZE, tran->op_buffer_length);
     EXPECT_EQ(0, tran->op_buffer_index);
 
-    ret = cceph_os_transaction_free(&tran, 0);
+    ret = cceph_os_tran_free(&tran, 0);
     EXPECT_EQ(CCEPH_OK, ret);
-    EXPECT_EQ((cceph_os_transaction*)NULL, tran);
+    EXPECT_EQ((cceph_os_tran*)NULL, tran);
 }
-TEST(os_transaction, cceph_os_coll_create) {
-    cceph_os_transaction *tran = NULL;
-    int ret = cceph_os_transaction_new(&tran, 0);
+TEST(os_tran, cceph_os_coll_create) {
+    cceph_os_tran *tran = NULL;
+    int ret = cceph_os_tran_new(&tran, 0);
     EXPECT_EQ(CCEPH_OK, ret);
 
     cceph_os_coll_id_t cid = 1;
@@ -31,15 +31,15 @@ TEST(os_transaction, cceph_os_coll_create) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(1, cceph_os_tran_get_op_count(tran, log_id));
 
-    cceph_os_transaction_op *op = cceph_os_tran_get_op(tran, 0, log_id);
-    EXPECT_NE((cceph_os_transaction_op*)NULL, op);
+    cceph_os_tran_op *op = cceph_os_tran_get_op(tran, 0, log_id);
+    EXPECT_NE((cceph_os_tran_op*)NULL, op);
     EXPECT_EQ(CCEPH_OS_OP_COLL_CREATE , op->op);
     EXPECT_EQ(cid , op->cid);
     EXPECT_EQ(log_id , op->log_id);
 }
-TEST(os_transaction, cceph_os_coll_remove) {
-    cceph_os_transaction *tran = NULL;
-    int ret = cceph_os_transaction_new(&tran, 0);
+TEST(os_tran, cceph_os_coll_remove) {
+    cceph_os_tran *tran = NULL;
+    int ret = cceph_os_tran_new(&tran, 0);
     EXPECT_EQ(CCEPH_OK, ret);
 
     cceph_os_coll_id_t cid = 1;
@@ -49,15 +49,15 @@ TEST(os_transaction, cceph_os_coll_remove) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(1, cceph_os_tran_get_op_count(tran, log_id));
 
-    cceph_os_transaction_op *op = cceph_os_tran_get_op(tran, 0, log_id);
-    EXPECT_NE((cceph_os_transaction_op*)NULL, op);
+    cceph_os_tran_op *op = cceph_os_tran_get_op(tran, 0, log_id);
+    EXPECT_NE((cceph_os_tran_op*)NULL, op);
     EXPECT_EQ(CCEPH_OS_OP_COLL_REMOVE, op->op);
     EXPECT_EQ(cid , op->cid);
     EXPECT_EQ(log_id , op->log_id);
 }
-TEST(os_transaction, cceph_os_obj_touch) {
-    cceph_os_transaction *tran = NULL;
-    int ret = cceph_os_transaction_new(&tran, 0);
+TEST(os_tran, cceph_os_obj_touch) {
+    cceph_os_tran *tran = NULL;
+    int ret = cceph_os_tran_new(&tran, 0);
     EXPECT_EQ(CCEPH_OK, ret);
 
     cceph_os_coll_id_t cid = 1;
@@ -68,16 +68,16 @@ TEST(os_transaction, cceph_os_obj_touch) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(1, cceph_os_tran_get_op_count(tran, log_id));
 
-    cceph_os_transaction_op *op = cceph_os_tran_get_op(tran, 0, log_id);
-    EXPECT_NE((cceph_os_transaction_op*)NULL, op);
+    cceph_os_tran_op *op = cceph_os_tran_get_op(tran, 0, log_id);
+    EXPECT_NE((cceph_os_tran_op*)NULL, op);
     EXPECT_EQ(CCEPH_OS_OP_OBJ_TOUCH , op->op);
     EXPECT_EQ(cid , op->cid);
     EXPECT_EQ(log_id , op->log_id);
     EXPECT_STREQ(oid , op->oid);
 }
-TEST(os_transaction, cceph_os_obj_write) {
-    cceph_os_transaction *tran = NULL;
-    int ret = cceph_os_transaction_new(&tran, 0);
+TEST(os_tran, cceph_os_obj_write) {
+    cceph_os_tran *tran = NULL;
+    int ret = cceph_os_tran_new(&tran, 0);
     EXPECT_EQ(CCEPH_OK, ret);
 
     cceph_os_coll_id_t cid = 1;
@@ -101,7 +101,7 @@ TEST(os_transaction, cceph_os_obj_write) {
         EXPECT_EQ(i + 1, tran->op_buffer_index);
         EXPECT_EQ(buffer_length, tran->op_buffer_length);
 
-        cceph_os_transaction_op *op = tran->op_buffer + i;
+        cceph_os_tran_op *op = tran->op_buffer + i;
         EXPECT_EQ(CCEPH_OS_OP_OBJ_WRITE , op->op);
         EXPECT_EQ(cid + i , op->cid);
         EXPECT_EQ(offset + i , op->offset);
@@ -112,7 +112,7 @@ TEST(os_transaction, cceph_os_obj_write) {
     }
 
     for (int i = 0; i < CCEPH_OS_TRAN_OP_LIST_SIZE * 3; i++) {
-        cceph_os_transaction_op *op = cceph_os_tran_get_op(tran, i, log_id);
+        cceph_os_tran_op *op = cceph_os_tran_get_op(tran, i, log_id);
         EXPECT_EQ(CCEPH_OS_OP_OBJ_WRITE , op->op);
         EXPECT_EQ(cid + i , op->cid);
         EXPECT_EQ(offset + i , op->offset);
@@ -122,9 +122,9 @@ TEST(os_transaction, cceph_os_obj_write) {
         EXPECT_STREQ(oid , op->oid);
     }
 }
-TEST(os_transaction, cceph_os_obj_map) {
-    cceph_os_transaction *tran = NULL;
-    int ret = cceph_os_transaction_new(&tran, 0);
+TEST(os_tran, cceph_os_obj_map) {
+    cceph_os_tran *tran = NULL;
+    int ret = cceph_os_tran_new(&tran, 0);
     EXPECT_EQ(CCEPH_OK, ret);
 
     cceph_os_coll_id_t  cid = 1;
@@ -136,17 +136,17 @@ TEST(os_transaction, cceph_os_obj_map) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(1, cceph_os_tran_get_op_count(tran, log_id));
 
-    cceph_os_transaction_op *op = cceph_os_tran_get_op(tran, 0, log_id);
-    EXPECT_NE((cceph_os_transaction_op*)NULL, op);
+    cceph_os_tran_op *op = cceph_os_tran_get_op(tran, 0, log_id);
+    EXPECT_NE((cceph_os_tran_op*)NULL, op);
     EXPECT_EQ(CCEPH_OS_OP_OBJ_MAP , op->op);
     EXPECT_EQ(cid , op->cid);
     EXPECT_EQ(&map , op->map);
     EXPECT_EQ(log_id , op->log_id);
     EXPECT_STREQ(oid , op->oid);
 }
-TEST(os_transaction, cceph_os_obj_remove) {
-    cceph_os_transaction *tran = NULL;
-    int ret = cceph_os_transaction_new(&tran, 0);
+TEST(os_tran, cceph_os_obj_remove) {
+    cceph_os_tran *tran = NULL;
+    int ret = cceph_os_tran_new(&tran, 0);
     EXPECT_EQ(CCEPH_OK, ret);
 
     cceph_os_coll_id_t cid = 1;
@@ -157,8 +157,8 @@ TEST(os_transaction, cceph_os_obj_remove) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(1, cceph_os_tran_get_op_count(tran, log_id));
 
-    cceph_os_transaction_op *op = cceph_os_tran_get_op(tran, 0, log_id);
-    EXPECT_NE((cceph_os_transaction_op*)NULL, op);
+    cceph_os_tran_op *op = cceph_os_tran_get_op(tran, 0, log_id);
+    EXPECT_NE((cceph_os_tran_op*)NULL, op);
     EXPECT_EQ(CCEPH_OS_OP_OBJ_REMOVE , op->op);
     EXPECT_EQ(cid , op->cid);
     EXPECT_EQ(log_id , op->log_id);

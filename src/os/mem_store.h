@@ -24,19 +24,19 @@ extern int cceph_mem_store_mount(
         cceph_object_store*  os,
         int64_t              log_id);
 
-extern int cceph_mem_store_submit_transaction(
-        cceph_object_store*   os,
-        cceph_os_transaction* transaction,
-        int64_t               log_id);
+extern int cceph_mem_store_submit_tran(
+        cceph_object_store*  os,
+        cceph_os_tran*       tran,
+        int64_t              log_id);
 
 extern int cceph_mem_store_read_obj(
-        cceph_object_store* os,
-        cceph_os_coll_id_t  cid,
-        const char*         oid,
-        int64_t             offset,
-        int64_t             length,
-        int64_t*            result_length,
-        char**              result_data,
-        int64_t             log_id);
+        cceph_object_store*  os,
+        cceph_os_coll_id_t   cid,
+        const char*          oid,
+        int64_t              offset,
+        int64_t              length,
+        int64_t*             result_length,
+        char**               result_data,
+        int64_t              log_id);
 
 #endif

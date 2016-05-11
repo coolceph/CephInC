@@ -15,54 +15,54 @@ typedef struct {
     int64_t             length;     //OBJ_WRITE
     const char*         data;       //OBJ_WRITE
     cceph_rb_root*      map;        //COLL_MAP, OBJ_MAP
-} cceph_os_transaction_op;
+} cceph_os_tran_op;
 
 typedef struct {
-    cceph_os_transaction_op *op_buffer;
-    int32_t                  op_buffer_length;
-    int32_t                  op_buffer_index;
-} cceph_os_transaction;
+    cceph_os_tran_op* op_buffer;
+    int32_t           op_buffer_length;
+    int32_t           op_buffer_index;
+} cceph_os_tran;
 
-extern int cceph_os_transaction_new(
-        cceph_os_transaction** tran,
-        int64_t                log_id);
+extern int cceph_os_tran_new(
+        cceph_os_tran** tran,
+        int64_t         log_id);
 
-extern int cceph_os_transaction_free(
-        cceph_os_transaction** tran,
-        int64_t                log_id);
+extern int cceph_os_tran_free(
+        cceph_os_tran** tran,
+        int64_t         log_id);
 
 extern int cceph_os_tran_get_op_count(
-        cceph_os_transaction* tran,
-        int64_t               log_id);
+        cceph_os_tran* tran,
+        int64_t        log_id);
 
-extern cceph_os_transaction_op* cceph_os_tran_get_op(
-        cceph_os_transaction* tran,
-        int32_t               index,
-        int64_t               log_id);
+extern cceph_os_tran_op* cceph_os_tran_get_op(
+        cceph_os_tran* tran,
+        int32_t        index,
+        int64_t        log_id);
 
 //if coll existed, do nothing
 extern int cceph_os_coll_create(
-        cceph_os_transaction* tran,
+        cceph_os_tran*        tran,
         cceph_os_coll_id_t    cid,
         int64_t               log_id);
 
 //if coll not existed, return CCEPH_ERR_COLL_NOT_EXISTED
 extern int cceph_os_coll_remove(
-        cceph_os_transaction* tran,
+        cceph_os_tran*        tran,
         cceph_os_coll_id_t    cid,
         int64_t               log_id);
 
 //Update map for given collection
 //if the value of the key is NULL, it mean to delete the key
 extern int cceph_os_coll_map(
-        cceph_os_transaction* tran,
+        cceph_os_tran*        tran,
         cceph_os_coll_id_t    cid,
         cceph_rb_root*        map,
         int64_t               log_id);
 
 //if object already existed, do nothing
 extern int cceph_os_obj_touch(
-        cceph_os_transaction* tran,
+        cceph_os_tran*        tran,
         cceph_os_coll_id_t    cid,
         const char*           oid,
         int64_t               log_id);
@@ -70,7 +70,7 @@ extern int cceph_os_obj_touch(
 //if object not exists, create it
 //length == 0 means touch object
 extern int cceph_os_obj_write(
-        cceph_os_transaction* tran,
+        cceph_os_tran*        tran,
         cceph_os_coll_id_t    cid,
         const char*           oid,
         int64_t               offset,
@@ -81,7 +81,7 @@ extern int cceph_os_obj_write(
 //Update map for given object
 //if the value of the key is NULL, it mean to delete the key
 extern int cceph_os_obj_map(
-        cceph_os_transaction* tran,
+        cceph_os_tran*        tran,
         cceph_os_coll_id_t    cid,
         const char*           oid,
         cceph_rb_root*        map,
@@ -89,7 +89,7 @@ extern int cceph_os_obj_map(
 
 //if object not existed, return CCEPH_ERR_OBJECT_NOT_EXISTED
 extern int cceph_os_obj_remove(
-        cceph_os_transaction* tran,
+        cceph_os_tran*        tran,
         cceph_os_coll_id_t    cid,
         const char*           oid,
         int64_t               log_id);
