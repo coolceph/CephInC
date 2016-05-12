@@ -4,6 +4,7 @@
 
 #include "common/assert.h"
 #include "common/errno.h"
+#include "common/log.h"
 #include "common/rbtree.h"
 
 extern int cceph_os_coll_id_cmp(cceph_os_coll_id_t cid_a, cceph_os_coll_id_t cid_b) {
@@ -181,6 +182,67 @@ int cceph_os_map_update(cceph_rb_root* result_tree, cceph_rb_root* input_tree, i
     assert(log_id, result_tree != NULL);
     assert(log_id, input_tree  != NULL);
 
+    int ret = CCEPH_OK;
+    cceph_rb_node* input_rb_node = cceph_rb_first(input_tree);
+    while (input_rb_node) {
+        cceph_os_map_node *input_node = cceph_container_of(input_rb_node, cceph_os_map_node, node);
+
+        const char* key          = input_node->key;
+        const char* value        = input_node->value;
+        int32_t     value_length = input_node->value_length;
+
+        assert(log_id, key != NULL);
+        if (value_length > 0) {
+            assert(log_id, value != NULL);
+        }
+
+        cceph_os_map_node* result_node = NULL;
+        ret = cceph_os_map_node_search(result_tree, key, &result_node, log_id);
+        if (result_node == NULL) {
+            if (input_node->value_length > 0) {
+                //Add new node to result_tree
+                ret = cceph_os_map_node_new(key, value, value_length, &result_node, log_id);
+                if (ret != CCEPH_OK) {
+                    goto label_ret;
+                }
+                ret = cceph_os_map_node_insert(result_tree, result_node, log_id);
+                if (ret != CCEPH_OK) {
+                    goto label_ret;
+                }
+            }
+        } else {
+            //Remove the old first
+            ret = cceph_os_map_node_remove(result_tree, result_node, log_id);
+            if (ret != CCEPH_OK) {
+                goto label_ret;
+            }
+            ret = cceph_os_map_node_free(&result_node, log_id);
+            if (ret != CCEPH_OK) {
+                goto label_ret;
+            }
+
+            //Remove + Add  = Update
+            if (input_node->value_length > 0) {
+                ret = cceph_os_map_node_new(key, value, value_length, &result_node, log_id);
+                if (ret != CCEPH_OK) {
+                    goto label_ret;
+                }
+
+                ret = cceph_os_map_node_insert(result_tree, result_node, log_id);
+                if (ret != CCEPH_OK) {
+                    goto label_ret;
+                }
+            }
+        }
+
+        input_rb_node = cceph_rb_next(input_rb_node);
+    }
+
+label_ret:
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Error in cceph_os_map_update, errno %d(%s)",
+                ret, cceph_errno_str(ret));
+    }
     return CCEPH_OK;
 }
 
