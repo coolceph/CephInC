@@ -33,3 +33,11 @@ Full unit tests cost more time to cover more cases such as multithread cases. Wh
 make check will run simple unit tests.
 make fullcheck will run full unit tests.
 
+# Errno & Log #
+
+When log an errno, the format should be "errno %d(%s)", the %d will be the errno, and the %s will be cceph_errno_str(ret).
+
+For examples:
+    LOG(LL_ERROR, log_id, "Execute CreateCollection op failed, errno %d(%s).",
+            op->cid, ret, cceph_errno_str(ret));
+

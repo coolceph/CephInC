@@ -15,6 +15,7 @@
 
 typedef struct {
     cceph_msg_header *req;
+
     int ack_count;
     int commit_count;
     int req_count;
@@ -23,12 +24,12 @@ typedef struct {
 } cceph_client_wait_req;
 
 typedef struct {
-    cceph_osdmap *osdmap;
-    cceph_messenger *messenger;
+    cceph_osdmap*    osdmap;
+    cceph_messenger* messenger;
 
-    int32_t client_id;
+    int32_t          client_id;
     cceph_atomic64_t req_id;
-    int state;
+    int              state;
 
     cceph_client_wait_req  wait_req_list;
     pthread_mutex_t        wait_req_lock;
@@ -49,6 +50,7 @@ extern int cceph_client_delete_obj(cceph_client* client, int64_t log_id,
 
 extern int TEST_cceph_client_add_req_to_wait_list(cceph_client *client,
         cceph_msg_header *req, int req_count, int64_t log_id);
+
 extern int TEST_cceph_client_send_req_to_osd(cceph_messenger* msger,
         cceph_osd_entity *osd, cceph_msg_header* req, int64_t log_id);
 
