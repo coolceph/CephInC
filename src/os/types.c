@@ -221,7 +221,7 @@ int cceph_os_map_update(cceph_rb_root* result_tree, cceph_rb_root* input_tree, i
                 goto label_ret;
             }
 
-            //Remove + Add  = Update
+            //Remove + Add = Update
             if (input_node->value_length > 0) {
                 ret = cceph_os_map_node_new(key, value, value_length, &result_node, log_id);
                 if (ret != CCEPH_OK) {
