@@ -7,6 +7,7 @@
 typedef struct {
     cceph_os_coll_id_t cid;
     cceph_rb_root objects;
+    cceph_rb_root map;
 
     cceph_rb_node node;
 } cceph_mem_store_coll_node;

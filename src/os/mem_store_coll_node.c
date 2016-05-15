@@ -19,8 +19,9 @@ extern int cceph_mem_store_coll_node_new(
         return CCEPH_ERR_NO_ENOUGH_MEM;
     }
 
-    (*node)->cid = cid;
+    (*node)->cid     = cid;
     (*node)->objects = CCEPH_RB_ROOT;
+    (*node)->map     = CCEPH_RB_ROOT;
 
     return CCEPH_OK;
 }
@@ -31,9 +32,9 @@ extern int cceph_mem_store_coll_node_free(
     assert(log_id, node != NULL);
     assert(log_id, *node != NULL);
 
-    cceph_mem_store_coll_node   *cnode   = *node;
-    cceph_mem_store_object_node *onode   = NULL;
-    cceph_rb_node               *rb_node = cceph_rb_first(&cnode->objects);
+    cceph_mem_store_coll_node*   cnode   = *node;
+    cceph_mem_store_object_node* onode   = NULL;
+    cceph_rb_node*               rb_node = cceph_rb_first(&cnode->objects);
     while (rb_node) {
         onode = cceph_rb_entry(rb_node, cceph_mem_store_object_node, node);
 
@@ -41,6 +42,17 @@ extern int cceph_mem_store_coll_node_free(
         cceph_mem_store_object_node_free(&onode, log_id);
 
         rb_node = cceph_rb_first(&cnode->objects);
+    }
+
+    cceph_os_map_node* map_node = NULL;
+    rb_node = cceph_rb_first(&cnode->map);
+    while (rb_node) {
+        map_node = cceph_rb_entry(rb_node, cceph_os_map_node, node);
+
+        cceph_rb_erase(rb_node, &cnode->map);
+        cceph_os_map_node_free(&map_node, log_id);
+
+        rb_node = cceph_rb_first(&cnode->map);
     }
 
     free(cnode);
