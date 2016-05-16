@@ -40,6 +40,10 @@ extern int cceph_os_map_node_free(
         cceph_os_map_node** node,
         int64_t             log_id);
 
+extern int cceph_os_map_node_free_tree(
+        cceph_rb_root*      tree,
+        int64_t             log_id);
+
 extern int cceph_os_map_node_insert(
         cceph_rb_root       *root,
         cceph_os_map_node   *node,

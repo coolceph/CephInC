@@ -104,6 +104,23 @@ int cceph_os_map_node_free(
     return CCEPH_OK;
 }
 
+int cceph_os_map_node_free_tree(
+        cceph_rb_root*      tree,
+        int64_t             log_id) {
+    assert(log_id, tree != NULL);
+
+    cceph_os_map_node* map_node = NULL;
+    cceph_rb_node*     rb_node  = cceph_rb_first(tree);
+    while (rb_node) {
+        map_node = cceph_rb_entry(rb_node, cceph_os_map_node, node);
+
+        cceph_rb_erase(rb_node, tree);
+        cceph_os_map_node_free(&map_node, log_id);
+
+        rb_node = cceph_rb_first(tree);
+    }
+    return CCEPH_OK;
+}
 int cceph_os_map_node_insert(
         cceph_rb_root     *root,
         cceph_os_map_node *node,
