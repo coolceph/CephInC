@@ -44,16 +44,8 @@ extern int cceph_mem_store_coll_node_free(
         rb_node = cceph_rb_first(&cnode->objects);
     }
 
-    cceph_os_map_node* map_node = NULL;
-    rb_node = cceph_rb_first(&cnode->map);
-    while (rb_node) {
-        map_node = cceph_rb_entry(rb_node, cceph_os_map_node, node);
-
-        cceph_rb_erase(rb_node, &cnode->map);
-        cceph_os_map_node_free(&map_node, log_id);
-
-        rb_node = cceph_rb_first(&cnode->map);
-    }
+    int ret = cceph_os_map_node_free_tree(&cnode->map, log_id);
+    assert(log_id, ret == CCEPH_OK);
 
     free(cnode);
     *node = NULL;
