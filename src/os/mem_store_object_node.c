@@ -55,6 +55,23 @@ int cceph_mem_store_object_node_free(
 
     return CCEPH_OK;
 }
+int cceph_mem_store_object_node_free_tree(
+        cceph_rb_root*                tree,
+        int64_t                       log_id) {
+    assert(log_id, tree != NULL);
+
+    cceph_mem_store_object_node* onode   = NULL;
+    cceph_rb_node*               rb_node = cceph_rb_first(tree);
+    while (rb_node) {
+        onode = cceph_rb_entry(rb_node, cceph_mem_store_object_node, node);
+
+        cceph_rb_erase(rb_node, tree);
+        cceph_mem_store_object_node_free(&onode, log_id);
+
+        rb_node = cceph_rb_first(tree);
+    }
+    return CCEPH_OK;
+}
 
 int cceph_mem_store_object_node_insert(
         cceph_rb_root               *root,
