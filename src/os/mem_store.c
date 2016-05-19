@@ -123,6 +123,37 @@ int cceph_mem_store_do_op_coll_remove(
     return CCEPH_OK;
 }
 
+int cceph_mem_store_do_op_coll_map(
+        cceph_mem_store*   os,
+        cceph_os_tran_op*  op,
+        int64_t            log_id) {
+
+    assert(log_id, os != NULL);
+    assert(log_id, op != NULL);
+    assert(log_id, op->cid >= 0);
+    assert(log_id, op->map != NULL);
+
+    LOG(LL_INFO, log_id, "Execute CollectionMap op, cid %d, log_id %ld.", op->cid, op->log_id);
+
+    log_id = op->log_id; //We will use op's log_id from here
+
+    cceph_mem_store_coll_node *cnode = NULL;
+    int ret = cceph_mem_store_coll_node_search(&os->colls, op->cid, &cnode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute CollectionMap op failed, cid %d not existed.", op->cid);
+        return ret;
+    }
+
+    ret = cceph_os_map_update(&cnode->map, op->map, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute RemoveCollection op failed, update coll map failed, errno %d(%s).",
+                op->cid, ret, cceph_errno_str(ret));
+        return ret;
+    }
+
+    return CCEPH_OK;
+}
+
 int cceph_mem_store_do_op_obj_write(
         cceph_mem_store*   os,
         cceph_os_tran_op*  op,
@@ -262,6 +293,9 @@ int cceph_mem_store_do_op(
             break;
         case CCEPH_OS_OP_COLL_REMOVE:
             ret = cceph_mem_store_do_op_coll_remove(os, op, log_id);
+            break;
+        case CCEPH_OS_OP_COLL_MAP:
+            ret = cceph_mem_store_do_op_coll_map(os, op, log_id);
             break;
         case CCEPH_OS_OP_OBJ_TOUCH:
             op->length = 0; //this means touch
