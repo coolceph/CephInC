@@ -32,19 +32,12 @@ extern int cceph_mem_store_coll_node_free(
     assert(log_id, node != NULL);
     assert(log_id, *node != NULL);
 
-    cceph_mem_store_coll_node*   cnode   = *node;
-    cceph_mem_store_object_node* onode   = NULL;
-    cceph_rb_node*               rb_node = cceph_rb_first(&cnode->objects);
-    while (rb_node) {
-        onode = cceph_rb_entry(rb_node, cceph_mem_store_object_node, node);
+    cceph_mem_store_coll_node* cnode = *node;
 
-        cceph_rb_erase(rb_node, &cnode->objects);
-        cceph_mem_store_object_node_free(&onode, log_id);
+    int ret = cceph_mem_store_object_node_free_tree(&cnode->objects, log_id);
+    assert(log_id, ret == CCEPH_OK);
 
-        rb_node = cceph_rb_first(&cnode->objects);
-    }
-
-    int ret = cceph_os_map_node_free_tree(&cnode->map, log_id);
+    ret = cceph_os_map_node_free_tree(&cnode->map, log_id);
     assert(log_id, ret == CCEPH_OK);
 
     free(cnode);
