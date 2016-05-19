@@ -27,8 +27,9 @@ int cceph_mem_store_object_node_new(
     bzero((*node)->oid, oid_length);
     strcpy((*node)->oid, oid);
 
-    (*node)->data = NULL;
+    (*node)->data   = NULL;
     (*node)->length = 0;
+    (*node)->map    = CCEPH_RB_ROOT;
 
     return CCEPH_OK;
 }
@@ -49,6 +50,9 @@ int cceph_mem_store_object_node_free(
         free(onode->data);
         onode->data = NULL;
     }
+
+    int ret = cceph_os_map_node_free_tree(&onode->map, log_id);
+    assert(log_id, ret == CCEPH_OK);
 
     free(onode);
     *node = NULL;

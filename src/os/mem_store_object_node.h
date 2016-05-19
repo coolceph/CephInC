@@ -5,9 +5,10 @@
 #include "os/types.h"
 
 typedef struct {
-    char* oid;
-    char* data;
-    int64_t length;
+    char*         oid;
+    char*         data;
+    int64_t       length;
+    cceph_rb_root map;
 
     cceph_rb_node node;
 } cceph_mem_store_object_node;
