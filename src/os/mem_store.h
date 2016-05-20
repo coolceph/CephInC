@@ -39,4 +39,34 @@ extern int cceph_mem_store_read_obj(
         char**               result_data,
         int64_t              log_id);
 
+extern int cceph_mem_store_read_coll_map(
+        cceph_object_store* os,
+        cceph_os_coll_id_t  cid,
+        cceph_rb_root*      map,
+        int64_t             log_id);
+
+extern int cceph_mem_store_read_coll_map_key(
+        cceph_object_store* os,
+        cceph_os_coll_id_t  cid,
+        const char*         key,
+        int32_t*            result_value_length,
+        char**              result_value,
+        int64_t             log_id);
+
+extern int cceph_mem_store_read_obj_map(
+        cceph_object_store* os,
+        cceph_os_coll_id_t  cid,
+        const char*         oid,
+        cceph_rb_root*      map,
+        int64_t             log_id);
+
+extern int cceph_mem_store_read_obj_map_key(
+        cceph_object_store* os,
+        cceph_os_coll_id_t  cid,
+        const char*         oid,
+        const char*         key,
+        int32_t*            result_value_length,
+        char**              result_value,
+        int64_t             log_id);
+
 #endif

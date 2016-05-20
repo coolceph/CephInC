@@ -425,3 +425,34 @@ int cceph_mem_store_read_obj(
 
     return CCEPH_OK;
 }
+extern int cceph_mem_store_read_coll_map(
+        cceph_object_store* os,
+        cceph_os_coll_id_t  cid,
+        cceph_rb_root*      map,
+        int64_t             log_id) {
+    assert(log_id, os  != NULL);
+    assert(log_id, map != NULL);
+
+    cceph_mem_store* mem_store = (cceph_mem_store*)os;
+
+    pthread_mutex_lock(&mem_store->lock);
+
+    LOG(LL_INFO, log_id, "Execute ReadCollectionMap op, cid %d, log_id %ld.",
+            cid, log_id);
+
+    cceph_mem_store_coll_node *cnode = NULL;
+    int ret = cceph_mem_store_coll_node_search(&mem_store->colls, cid, &cnode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute ReadCollectionMap failed, search cid %d failed, errno %d(%s).",
+                cid, ret, cceph_errno_str(ret));
+        pthread_mutex_unlock(&mem_store->lock);
+        return CCEPH_ERR_COLL_NOT_EXIST;
+    }
+
+    ret = cceph_os_map_update(map, &cnode->map, log_id);
+    assert(log_id, ret == CCEPH_OK);
+
+    pthread_mutex_unlock(&mem_store->lock);
+    return ret;
+}
+
