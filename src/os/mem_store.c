@@ -514,14 +514,16 @@ extern int cceph_mem_store_read_object_map(
         const char*         oid,
         cceph_rb_root*      map,
         int64_t             log_id) {
+
     assert(log_id, os  != NULL);
+    assert(log_id, oid != NULL);
     assert(log_id, map != NULL);
 
     cceph_mem_store* mem_store = (cceph_mem_store*)os;
     pthread_mutex_lock(&mem_store->lock);
 
-    LOG(LL_INFO, log_id, "Execute ReadObjectMap op, cid %d, log_id %ld.",
-            cid, log_id);
+    LOG(LL_INFO, log_id, "Execute ReadObjectMap op, cid %d, oid %s, log_id %ld.",
+            cid, oid, log_id);
 
     cceph_mem_store_coll_node *cnode = NULL;
     int ret = cceph_mem_store_coll_node_search(&mem_store->colls, cid, &cnode, log_id);
@@ -547,3 +549,68 @@ extern int cceph_mem_store_read_object_map(
     pthread_mutex_unlock(&mem_store->lock);
     return ret;
 }
+extern int cceph_mem_store_read_object_map_key(
+        cceph_object_store* os,
+        cceph_os_coll_id_t  cid,
+        const char*         oid,
+        const char*         key,
+        int32_t*            result_value_length,
+        char**              result_value,
+        int64_t             log_id) {
+
+    assert(log_id, os  != NULL);
+    assert(log_id, oid != NULL);
+    assert(log_id, key != NULL);
+    assert(log_id, result_value_length != NULL);
+    assert(log_id, result_value != NULL);
+    assert(log_id, *result_value == NULL);
+
+    cceph_mem_store* mem_store = (cceph_mem_store*)os;
+    pthread_mutex_lock(&mem_store->lock);
+
+    LOG(LL_INFO, log_id, "Execute ReadObjectMapKey op, cid %d, oid %s, log_id %ld.",
+            cid, oid, log_id);
+
+    cceph_mem_store_coll_node *cnode = NULL;
+    int ret = cceph_mem_store_coll_node_search(&mem_store->colls, cid, &cnode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute ReadObjectMapKey failed, search cid %d failed, errno %d(%s).",
+                cid, ret, cceph_errno_str(ret));
+        pthread_mutex_unlock(&mem_store->lock);
+        return CCEPH_ERR_COLL_NOT_EXIST;
+    }
+
+    cceph_mem_store_object_node *onode = NULL;
+    ret = cceph_mem_store_object_node_search(&cnode->objects, oid, &onode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute ReadObjectMapKey failed, search oid %s failed, errno %d(%s).",
+                oid, ret, cceph_errno_str(ret));
+        pthread_mutex_unlock(&mem_store->lock);
+        return ret;
+    }
+
+    cceph_os_map_node* map_node = NULL;
+    ret = cceph_os_map_node_search(&onode->map, key, &map_node, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute ReadObjectMapKey failed, key %d not found, errno %d(%s).",
+                key, ret, cceph_errno_str(ret));
+        pthread_mutex_unlock(&mem_store->lock);
+        return ret;
+    }
+
+    int32_t value_length = map_node->value_length;
+    *result_value = (char*)malloc(sizeof(char) * value_length);
+    if (*result_value == NULL) {
+        LOG(LL_ERROR, log_id, "Execute ReadObjectMapKey failed, no enough memory, errno %d(%s).",
+                ret, cceph_errno_str(ret));
+        pthread_mutex_unlock(&mem_store->lock);
+        return CCEPH_ERR_NO_ENOUGH_MEM;
+    }
+
+    *result_value_length = value_length;
+    memcpy(*result_value, map_node->value, value_length);
+
+    pthread_mutex_unlock(&mem_store->lock);
+    return ret;
+}
+
