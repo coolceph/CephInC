@@ -508,3 +508,42 @@ extern int cceph_mem_store_read_coll_map_key(
     return ret;
 }
 
+extern int cceph_mem_store_read_object_map(
+        cceph_object_store* os,
+        cceph_os_coll_id_t  cid,
+        const char*         oid,
+        cceph_rb_root*      map,
+        int64_t             log_id) {
+    assert(log_id, os  != NULL);
+    assert(log_id, map != NULL);
+
+    cceph_mem_store* mem_store = (cceph_mem_store*)os;
+    pthread_mutex_lock(&mem_store->lock);
+
+    LOG(LL_INFO, log_id, "Execute ReadObjectMap op, cid %d, log_id %ld.",
+            cid, log_id);
+
+    cceph_mem_store_coll_node *cnode = NULL;
+    int ret = cceph_mem_store_coll_node_search(&mem_store->colls, cid, &cnode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute ReadObjectMap failed, search cid %d failed, errno %d(%s).",
+                cid, ret, cceph_errno_str(ret));
+        pthread_mutex_unlock(&mem_store->lock);
+        return ret;
+    }
+
+    cceph_mem_store_object_node *onode = NULL;
+    ret = cceph_mem_store_object_node_search(&cnode->objects, oid, &onode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute ReadObjectMap failed, search oid %s failed, errno %d(%s).",
+                oid, ret, cceph_errno_str(ret));
+        pthread_mutex_unlock(&mem_store->lock);
+        return ret;
+    }
+
+    ret = cceph_os_map_update(map, &onode->map, log_id);
+    assert(log_id, ret == CCEPH_OK);
+
+    pthread_mutex_unlock(&mem_store->lock);
+    return ret;
+}
