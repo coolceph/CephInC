@@ -15,9 +15,15 @@ cceph_os_funcs* cceph_mem_store_get_funcs() {
     cceph_os_funcs *os_funcs = (cceph_os_funcs*)malloc(sizeof(cceph_os_funcs));
     bzero(os_funcs, sizeof(cceph_os_funcs));
 
-    os_funcs->mount       = cceph_mem_store_mount;
-    os_funcs->submit_tran = cceph_mem_store_submit_tran;
-    os_funcs->read_obj    = cceph_mem_store_read_obj;
+    os_funcs->mount             = cceph_mem_store_mount;
+    os_funcs->submit_tran       = cceph_mem_store_submit_tran;
+    os_funcs->read_obj          = cceph_mem_store_read_obj;
+
+    os_funcs->read_coll_map     = cceph_mem_store_read_coll_map;
+    os_funcs->read_coll_map_key = cceph_mem_store_read_coll_map_key;
+
+    os_funcs->read_obj_map      = cceph_mem_store_read_obj_map;
+    os_funcs->read_obj_map_key  = cceph_mem_store_read_obj_map_key;
 
     return os_funcs;
 }
@@ -454,7 +460,7 @@ extern int cceph_mem_store_read_coll_map(
     pthread_mutex_unlock(&mem_store->lock);
     return ret;
 }
-extern int cceph_mem_store_read_coll_map_key(
+int cceph_mem_store_read_coll_map_key(
         cceph_object_store* os,
         cceph_os_coll_id_t  cid,
         const char*         key,
@@ -508,7 +514,7 @@ extern int cceph_mem_store_read_coll_map_key(
     return ret;
 }
 
-extern int cceph_mem_store_read_object_map(
+extern int cceph_mem_store_read_obj_map(
         cceph_object_store* os,
         cceph_os_coll_id_t  cid,
         const char*         oid,
@@ -549,7 +555,7 @@ extern int cceph_mem_store_read_object_map(
     pthread_mutex_unlock(&mem_store->lock);
     return ret;
 }
-extern int cceph_mem_store_read_object_map_key(
+int cceph_mem_store_read_obj_map_key(
         cceph_object_store* os,
         cceph_os_coll_id_t  cid,
         const char*         oid,
