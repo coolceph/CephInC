@@ -356,3 +356,137 @@ TEST_F(os, object_write_and_read_multithread) {
         EXPECT_EQ(CCEPH_OK, ret);
     }
 }
+TEST_F(os, coll_map) {
+    int64_t             log_id = 122;
+    cceph_os_coll_id_t  cid    = 1;
+    cceph_os_tran*      tran   = NULL;
+    cceph_object_store* os     = GetObjectStore(log_id);
+    cceph_os_funcs*     funcs  = GetObjectStoreFuncs();
+
+    int ret = funcs->mount(os, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    //Create Collection: Success
+    ret = cceph_os_tran_new(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_coll_create(tran, cid,  log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = funcs->submit_tran(os, tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_tran_free(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    //Initial Input Node and map
+    cceph_rb_root input_map = CCEPH_RB_ROOT;
+    cceph_os_map_node* node1 = NULL;
+    ret = cceph_os_map_node_new("key1", "value1", strlen("value1"), &node1, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_map_node_insert(&input_map, node1, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    //Map: Not Exist
+    cceph_os_map_node* result_node = NULL;
+    cceph_rb_root      result_map  = CCEPH_RB_ROOT;
+    ret = funcs->read_coll_map(os, cid, &result_map, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_TRUE(CCEPH_RB_EMPTY_ROOT(&result_map));
+    ret = cceph_os_map_node_search(&result_map, "key1", &result_node, log_id);
+    EXPECT_EQ(CCEPH_ERR_MAP_NODE_NOT_EXIST, ret);
+
+    //MapKey: Not Exist
+    char*   result_value  = NULL;
+    int32_t result_length = 0;
+    ret = funcs->read_coll_map_key(os, cid, "key1", &result_length, &result_value, log_id);
+    EXPECT_EQ(CCEPH_ERR_MAP_NODE_NOT_EXIST, ret);
+    EXPECT_EQ((char*)NULL, result_value);
+    EXPECT_EQ(0, result_length);
+
+    //Map Add
+    ret = cceph_os_tran_new(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_coll_map(tran, cid, &input_map, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = funcs->submit_tran(os, tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_tran_free(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    //Map: Exist, Value = "value1"
+    result_node = NULL;
+    result_map  = CCEPH_RB_ROOT;
+    ret = funcs->read_coll_map(os, cid, &result_map, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_FALSE(CCEPH_RB_EMPTY_ROOT(&result_map));
+    ret = cceph_os_map_node_search(&result_map, "key1", &result_node, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_STREQ("value1", result_node->value);
+    EXPECT_EQ(strlen("value1"), result_node->value_length);
+
+    //MapKey: Exist, value = "value1"
+    result_value  = NULL;
+    result_length = 0;
+    ret = funcs->read_coll_map_key(os, cid, "key1", &result_length, &result_value, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_STREQ("value1", result_value);
+    EXPECT_EQ(strlen("value1"), result_length);
+
+    //Map Update
+    node1->value        = (char*)"value1_changed";
+    node1->value_length = strlen("value1_changed");
+    ret = cceph_os_tran_new(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_coll_map(tran, cid, &input_map, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = funcs->submit_tran(os, tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_tran_free(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    //Map: Exist, Value = "value1_changed"
+    result_node = NULL;
+    result_map  = CCEPH_RB_ROOT;
+    ret = funcs->read_coll_map(os, cid, &result_map, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_FALSE(CCEPH_RB_EMPTY_ROOT(&result_map));
+    ret = cceph_os_map_node_search(&result_map, "key1", &result_node, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_STREQ("value1_changed", result_node->value);
+    EXPECT_EQ(strlen("value1_changed"), result_node->value_length);
+
+    //MapKey: Exist, value = "value1_changed"
+    result_value  = NULL;
+    result_length = 0;
+    ret = funcs->read_coll_map_key(os, cid, "key1", &result_length, &result_value, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_STREQ("value1_changed", result_value);
+    EXPECT_EQ(strlen("value1_changed"), result_length);
+
+    //Map Remove
+    node1->value        = NULL;
+    node1->value_length = 0;
+    ret = cceph_os_tran_new(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_coll_map(tran, cid, &input_map, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = funcs->submit_tran(os, tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_tran_free(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    //Map: Not Exist
+    result_node = NULL;
+    result_map  = CCEPH_RB_ROOT;
+    ret = funcs->read_coll_map(os, cid, &result_map, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_TRUE(CCEPH_RB_EMPTY_ROOT(&result_map));
+    ret = cceph_os_map_node_search(&result_map, "key1", &result_node, log_id);
+    EXPECT_EQ(CCEPH_ERR_MAP_NODE_NOT_EXIST, ret);
+
+    //MapKey: Not Exist
+    result_value  = NULL;
+    result_length = 0;
+    ret = funcs->read_coll_map_key(os, cid, "key1", &result_length, &result_value, log_id);
+    EXPECT_EQ(CCEPH_ERR_MAP_NODE_NOT_EXIST, ret);
+    EXPECT_EQ((char*)NULL, result_value);
+    EXPECT_EQ(0, result_length);
+}
