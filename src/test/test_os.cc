@@ -195,7 +195,7 @@ void* write_read_thread_func(void* arg_ptr) {
     ret = funcs->read_obj(os, cid, oid, 0, -1, &result_length, &result_buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(length, result_length);
-    EXPECT_STREQ(buffer, result_buffer);
+    EXPECT_TRUE(strncmp(buffer, result_buffer, length) == 0);
 
     //Remove Object
     ret = cceph_os_tran_new(&tran, log_id);
