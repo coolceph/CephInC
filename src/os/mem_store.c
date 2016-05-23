@@ -152,7 +152,7 @@ int cceph_mem_store_do_op_coll_map(
 
     ret = cceph_os_map_update(&cnode->map, op->map, log_id);
     if (ret != CCEPH_OK) {
-        LOG(LL_ERROR, log_id, "Execute RemoveCollection op failed, update coll map failed, errno %d(%s).",
+        LOG(LL_ERROR, log_id, "Execute CollectionMap op failed, update coll map failed, errno %d(%s).",
                 op->cid, ret, cceph_errno_str(ret));
         return ret;
     }
@@ -280,6 +280,45 @@ int cceph_mem_store_do_op_obj_remove(
 
     return CCEPH_OK;
 }
+int cceph_mem_store_do_op_obj_map(
+        cceph_mem_store*   os,
+        cceph_os_tran_op*  op,
+        int64_t            log_id) {
+
+    assert(log_id, os != NULL);
+    assert(log_id, op != NULL);
+    assert(log_id, op->cid >= 0);
+    assert(log_id, op->oid != NULL);
+    assert(log_id, op->map != NULL);
+
+    LOG(LL_INFO, log_id, "Execute ObjectMap op, cid %d, oid %s, log_id %ld.", op->cid, op->oid, op->log_id);
+
+    log_id = op->log_id; //We will use op's log_id from here
+
+    cceph_mem_store_coll_node *cnode = NULL;
+    int ret = cceph_mem_store_coll_node_search(&os->colls, op->cid, &cnode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute ObjectMap op failed, cid %d not existed.", op->cid);
+        return ret;
+    }
+
+    cceph_mem_store_object_node *onode = NULL;
+    ret = cceph_mem_store_object_node_search(&cnode->objects, op->oid, &onode, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute ObjectMap failed, search oid %d failed, errno %d(%s).",
+                op->oid, ret, cceph_errno_str(ret));
+        return ret;
+    }
+
+    ret = cceph_os_map_update(&onode->map, op->map, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Execute ObjectMap op failed, update object map failed, errno %d(%s).",
+                op->cid, ret, cceph_errno_str(ret));
+        return ret;
+    }
+
+    return CCEPH_OK;
+}
 
 int cceph_mem_store_do_op(
         cceph_mem_store*  os,
@@ -312,6 +351,9 @@ int cceph_mem_store_do_op(
             break;
         case CCEPH_OS_OP_OBJ_REMOVE:
             ret = cceph_mem_store_do_op_obj_remove(os, op, log_id);
+            break;
+        case CCEPH_OS_OP_OBJ_MAP:
+            ret = cceph_mem_store_do_op_obj_map(os, op, log_id);
             break;
         default:
             ret = CCEPH_ERR_UNKNOWN_OS_OP;
