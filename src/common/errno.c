@@ -26,6 +26,10 @@ const char* cceph_errno_str(int err_no) {
             return "ObjectAlreadyExist";
         case CCEPH_ERR_OBJECT_NOT_EXIST:
             return "ObjectNotExist";
+        case CCEPH_ERR_MAP_NODE_ALREADY_EXIST:
+            return "MapNodeAlreadyExist";
+        case  CCEPH_ERR_MAP_NODE_NOT_EXIST:
+            return "MapNodeNotExist";
         case CCEPH_ERR_UNKNOWN_OS_OP:
             return "UnknownOsOp";
     }
