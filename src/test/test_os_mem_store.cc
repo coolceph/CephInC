@@ -11,6 +11,19 @@ TEST(os_mem_store, cceph_mem_store_new) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_NE((cceph_mem_store*)NULL, store);
 }
+TEST(os_mem_store, cceph_mem_store_get_funcs) {
+    cceph_os_funcs *funcs = cceph_mem_store_get_funcs();
+
+    EXPECT_TRUE(funcs->mount             == cceph_mem_store_mount);
+    EXPECT_TRUE(funcs->submit_tran       == cceph_mem_store_submit_tran);
+    EXPECT_TRUE(funcs->read_obj          == cceph_mem_store_read_obj);
+
+    EXPECT_TRUE(funcs->read_coll_map     == cceph_mem_store_read_coll_map);
+    EXPECT_TRUE(funcs->read_coll_map_key == cceph_mem_store_read_coll_map_key);
+
+    EXPECT_TRUE(funcs->read_obj_map      == cceph_mem_store_read_obj_map);
+    EXPECT_TRUE(funcs->read_obj_map_key  == cceph_mem_store_read_obj_map_key);
+}
 
 class os : public ::testing::Test {
 public:
