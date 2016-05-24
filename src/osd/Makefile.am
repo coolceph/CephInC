@@ -3,7 +3,8 @@ libosd_la_SOURCES =   \
 
 libosd_la_ADLDD = \
 	$(LIBCOMMON)  \
-	$(LIBMESSAGE) 
+	$(LIBMESSAGE) \
+	$(LIBOS)
 
 libosd_la_LIBADD = \
 	-lpthread

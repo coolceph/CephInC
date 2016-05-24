@@ -56,11 +56,11 @@ int do_object_write_req(cceph_messenger* messenger, cceph_conn_id_t conn_id, cce
     int64_t log_id = req->header.log_id;
 
     int32_t client_id = req->client_id;
-    int64_t req_id = req->req_id;
-    char* oid = req->oid;
-    int64_t length = req->length;
-    int64_t offset = req->offset;
-    char* data = req->data;
+    int64_t req_id    = req->req_id;
+    char*   oid       = req->oid;
+    int64_t length    = req->length;
+    int64_t offset    = req->offset;
+    char* data        = req->data;
 
     LOG(LL_INFO, log_id, "do_req_write, client_id %d, req_id %ld, oid %s, offset %lu, length %lu.",
             client_id, req_id, oid, offset, length);

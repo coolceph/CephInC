@@ -6,11 +6,11 @@
 typedef struct {
     cceph_msg_header header;
 
-    int32_t client_id;
-    int64_t req_id;
+    int32_t client_id; //src client
+    int64_t req_id;    //by client
 
     int16_t oid_size;
-    char* oid;
+    char*   oid;
 
     int64_t offset;
     int64_t length;
