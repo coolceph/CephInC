@@ -29,6 +29,12 @@ extern int cceph_mem_store_submit_tran(
         cceph_os_tran*       tran,
         int64_t              log_id);
 
+extern int cceph_mem_store_list_coll(
+        cceph_object_store*  os,
+        int64_t*             coll_id_list_length,
+        cceph_os_coll_id_t** coll_id_list,
+        int64_t              log_id);
+
 extern int cceph_mem_store_read_obj(
         cceph_object_store*  os,
         cceph_os_coll_id_t   cid,

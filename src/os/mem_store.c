@@ -17,11 +17,13 @@ cceph_os_funcs* cceph_mem_store_get_funcs() {
 
     os_funcs->mount             = cceph_mem_store_mount;
     os_funcs->submit_tran       = cceph_mem_store_submit_tran;
-    os_funcs->read_obj          = cceph_mem_store_read_obj;
+
+    os_funcs->list_coll         = cceph_mem_store_list_coll;
 
     os_funcs->read_coll_map     = cceph_mem_store_read_coll_map;
     os_funcs->read_coll_map_key = cceph_mem_store_read_coll_map_key;
 
+    os_funcs->read_obj          = cceph_mem_store_read_obj;
     os_funcs->read_obj_map      = cceph_mem_store_read_obj_map;
     os_funcs->read_obj_map_key  = cceph_mem_store_read_obj_map_key;
 
@@ -473,6 +475,55 @@ int cceph_mem_store_read_obj(
 
     return CCEPH_OK;
 }
+
+extern int cceph_mem_store_list_coll(
+        cceph_object_store*  os,
+        int64_t*             coll_id_list_length,
+        cceph_os_coll_id_t** coll_id_list,
+        int64_t              log_id) {
+
+    assert(log_id, os != NULL);
+    assert(log_id, coll_id_list_length != NULL);
+    assert(log_id, coll_id_list != NULL);
+    assert(log_id, *coll_id_list = NULL);
+
+    cceph_mem_store* mem_store = (cceph_mem_store*)os;
+    pthread_mutex_lock(&mem_store->lock);
+
+    LOG(LL_INFO, log_id, "Execute ListCollection op, log_id %ld.", log_id);
+
+    int ret = CCEPH_OK;
+    int coll_count = 0;
+    cceph_rb_node* coll_rb_node = cceph_rb_first(&mem_store->colls);
+    while (coll_rb_node) {
+        coll_count++;
+        coll_rb_node = cceph_rb_next(coll_rb_node);
+    }
+
+    *coll_id_list = (cceph_os_coll_id_t*)malloc(sizeof(cceph_os_coll_id_t) * coll_count);
+    if (*coll_id_list == NULL) {
+        LOG(LL_ERROR, log_id, "Execute ListCollection failed, No enough memory");
+        pthread_mutex_unlock(&mem_store->lock);
+        return CCEPH_ERR_NO_ENOUGH_MEM;
+    }
+
+    *coll_id_list_length = coll_count;
+
+    coll_rb_node = cceph_rb_first(&mem_store->colls);
+    cceph_os_coll_id_t* coll_id_list_ptr = *coll_id_list;
+    while (coll_rb_node) {
+        cceph_mem_store_coll_node *cnode = cceph_container_of(coll_rb_node, cceph_mem_store_coll_node, node);
+
+        *coll_id_list_ptr = cnode->cid;
+        coll_id_list_ptr++;
+
+        coll_rb_node = cceph_rb_next(coll_rb_node);
+    }
+
+    pthread_mutex_unlock(&mem_store->lock);
+    return ret;
+}
+
 extern int cceph_mem_store_read_coll_map(
         cceph_object_store* os,
         cceph_os_coll_id_t  cid,

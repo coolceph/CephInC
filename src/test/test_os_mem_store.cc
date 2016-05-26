@@ -16,6 +16,9 @@ TEST(os_mem_store, cceph_mem_store_get_funcs) {
 
     EXPECT_TRUE(funcs->mount             == cceph_mem_store_mount);
     EXPECT_TRUE(funcs->submit_tran       == cceph_mem_store_submit_tran);
+
+    EXPECT_TRUE(funcs->list_coll         == cceph_mem_store_list_coll);
+
     EXPECT_TRUE(funcs->read_obj          == cceph_mem_store_read_obj);
 
     EXPECT_TRUE(funcs->read_coll_map     == cceph_mem_store_read_coll_map);
