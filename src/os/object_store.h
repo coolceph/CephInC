@@ -19,7 +19,7 @@ typedef int (*cceph_os_submit_tran_func)(
 
 typedef int (*cceph_os_list_coll_func)(
         cceph_object_store*  os,
-        int64_t*             coll_id_list_length,
+        int32_t*             coll_id_list_length,
         cceph_os_coll_id_t** coll_id_list,
         int64_t              log_id);
 

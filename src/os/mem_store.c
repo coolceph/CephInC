@@ -478,14 +478,14 @@ int cceph_mem_store_read_obj(
 
 extern int cceph_mem_store_list_coll(
         cceph_object_store*  os,
-        int64_t*             coll_id_list_length,
+        int32_t*             coll_id_list_length,
         cceph_os_coll_id_t** coll_id_list,
         int64_t              log_id) {
 
     assert(log_id, os != NULL);
     assert(log_id, coll_id_list_length != NULL);
     assert(log_id, coll_id_list != NULL);
-    assert(log_id, *coll_id_list = NULL);
+    assert(log_id, *coll_id_list == NULL);
 
     cceph_mem_store* mem_store = (cceph_mem_store*)os;
     pthread_mutex_lock(&mem_store->lock);

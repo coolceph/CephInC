@@ -54,6 +54,41 @@ TEST_F(os, coll_create_and_remove) {
     EXPECT_EQ(CCEPH_OK, ret);
 }
 
+TEST_F(os, coll_list) {
+    int64_t             log_id = 122;
+    cceph_os_tran*      tran   = NULL;
+    cceph_object_store* os     = GetObjectStore(log_id);
+    cceph_os_funcs*     funcs  = GetObjectStoreFuncs();
+
+    int ret = funcs->mount(os, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    //Create Collection: Success
+    ret = cceph_os_tran_new(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_coll_create(tran, 1,  log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_coll_create(tran, 2,  log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_coll_create(tran, 3,  log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = funcs->submit_tran(os, tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_tran_free(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    int coll_list_length = 0;
+    cceph_os_coll_id_t* coll_list = NULL;
+    ret = funcs->list_coll(os, &coll_list_length, &coll_list, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_EQ(3, coll_list_length);
+    for (int i = 0; i < coll_list_length; i++) {
+        cceph_os_coll_id_t id = coll_list[i];
+        EXPECT_TRUE(id == 1 || id == 2 || id == 3);
+    }
+
+}
+
 TEST_F(os, object_touch_and_remove) {
     int64_t             log_id        = 122;
     cceph_os_coll_id_t  cid           = 1;

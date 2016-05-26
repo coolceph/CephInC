@@ -31,7 +31,7 @@ extern int cceph_mem_store_submit_tran(
 
 extern int cceph_mem_store_list_coll(
         cceph_object_store*  os,
-        int64_t*             coll_id_list_length,
+        int32_t*             coll_id_list_length,
         cceph_os_coll_id_t** coll_id_list,
         int64_t              log_id);
 
