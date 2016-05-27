@@ -10,6 +10,7 @@ typedef struct {
 
     int osd_msg_workthread_count;
     int osd_reply_write_commit_to_client;
+    int osd_port_base;
 } cceph_option;
 
 extern cceph_option g_cceph_option;

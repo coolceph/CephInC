@@ -15,6 +15,7 @@ int cceph_option_init() {
 
     g_cceph_option.osd_msg_workthread_count = 2;
     g_cceph_option.osd_reply_write_commit_to_client = 1;
+    g_cceph_option.osd_port_base = 10000;
     return 0;
 }
 int cceph_option_load(const char* option_path, int64_t log_id) {

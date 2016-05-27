@@ -15,8 +15,8 @@ int main(int argc, char *argv[]) {
 
     int32_t log_prefix = 201;
     cceph_log_initial_id(log_prefix);
-
     int64_t log_id = cceph_log_new_id();
+
     int msg_work_thread_count = g_cceph_option.osd_msg_workthread_count;
     cceph_messenger* msger = cceph_messenger_new(&cceph_osd_process_message, NULL, msg_work_thread_count, log_id);
     cceph_server_messenger *smsger = new_cceph_server_messenger(msger, port, log_id);
