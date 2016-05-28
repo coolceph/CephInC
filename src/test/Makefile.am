@@ -71,6 +71,11 @@ unittest_os_mem_store_object_node_LDADD = $(LIBOS) $(LIBCOMMON) -lm $(UNITTEST_L
 unittest_os_mem_store_object_node_CXXFLAGS = $(UNITTEST_CXXFLAGS)
 check_PROGRAMS += unittest_os_mem_store_object_node
 
+unittest_osd_osd_SOURCES = test/test_osd_osd.cc
+unittest_osd_osd_LDADD = $(LIBOSD) $(LIBMESSAGE) $(LIBOS) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
+unittest_osd_osd_CXXFLAGS = $(UNITTEST_CXXFLAGS)
+check_PROGRAMS += unittest_osd_osd
+
 unittest_client_client_SOURCES = test/test_client_client.cc
 unittest_client_client_LDADD = $(LIBCLIENT) $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_client_client_CXXFLAGS = $(UNITTEST_CXXFLAGS)
