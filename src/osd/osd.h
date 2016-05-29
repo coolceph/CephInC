@@ -26,7 +26,9 @@ extern int cceph_osd_initial(
 
 extern int cceph_osd_create(cceph_osd* osd);
 
-extern int cceph_osd_start(cceph_osd* osd);
+extern int cceph_osd_start(
+        cceph_osd* osd,
+        int64_t    log_id);
 
 extern int cceph_osd_process_message(
         cceph_messenger* cceph_messenger,

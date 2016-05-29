@@ -1,28 +1,55 @@
+#include "common/errno.h"
 #include "common/log.h"
 #include "common/option.h"
 
 #include "message/server_messenger.h"
+
+#include "os/object_store.h"
+#include "os/mem_store.h"
 
 #include "osd/osd.h"
 
 int main(int argc, char *argv[]) {
 
     if (argc != 2) {
-        fprintf(stderr, "Usage: %s [port]\n", argv[0]);
+        fprintf(stderr, "Usage: cceph_osd osd_id\n");
         exit(EXIT_FAILURE);
     }
-    int port = atoi(argv[1]);
+    cceph_osd_id_t osd_id = atoi(argv[1]);
 
-    int32_t log_prefix = 201;
+    int32_t log_prefix = 200000 + osd_id;
     cceph_log_initial_id(log_prefix);
+    cceph_option_init();
+
     int64_t log_id = cceph_log_new_id();
 
-    int msg_work_thread_count = g_cceph_option.osd_msg_workthread_count;
-    cceph_messenger* msger = cceph_messenger_new(&cceph_osd_process_message, NULL, msg_work_thread_count, log_id);
-    cceph_server_messenger *smsger = new_cceph_server_messenger(msger, port, log_id);
+    cceph_mem_store *mem_store = NULL;
+    int ret = cceph_mem_store_new(&mem_store, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Create MemStore failed, errno %d(%s)",
+                ret, cceph_errno_str(ret));
+        return ret;
+    }
 
-    cceph_server_messenger_start(smsger, log_id);
+    //TODO: This should be chose by config
+    cceph_object_store os       = (cceph_object_store*)mem_store;
+    cceph_os_funcs*    os_funcs = cceph_mem_store_get_funcs();
 
-    return 0;
+    cceph_osd* osd = NULL;
+    ret = cceph_osd_initial(&osd, osd_id, os, os_funcs, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Initial OSD failed, errno %d(%s)",
+                ret, cceph_errno_str(ret));
+        return ret;
+    }
+
+    ret = cceph_osd_start(osd, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Start OSD failed, errno %d(%s)",
+                ret, cceph_errno_str(ret));
+        return ret;
+    }
+
+    return ret;
 }
 

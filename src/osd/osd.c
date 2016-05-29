@@ -151,6 +151,11 @@ int cceph_osd_initial(
 
     return CCEPH_OK;
 }
+extern int cceph_osd_start(
+        cceph_osd* osd,
+        int64_t    log_id) {
+    return cceph_server_messenger_start(osd->smsger, log_id);
+}
 
 int cceph_osd_process_message(
         cceph_messenger* messenger,
