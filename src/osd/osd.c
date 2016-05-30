@@ -154,6 +154,8 @@ int cceph_osd_initial(
 extern int cceph_osd_start(
         cceph_osd* osd,
         int64_t    log_id) {
+    assert(log_id, osd != NULL);
+
     return cceph_server_messenger_start(osd->smsger, log_id);
 }
 
