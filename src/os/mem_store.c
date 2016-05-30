@@ -52,6 +52,9 @@ int cceph_mem_store_mount(
         int64_t             log_id) {
     //MemStore don't need mount
     assert(log_id, os != NULL);
+
+    LOG(LL_NOTICE, "MemStore Mounted.");
+
     return CCEPH_OK;
 }
 

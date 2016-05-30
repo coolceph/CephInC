@@ -31,8 +31,8 @@ int main(int argc, char *argv[]) {
     }
 
     //TODO: This should be chose by config
-    cceph_object_store os       = (cceph_object_store*)mem_store;
-    cceph_os_funcs*    os_funcs = cceph_mem_store_get_funcs();
+    cceph_object_store* os       = (cceph_object_store*)mem_store;
+    cceph_os_funcs*     os_funcs = cceph_mem_store_get_funcs();
 
     cceph_osd* osd = NULL;
     ret = cceph_osd_initial(&osd, osd_id, os, os_funcs, log_id);

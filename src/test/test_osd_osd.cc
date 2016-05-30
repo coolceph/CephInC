@@ -14,7 +14,7 @@ TEST(osd, initial) {
 
     cceph_osd*          osd = NULL;
     cceph_osd_id_t      osd_id = 45;
-    cceph_object_store* os = (void**)&mem_store;
+    cceph_object_store* os = (cceph_object_store*)&mem_store;
     cceph_os_funcs*     funcs = cceph_mem_store_get_funcs();
     int64_t             log_id = 122;
 
