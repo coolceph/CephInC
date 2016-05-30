@@ -26,12 +26,16 @@
     _cceph_log(level, log_id, __FILE__, __LINE__, fmt, ##args);     \
 }                                                                   \
 
+#define CCEPH_LOG_MON_PREFIX_BASE    100000
+#define CCEPH_LOG_OSD_PREFIX_BASE    200000
+#define CCEPH_LOG_CLIENT_PREFIX_BASE 300000
+
 //#define LOG(level, fmt, args...)  { if (level <= LL_ERROR) { fprintf(stderr, fmt, ##args); fprintf(stderr, "\n"); } else { fprintf(stdout, fmt, ##args); fprintf(stdout, "\n"); } }
 //#define LOGV(level, fmt, args...) if (level <= LOGGER.log_level()) LOGGER.Write(level, __FILE__, __LINE__, __FUNCTION__, fmt, ##args)L
 
 void _cceph_log(int level, int64_t log_id, const char* file, int length, const char* fmt, ...);
 
-extern void cceph_log_initial_id(int seed);
+extern void cceph_log_initial(int seed);
 extern int64_t cceph_log_new_id();
 
 #endif

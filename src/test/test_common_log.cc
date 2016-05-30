@@ -6,7 +6,7 @@ extern "C" {
 
 TEST(common_log, log_id) {
     int prefix = 1;
-    cceph_log_initial_id(prefix);
+    cceph_log_initial(prefix);
 
     int64_t log_id_1 = cceph_log_new_id();
     EXPECT_TRUE(log_id_1 >= 10000000000);

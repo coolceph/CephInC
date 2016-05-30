@@ -7,11 +7,11 @@
 
 cceph_atomic64_t cceph_g_log_id = { 0 };
 
-void cceph_log_initial_id(int32_t prefix) {
+void cceph_log_initial(int32_t prefix) {
     srand((unsigned)time(0));
 
     int64_t log_id = prefix;
-    log_id = (log_id * 10000000000) + rand();
+    log_id = (log_id * 10000000000) + rand() % 10000000000;
 
     cceph_atomic_set64(&cceph_g_log_id, log_id);
 }

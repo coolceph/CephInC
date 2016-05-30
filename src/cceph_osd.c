@@ -17,8 +17,7 @@ int main(int argc, char *argv[]) {
     }
     cceph_osd_id_t osd_id = atoi(argv[1]);
 
-    int32_t log_prefix = 200000 + osd_id;
-    cceph_log_initial_id(log_prefix);
+    cceph_log_initial(CCEPH_LOG_OSD_PREFIX_BASE + osd_id);
     cceph_option_initial();
 
     int64_t log_id = cceph_log_new_id();
