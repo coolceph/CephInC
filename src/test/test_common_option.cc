@@ -4,8 +4,8 @@ extern "C" {
 
 #include "gtest/gtest.h"
 
-TEST(common_option, cceph_option_init) {
-    int ret = cceph_option_init();
+TEST(common_option, cceph_option_initial) {
+    int ret = cceph_option_initial();
     EXPECT_EQ(0, ret);
 
     EXPECT_EQ(2, g_cceph_option.client_msg_workthread_count);
@@ -13,4 +13,5 @@ TEST(common_option, cceph_option_init) {
 
     EXPECT_EQ(2, g_cceph_option.osd_msg_workthread_count);
     EXPECT_EQ(1, g_cceph_option.osd_reply_write_commit_to_client);
+    EXPECT_EQ(10000, g_cceph_option.osd_port_base);
 }

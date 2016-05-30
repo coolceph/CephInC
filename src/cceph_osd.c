@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
 
     int32_t log_prefix = 200000 + osd_id;
     cceph_log_initial_id(log_prefix);
-    cceph_option_init();
+    cceph_option_initial();
 
     int64_t log_id = cceph_log_new_id();
 

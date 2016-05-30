@@ -8,7 +8,7 @@
 
 cceph_option g_cceph_option;
 
-int cceph_option_init() {
+int cceph_option_initial() {
     bzero(&g_cceph_option, sizeof(cceph_option));
     g_cceph_option.client_msg_workthread_count = 2;
     g_cceph_option.client_debug_check_duplicate_req_when_ack = 1;

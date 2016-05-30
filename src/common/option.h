@@ -15,7 +15,7 @@ typedef struct {
 
 extern cceph_option g_cceph_option;
 
-extern int cceph_option_init();
+extern int cceph_option_initial();
 
 extern int cceph_option_load(const char* option_path, int64_t log_id);
 
