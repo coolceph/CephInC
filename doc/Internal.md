@@ -41,3 +41,10 @@ For examples:
     LOG(LL_ERROR, log_id, "Execute CreateCollection op failed, errno %d(%s).",
             op->cid, ret, cceph_errno_str(ret));
 
+# Memory Malloc/Free of ObjectStore #
+
+The Transaction will use the ref of the op data directly, so before a transaction finished, the data of the transaction op should not be freed.
+
+Ordinary, the caller such as OSD should keep the ref of the transacation op data, and free them when the op finished.
+
+When execute a read op, The caller should keep the ref of the results and free them when they are unused.
