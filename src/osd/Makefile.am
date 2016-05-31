@@ -1,4 +1,5 @@
 libosd_la_SOURCES =   \
+	osd/types.c       \
 	osd/osd.c
 
 libosd_la_ADLDD = \

@@ -7,15 +7,7 @@
 
 #include "os/object_store.h"
 
-typedef struct {
-    cceph_osd_id_t          osd_id;
-
-    cceph_object_store*     os;
-    cceph_os_funcs*         os_funcs;
-
-    cceph_messenger*        msger;
-    cceph_server_messenger* smsger;
-} cceph_osd;
+#include "osd/types.h"
 
 extern int cceph_osd_initial(
         cceph_osd**         osd,
