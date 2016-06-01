@@ -1,4 +1,5 @@
 extern "C" {
+#include "common/errno.h"
 #include "message/server_messenger.h"
 #include "message/msg_write_obj.h"
 }
@@ -12,7 +13,9 @@ TEST(server_messenger, new_cceph_server_messenger) {
     int port = 12;
     int64_t log_id = 345;
 
-    cceph_server_messenger* smsger = new_cceph_server_messenger(&cceph_messenger, port, log_id);
+    cceph_server_messenger* smsger = NULL;
+    int ret = cceph_server_messenger_new(&smsger, &cceph_messenger, port, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_NE((cceph_server_messenger*)NULL, smsger);
     EXPECT_EQ(&cceph_messenger, smsger->messenger);
     EXPECT_EQ(port, smsger->port);

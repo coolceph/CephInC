@@ -586,9 +586,12 @@ void* server_messenger_thread_func(void* arg_ptr){
     cceph_messenger* messenger = arg->messenger;
     int port = arg->port;
 
-    cceph_server_messenger *cceph_server_messenger = new_cceph_server_messenger(messenger, port, log_id);
-    int ret = cceph_server_messenger_start(cceph_server_messenger, log_id);
-    EXPECT_EQ(0, ret);
+    cceph_server_messenger *cceph_server_messenger = NULL;
+    int ret = cceph_server_messenger_new(&cceph_server_messenger, messenger, port, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    ret = cceph_server_messenger_start(cceph_server_messenger, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
 
     return NULL;
 }

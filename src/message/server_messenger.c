@@ -16,34 +16,40 @@
 #include "common/errno.h"
 #include "common/log.h"
 
-cceph_server_messenger* new_cceph_server_messenger(
-        cceph_messenger* messenger,
-        int port,
-        int64_t log_id) {
+int cceph_server_messenger_new(
+        cceph_server_messenger** smsger,
+        cceph_messenger*         messenger,
+        int                      port,
+        int64_t                  log_id) {
 
+    assert(log_id, smsger != NULL);
+    assert(log_id, *smsger == NULL);
     assert(log_id, messenger != NULL);
     assert(log_id, messenger->state == CCEPH_MESSENGER_STATE_UNKNOWN);
 
     cceph_server_messenger* server_messenger = (cceph_server_messenger*)malloc(sizeof(cceph_server_messenger));
     if (server_messenger == NULL) {
-        LOG(LL_FATAL, log_id, "Malloc cceph_server_messenger failed.");
-        return NULL;
+        LOG(LL_FATAL, log_id, "New cceph_server_messenger failed, no enough memory.");
+        return CCEPH_ERR_NO_ENOUGH_MEM;
     }
 
     bzero(server_messenger, sizeof(cceph_server_messenger));
     server_messenger->messenger = messenger;
     server_messenger->port = port;
     server_messenger->log_id = log_id;
-    return server_messenger;
+
+    *smsger = server_messenger;
+    return CCEPH_OK;
 }
-int free_cceph_server_messenger(
-        cceph_server_messenger** server_messenger, int64_t log_id) {
+int cceph_server_messenger_free(
+        cceph_server_messenger** server_messenger,
+        int64_t log_id) {
     assert(log_id, *server_messenger != NULL);
 
     free(*server_messenger);
     *server_messenger = NULL;
 
-    return 0;
+    return CCEPH_OK;
 }
 
 int bind_and_listen(cceph_server_messenger *server_messenger, int64_t log_id) {
@@ -108,13 +114,13 @@ int bind_and_listen(cceph_server_messenger *server_messenger, int64_t log_id) {
             break;
         }
     }
-    return 0;
+    return CCEPH_OK;
 }
 
 int cceph_server_messenger_start(
         cceph_server_messenger *server_messenger, int64_t log_id) {
     int ret = cceph_messenger_start(server_messenger->messenger, log_id);
-    if (ret == 0) {
+    if (ret == CCEPH_OK) {
         LOG(LL_INFO, log_id, "start messenger for server_messenger success.");
     } else {
         LOG(LL_ERROR, log_id, "start messenger for server_messenger failed. errno %d(%s).",
@@ -134,7 +140,7 @@ int cceph_server_messenger_stop(
         cceph_server_messenger *server_messenger, int64_t log_id) {
     //TODO: Do we actually need it?
     assert(log_id, server_messenger != NULL);
-    return 0;
+    return CCEPH_OK;
 }
 
 cceph_messenger* cceph_server_messenger_get_messenger(

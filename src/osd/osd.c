@@ -48,14 +48,17 @@ int cceph_osd_initial(
         return ret;
     }
 
-    cceph_server_messenger *smsger = new_cceph_server_messenger(
+    cceph_server_messenger *smsger = NULL;
+    ret = cceph_server_messenger_new(
+            &smsger,
             msger,
             g_cceph_option.osd_port_base + osd_id,
             log_id);
-    if (smsger == NULL) {
+    if (ret != CCEPH_OK) {
         free(*osd);
         cceph_messenger_free(&msger, log_id);
-        LOG(LL_ERROR, log_id, "Initial osd error, no enough memory");
+        LOG(LL_ERROR, log_id, "Initial osd error, new server messenger failed, errno %d(%s).",
+                ret, cceph_errno_str(ret));
         return CCEPH_ERR_NO_ENOUGH_MEM;
     }
 
