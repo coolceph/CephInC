@@ -1,4 +1,5 @@
 extern "C" {
+#include "common/errno.h"
 #include "common/option.h"
 }
 
@@ -6,7 +7,7 @@ extern "C" {
 
 TEST(common_option, cceph_option_initial) {
     int ret = cceph_option_initial();
-    EXPECT_EQ(0, ret);
+    EXPECT_EQ(CCEPH_OK, ret);
 
     EXPECT_EQ(2, g_cceph_option.client_msg_workthread_count);
     EXPECT_EQ(1, g_cceph_option.client_debug_check_duplicate_req_when_ack);

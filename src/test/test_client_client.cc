@@ -1,4 +1,5 @@
 extern "C" {
+#include "common/errno.h"
 #include "message/messenger.h"
 #include "client/client.h"
 }
@@ -26,7 +27,7 @@ TEST(client, cceph_client_init) {
     cceph_client *client = cceph_client_new(&osdmap);
 
     int ret = cceph_client_init(client);
-    EXPECT_EQ(0, ret);
+    EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(0, client->client_id);
     EXPECT_EQ(0, cceph_atomic_get64(&client->req_id));
     EXPECT_EQ(CCEPH_CLIENT_STATE_NORMAL, client->state);
@@ -35,13 +36,13 @@ TEST(client, add_req_to_wait_list) {
     cceph_osdmap osdmap;
     cceph_client *client = cceph_client_new(&osdmap);
     int ret = cceph_client_init(client);
-    EXPECT_EQ(0, ret);
+    EXPECT_EQ(CCEPH_OK, ret);
 
     cceph_msg_header header;
     int req_count = 3;
     int64_t log_id = 1;
     ret = TEST_cceph_client_add_req_to_wait_list(client, &header, req_count, log_id);
-    EXPECT_EQ(0, ret);
+    EXPECT_EQ(CCEPH_OK, ret);
 
     cceph_list_head *pos;
     cceph_client_wait_req *wait_req = NULL;
@@ -87,7 +88,7 @@ int MOCK__send_req_to_osd__cceph_messenger_send_msg(
     EXPECT_EQ(test_client_send_req_to_osd_param.log_id, log_id);
 
     test_client_send_req_to_osd_param.MOCK_cceph_messenger_send_msg_called = true;
-    return 0;
+    return CCEPH_OK;
 }
 
 TEST(client, send_req_to_osd) {
@@ -112,7 +113,7 @@ TEST(client, send_req_to_osd) {
     detach_func_lib(fname_cceph_messenger_get_conn);
     detach_func_lib(fname_cceph_messenger_send_msg);
 
-    EXPECT_EQ(0, ret);
+    EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(true, test_client_send_req_to_osd_param.MOCK_cceph_messenger_send_msg_called);
     EXPECT_EQ(true, test_client_send_req_to_osd_param.MOCK_cceph_messenger_get_conn_called);
 }
@@ -134,7 +135,7 @@ void* write_req_callback_thread_func(void* arg) {
     cceph_messenger msger;
     TEST_cceph_client_process_message(&msger, req_id, &ack->header, write_obj_client);
 
-    return 0;
+    return CCEPH_OK;
 }
 cceph_conn_id_t MOCK__write_obj__cceph_messenger_get_conn(
         cceph_messenger* messenger, const char* host, int port, int64_t log_id) {
@@ -164,9 +165,9 @@ int MOCK__write_obj__cceph_messenger_send_msg(
     pthread_attr_init(&thread_attr);
     pthread_t callback_thread_id;
     int ret = pthread_create(&callback_thread_id, &thread_attr, &write_req_callback_thread_func, &req->req_id);
-    EXPECT_EQ(0, ret);
+    EXPECT_EQ(CCEPH_OK, ret);
 
-    return 0;
+    return CCEPH_OK;
 }
 int MOCK__write_obj__cceph_messenger_send_msg__failed(
         cceph_messenger* messenger, cceph_conn_id_t conn_id,
@@ -197,8 +198,8 @@ int write_obj(cceph_client *client) {
 }
 void* write_obj_thread_func(void*) {
     int ret = write_obj(write_obj_client);
-    EXPECT_EQ(0, ret);
-    return 0;
+    EXPECT_EQ(CCEPH_OK, ret);
+    return CCEPH_OK;
 }
 
 cceph_osdmap* get_osdmap() {
@@ -220,7 +221,7 @@ TEST(client, cceph_client_write_obj__not_enough_server) {
     write_obj_client = cceph_client_new(osdmap);
     cceph_client* client = write_obj_client;
     int ret = cceph_client_init(client);
-    EXPECT_EQ(0, ret);
+    EXPECT_EQ(CCEPH_OK, ret);
 
     ret = write_obj(client);
     EXPECT_EQ(CCEPH_ERR_NOT_ENOUGH_SERVER, ret);
@@ -238,7 +239,7 @@ TEST(client, cceph_client_write_obj__success) {
     write_obj_client = cceph_client_new(osdmap);
     cceph_client* client = write_obj_client;
     int ret = cceph_client_init(client);
-    EXPECT_EQ(0, ret);
+    EXPECT_EQ(CCEPH_OK, ret);
 
     //Single Thread
     write_obj_thread_func(client);
@@ -250,7 +251,7 @@ TEST(client, cceph_client_write_obj__success) {
     pthread_t client_thread_ids[thread_count];
     for (int i = 0; i < thread_count; i++) {
         int ret = pthread_create(client_thread_ids + i, &thread_attr, &write_obj_thread_func, client);
-        EXPECT_EQ(0, ret);
+        EXPECT_EQ(CCEPH_OK, ret);
     }
     for (int i = 0; i < thread_count; i++) {
         pthread_join(*(client_thread_ids + i), NULL);
