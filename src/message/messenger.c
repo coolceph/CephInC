@@ -307,9 +307,17 @@ void* start_epoll(void* arg) {
     return NULL;
 }
 
-cceph_messenger* cceph_messenger_new(
-        cceph_msg_handler msg_handler, void* context, int work_thread_count, int64_t log_id) {
+int cceph_messenger_new(
+        cceph_messenger** msger,
+        cceph_msg_handler msg_handler,
+        void*             context,
+        int               work_thread_count,
+        int64_t           log_id) {
     cceph_messenger* messenger = (cceph_messenger*)malloc(sizeof(cceph_messenger));
+    if (messenger == NULL) {
+        LOG(LL_ERROR, log_id, "New messenger failed, no enough memory.");
+        return CCEPH_ERR_NO_ENOUGH_MEM;
+    }
     messenger->epoll_fd = -1;
     messenger->state = CCEPH_MESSENGER_STATE_UNKNOWN;
     messenger->log_id = log_id;
@@ -317,6 +325,12 @@ cceph_messenger* cceph_messenger_new(
     messenger->context = context;
     messenger->thread_count = work_thread_count;
     messenger->thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * messenger->thread_count);
+    if (messenger->thread_ids == NULL) {
+        LOG(LL_ERROR, log_id, "New messenger failed, no enough memory.");
+        free(messenger); messenger = NULL;
+        return CCEPH_ERR_NO_ENOUGH_MEM;
+    }
+
     cceph_atomic_set64(&messenger->next_conn_id, 1);
 
     cceph_list_head_init(&messenger->conn_list.list_node);
@@ -330,21 +344,22 @@ cceph_messenger* cceph_messenger_new(
         LOG(LL_FATAL, log_id, "can't initial cceph_messenger->wake_thread_pipe, errno %d.", ret);
         free(messenger->thread_ids); messenger->thread_ids = NULL;
         free(messenger); messenger = NULL;
-        return NULL;
+        return ret;
     }
 
     //create epoll_fd
     messenger->epoll_fd = epoll_create1(0);
-    if (messenger->epoll_fd == -1) {
+    if (messenger->epoll_fd < 0) {
         LOG(LL_FATAL, log_id, "epoll_create for cceph_messenger error, errno: %d.", errno);
         close(messenger->wake_thread_pipe_fd[0]);
         close(messenger->wake_thread_pipe_fd[1]);
         free(messenger->thread_ids); messenger->thread_ids = NULL;
         free(messenger); messenger = NULL;
-        return NULL;
+        return messenger->epoll_fd;
     }
 
-    return messenger;
+    *msger = messenger;
+    return CCEPH_OK;
 }
 
 int cceph_messenger_start(cceph_messenger* messenger, int64_t log_id) {

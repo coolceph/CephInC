@@ -129,10 +129,16 @@ extern cceph_client *cceph_client_new(cceph_osdmap* osdmap) {
         return NULL;
     }
 
-    int msg_work_thread_count = g_cceph_option.client_msg_workthread_count;
-    client->messenger = cceph_messenger_new(&client_process_message, client, msg_work_thread_count, log_id);
-    if (client->messenger == NULL) {
-        LOG(LL_ERROR, log_id, "Failed to malloc cceph_client->messenger, maybe not enough memory.");
+    client->messenger = NULL;
+    int ret = cceph_messenger_new(
+            &(client->messenger),
+            &client_process_message,
+            client,
+            g_cceph_option.client_msg_workthread_count,
+            log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Failed to initial cceph_client->messenger, errno %d(%s).",
+                ret, cceph_errno_str(ret));
         free(client);
         client = NULL;
         return NULL;

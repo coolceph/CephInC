@@ -33,15 +33,19 @@ int cceph_osd_initial(
         LOG(LL_ERROR, log_id, "Initial osd error, no enough memory");
         return CCEPH_ERR_NO_ENOUGH_MEM;
     }
-    cceph_messenger* msger = cceph_messenger_new(
+
+    cceph_messenger* msger = NULL;
+    int ret = cceph_messenger_new(
+            &msger,
             &cceph_osd_process_message,
             *osd,
             g_cceph_option.osd_msg_workthread_count,
             log_id);
-    if (msger == NULL) {
+    if (ret != CCEPH_OK) {
         free(*osd);
-        LOG(LL_ERROR, log_id, "Initial osd error, no enough memory");
-        return CCEPH_ERR_NO_ENOUGH_MEM;
+        LOG(LL_ERROR, log_id, "Initial osd error, new messenger failed, errno %d(%s).",
+                ret, cceph_errno_str(ret));
+        return ret;
     }
 
     cceph_server_messenger *smsger = new_cceph_server_messenger(
@@ -69,11 +73,15 @@ int cceph_osd_load_metadata(
     cceph_osd* osd,
     int64_t    log_id) {
 
+    assert(log_id, osd != NULL);
+
     return CCEPH_OK;
 }
 int cceph_osd_load_pgs(
     cceph_osd* osd,
     int64_t    log_id) {
+
+    assert(log_id, osd != NULL);
 
     return CCEPH_OK;
 }

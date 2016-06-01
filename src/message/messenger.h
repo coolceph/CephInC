@@ -60,15 +60,22 @@ struct cceph_messenger_ {
 typedef cceph_messenger_ cceph_messenger;
 typedef int (*cceph_msg_handler)(cceph_messenger*, cceph_conn_id_t, cceph_msg_header*, void*);
 
-extern cceph_messenger* cceph_messenger_new(
-        cceph_msg_handler msg_handler, void* context, int work_thread_count, int64_t log_id);
+extern int cceph_messenger_new(
+        cceph_messenger** msger,
+        cceph_msg_handler msg_handler,
+        void*             context,
+        int               work_thread_count,
+        int64_t           log_id);
 extern int cceph_messenger_free(
-        cceph_messenger** messenger, int64_t log_id);
+        cceph_messenger** msger,
+        int64_t           log_id);
 
 extern int cceph_messenger_start(
-        cceph_messenger* cceph_messenger, int64_t log_id);
+        cceph_messenger* msger,
+        int64_t          log_id);
 extern int cceph_messenger_stop(
-        cceph_messenger* messenger, int64_t log_id);
+        cceph_messenger* msger,
+        int64_t          log_id);
 
 extern cceph_conn_id_t cceph_messenger_add_conn(
         cceph_messenger* messenger, const char* host, int port, int fd, int64_t log_id);
