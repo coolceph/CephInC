@@ -1,6 +1,8 @@
 #ifndef CCEPH_OSD_TYPES_H
 #define CCEPH_OSD_TYPES_H
 
+#include "common/types.h"
+
 #include "message/messenger.h"
 #include "message/server_messenger.h"
 #include "message/msg_header.h"
@@ -15,6 +17,8 @@ typedef struct {
 
     cceph_messenger*        msger;
     cceph_server_messenger* smsger;
+
+    cceph_osdmap*           osdmap;
 } cceph_osd;
 
 #endif

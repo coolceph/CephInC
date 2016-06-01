@@ -64,7 +64,21 @@ int cceph_osd_initial(
 
     return CCEPH_OK;
 }
-extern int cceph_osd_start(
+
+int cceph_osd_load_metadata(
+    cceph_osd* osd,
+    int64_t    log_id) {
+
+    return CCEPH_OK;
+}
+int cceph_osd_load_pgs(
+    cceph_osd* osd,
+    int64_t    log_id) {
+
+    return CCEPH_OK;
+}
+
+int cceph_osd_start(
         cceph_osd* osd,
         int64_t    log_id) {
     assert(log_id, osd != NULL);
@@ -72,6 +86,20 @@ extern int cceph_osd_start(
     int ret = osd->os_funcs->mount(osd->os, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Mount ObjectStore Failed, errno %d(%s).",
+                ret, cceph_errno_str(ret));
+        return ret;
+    }
+
+    ret = cceph_osd_load_metadata(osd, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Load Metadata Failed, errno %d(%s).",
+                ret, cceph_errno_str(ret));
+        return ret;
+    }
+
+    ret = cceph_osd_load_pgs(osd, log_id);
+    if (ret != CCEPH_OK) {
+        LOG(LL_ERROR, log_id, "Load PGs Failed, errno %d(%s).",
                 ret, cceph_errno_str(ret));
         return ret;
     }
