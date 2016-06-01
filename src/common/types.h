@@ -25,5 +25,4 @@ typedef struct {
 
 } cceph_osdmap;
 
-
 #endif
