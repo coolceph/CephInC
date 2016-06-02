@@ -25,5 +25,9 @@ extern int cceph_buffer_new(
         cceph_buffer** buffer,
         int64_t        log_id);
 
+extern int cceph_buffer_free(
+        cceph_buffer** buffer,
+        int64_t        log_id);
+
 
 #endif
