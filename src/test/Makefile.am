@@ -11,6 +11,11 @@ UNITTEST_LDADD = \
     $(top_builddir)/module/bhook/libbhook.a \
     -lbfd -ldl -lopcodes -lpthread
 
+unittest_common_buffer_SOURCES = test/test_common_buffer.cc
+unittest_common_buffer_LDADD = $(LIBCOMMON) -lm $(UNITTEST_LDADD)
+unittest_common_buffer_CXXFLAGS = $(UNITTEST_CXXFLAGS)
+check_PROGRAMS += unittest_common_buffer
+
 unittest_common_log_SOURCES = test/test_common_log.cc
 unittest_common_log_LDADD = $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_common_log_CXXFLAGS = $(UNITTEST_CXXFLAGS)

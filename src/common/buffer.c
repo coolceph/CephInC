@@ -4,8 +4,6 @@
 #include "common/errno.h"
 #include "common/types.h"
 
-#define CCEPH_BUFFER_NODE_LENGTH 4096
-
 int cceph_buffer_node_new(
         cceph_buffer_node** node_ptr,
         int64_t             log_id) {
@@ -69,6 +67,7 @@ int cceph_buffer_new(
     buffer->length  = node->length;
     buffer->offset  = 0;
 
+    *buffer_ptr = buffer;
     return CCEPH_OK;
 }
 

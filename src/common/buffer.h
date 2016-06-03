@@ -3,6 +3,8 @@
 
 #include "common/types.h"
 
+#define CCEPH_BUFFER_NODE_LENGTH 4096
+
 typedef struct cceph_buffer_node_ cceph_buffer_node_;
 struct cceph_buffer_node_ {
     char*   data;
