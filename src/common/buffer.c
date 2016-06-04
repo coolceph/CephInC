@@ -1,5 +1,7 @@
 #include "common/buffer.h"
 
+#include <string.h>
+
 #include "common/assert.h"
 #include "common/errno.h"
 #include "common/types.h"
@@ -89,6 +91,47 @@ int cceph_buffer_free(
 
     free(buffer);
     *buffer_ptr = NULL;
+
+    return CCEPH_OK;
+}
+
+int cceph_buffer_append(
+        cceph_buffer* buffer,
+        char*         data,
+        int32_t       length,
+        int64_t       log_id) {
+
+    assert(log_id, buffer != NULL);
+    assert(log_id, data   != NULL);
+    assert(log_id, length >  0);
+
+    cceph_buffer_node* current_node = buffer->current;
+    int32_t current_node_offset = current_node->ptr - current_node->data;
+    while (length > 0) {
+        int32_t node_empty_size = current_node->length = current_node_offset;
+        if (node_empty_size == 0) {
+            cceph_buffer_node* new_node = NULL;
+            int ret = cceph_buffer_node_new(&new_node, log_id);
+            if (ret != CCEPH_OK) {
+                return ret;
+            }
+
+            buffer->current->next = new_node;
+            buffer->current = new_node;
+            current_node = current_node;
+            node_empty_size = current_node->length;
+        }
+
+        int32_t copy_size = length;
+        if (length > node_empty_size) {
+            copy_size = node_empty_size;
+        }
+
+        memcpy(current_node->ptr, data, copy_size);
+
+        data   += copy_size;
+        length -= copy_size;
+    }
 
     return CCEPH_OK;
 }

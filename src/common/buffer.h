@@ -31,5 +31,10 @@ extern int cceph_buffer_free(
         cceph_buffer** buffer,
         int64_t        log_id);
 
+extern int cceph_buffer_append(
+        cceph_buffer* buffer,
+        char*         data,
+        int32_t       length,
+        int64_t       log_id);
 
 #endif
