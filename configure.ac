@@ -23,6 +23,11 @@ if test "$CXX" = no || test "$CXX:$GXX" = "g++:"; then
 fi
 
 # Checks for libraries.
+# check if snappy-devel is installed, needed by leveldb
+AC_CHECK_LIB([snappy], [snappy_compress], [true], [AC_MSG_FAILURE([libsnappy not found])])
+
+# check leveldb
+AC_CHECK_LIB([leveldb], [leveldb_open], [true], [AC_MSG_FAILURE([libleveldb not found])], [-lsnappy -lpthread])
 
 # Checks for header files.
 AC_CHECK_HEADERS([netinet/in.h])
