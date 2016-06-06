@@ -105,10 +105,10 @@ int cceph_buffer_append(
     assert(log_id, data   != NULL);
     assert(log_id, length >  0);
 
-    cceph_buffer_node* current_node = buffer->current;
-    int32_t current_node_offset = current_node->ptr - current_node->data;
     while (length > 0) {
-        int32_t node_empty_size = current_node->length = current_node_offset;
+        cceph_buffer_node* current_node = buffer->current;
+        int32_t current_node_offset = current_node->ptr - current_node->data;
+        int32_t node_empty_size = current_node->length - current_node_offset;
         if (node_empty_size == 0) {
             cceph_buffer_node* new_node = NULL;
             int ret = cceph_buffer_node_new(&new_node, log_id);
@@ -116,21 +116,24 @@ int cceph_buffer_append(
                 return ret;
             }
 
-            buffer->current->next = new_node;
-            buffer->current = new_node;
-            current_node = current_node;
-            node_empty_size = current_node->length;
+            buffer->current->next =  new_node;
+            buffer->current       =  new_node;
+            buffer->length        += new_node->length;
+
+            current_node          =  new_node;
+            node_empty_size       =  current_node->length;
         }
 
-        int32_t copy_size = length;
-        if (length > node_empty_size) {
-            copy_size = node_empty_size;
-        }
-
+        int32_t copy_size = MIN(length, node_empty_size);
         memcpy(current_node->ptr, data, copy_size);
 
         data   += copy_size;
         length -= copy_size;
+
+        current_node->ptr += copy_size;
+        buffer->offset    += copy_size;
+        assert(log_id, current_node->ptr <= current_node->data + current_node->length);
+        assert(log_id, buffer->offset <= buffer->length);
     }
 
     return CCEPH_OK;
