@@ -13,7 +13,7 @@
 
 cceph_os_funcs* cceph_mem_store_get_funcs() {
     cceph_os_funcs *os_funcs = (cceph_os_funcs*)malloc(sizeof(cceph_os_funcs));
-    bzero(os_funcs, sizeof(cceph_os_funcs));
+    memset(os_funcs, 0, sizeof(cceph_os_funcs));
 
     os_funcs->mount             = cceph_mem_store_mount;
     os_funcs->submit_tran       = cceph_mem_store_submit_tran;
@@ -233,7 +233,7 @@ int cceph_mem_store_do_op_obj_write(
         }
 
         //cp old data to new data;
-        bzero(new_data, new_length);
+        memset(new_data, 0, new_length);
         memcpy(new_data, onode->data, onode->length);
 
         char* old_data = onode->data;

@@ -236,7 +236,7 @@ cceph_msg_write_obj_req* get_cceph_msg_write_obj_req() {
     req->offset        = 0;
     req->length        = 1024;
     req->data          = (char*)malloc(sizeof(char) * 1024);
-    bzero(req->oid, req->oid_size);
+    memset(req->oid, 0, req->oid_size);
     strcpy(req->oid, (char*)"cceph_oid");
     return req;
 }
@@ -294,11 +294,11 @@ void* listen_thread_func(void* arg_ptr){
 
     //set server addr_param
     struct sockaddr_in my_addr;
-    bzero(&my_addr, sizeof(my_addr));
+    memset(&my_addr, 0, sizeof(my_addr));
     my_addr.sin_family = AF_INET;
     my_addr.sin_port = htons(port);
     my_addr.sin_addr.s_addr = INADDR_ANY;
-    bzero(&(my_addr.sin_zero), 8);
+    memset(&(my_addr.sin_zero), 0, sizeof(my_addr.sin_zero));
 
     //bind sockfd & addr
     int ret = bind(listen_fd, (struct sockaddr*)&my_addr, sizeof(struct sockaddr_in));
@@ -435,7 +435,7 @@ TEST(message_messenger, send_and_recv) {
     their_addr.sin_family = AF_INET;
     their_addr.sin_port = htons(port);
     inet_aton( "127.0.0.1", &their_addr.sin_addr);
-    bzero(&(their_addr.sin_zero),8);
+    memset(&(their_addr.sin_zero), 0, sizeof(their_addr.sin_zero));
 
     int ret = connect(fd, (struct sockaddr *)&their_addr, sizeof(struct sockaddr));
     EXPECT_NE(-1, ret);

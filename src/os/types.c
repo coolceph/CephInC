@@ -63,7 +63,7 @@ int cceph_os_map_node_new(
         *node = NULL;
         return CCEPH_ERR_NO_ENOUGH_MEM;
     }
-    bzero((*node)->key, key_length);
+    memset((*node)->key, 0, key_length);
     strcpy((*node)->key, key);
 
     if (value_length > 0) {

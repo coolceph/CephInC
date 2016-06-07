@@ -24,7 +24,7 @@ int cceph_mem_store_object_node_new(
         *node = NULL;
         return CCEPH_ERR_NO_ENOUGH_MEM;
     }
-    bzero((*node)->oid, oid_length);
+    memset((*node)->oid, 0, oid_length);
     strcpy((*node)->oid, oid);
 
     (*node)->data   = NULL;

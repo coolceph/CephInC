@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <strings.h>
+#include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 
@@ -13,7 +14,7 @@
 
 cceph_msg_write_obj_req* cceph_msg_write_obj_req_new() {
     cceph_msg_write_obj_req* req = malloc(sizeof(cceph_msg_write_obj_req));
-    bzero(req, sizeof(cceph_msg_write_obj_req));
+    memset(req, 0, sizeof(cceph_msg_write_obj_req));
     req->header.op = CCEPH_MSG_OP_WRITE;
     return req;
 }
@@ -62,7 +63,7 @@ int cceph_msg_write_obj_req_recv(int fd, cceph_msg_write_obj_req* req, int64_t l
 
 cceph_msg_write_obj_ack* cceph_msg_write_obj_ack_new() {
     cceph_msg_write_obj_ack* msg = malloc(sizeof(cceph_msg_write_obj_ack));
-    bzero(msg, sizeof(cceph_msg_write_obj_ack));
+    memset(msg, 0, sizeof(cceph_msg_write_obj_ack));
     msg->header.op = CCEPH_MSG_OP_WRITE_ACK;
     return msg;
 }

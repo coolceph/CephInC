@@ -19,7 +19,7 @@ TEST(os_types, cceph_os_map_node) {
     cceph_os_map_node *node = NULL;
 
     for (int i = 0; i < 1000; i++) {
-        bzero(key, 256);
+        memset(key, 0, 256);
         sprintf(key, "%d", i);
 
         node = NULL;
@@ -34,7 +34,7 @@ TEST(os_types, cceph_os_map_node) {
         EXPECT_EQ(CCEPH_OK, ret);
     }
     for (int i = 0; i < 1000; i++) {
-        bzero(key, 256);
+        memset(key, 0, 0256);
         sprintf(key, "%d", i);
 
         node = NULL;
