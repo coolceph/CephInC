@@ -45,6 +45,7 @@ COPYING
 
 #Ctags
 tags
+*.taghl
 
 #Python
 *.pyc

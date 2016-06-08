@@ -12,7 +12,7 @@ TEST(cceph_mem_store, object_node) {
     cceph_mem_store_object_node* node       = NULL;
 
     for (int i = 0; i < 1000; i++) {
-        bzero(oid, 256);
+        memset(oid, 0, 256);
         sprintf(oid, "%d", i);
 
         node = NULL;
@@ -27,7 +27,7 @@ TEST(cceph_mem_store, object_node) {
         EXPECT_EQ(CCEPH_OK, ret);
     }
     for (int i = 0; i < 1000; i++) {
-        bzero(oid, 256);
+        memset(oid, 0, 256);
         sprintf(oid, "%d", i);
 
         node = NULL;

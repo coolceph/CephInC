@@ -230,7 +230,7 @@ void* start_epoll(void* arg) {
     assert(log_id, messenger->epoll_fd != -1);
 
     struct epoll_event event;
-    bzero(&event, sizeof(event));
+    memset(&event, 0, sizeof(event));
     while (1) {
         int fd_count = epoll_wait(messenger->epoll_fd, &event, 1, -1);
         if (fd_count <= 0) {
@@ -480,7 +480,7 @@ cceph_conn_id_t cceph_messenger_get_conn(
     LOG(LL_DEBUG, log_id, "Conn for %s:%d is not found in current conn_list, try to connect.", host, port);
 
     struct sockaddr_in server_addr_in;
-    bzero(&server_addr_in, sizeof(server_addr_in) );
+    memset(&server_addr_in, 0, sizeof(server_addr_in) );
     server_addr_in.sin_family = AF_INET;
     server_addr_in.sin_port = htons(port);
     inet_pton(AF_INET, host, &server_addr_in.sin_addr);

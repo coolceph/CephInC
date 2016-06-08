@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <strings.h>
+#include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -33,7 +34,7 @@ int cceph_server_messenger_new(
         return CCEPH_ERR_NO_ENOUGH_MEM;
     }
 
-    bzero(server_messenger, sizeof(cceph_server_messenger));
+    memset(server_messenger, 0, sizeof(cceph_server_messenger));
     server_messenger->messenger = messenger;
     server_messenger->port = port;
     server_messenger->log_id = log_id;
@@ -64,11 +65,11 @@ int bind_and_listen(cceph_server_messenger *server_messenger, int64_t log_id) {
 
     //set server addr_param
     struct sockaddr_in my_addr;
-    bzero(&my_addr, sizeof(my_addr));
+    memset(&my_addr, 0, sizeof(my_addr));
     my_addr.sin_family = AF_INET;
     my_addr.sin_port = htons(port);
     my_addr.sin_addr.s_addr = INADDR_ANY;
-    bzero(&(my_addr.sin_zero), 8);
+    memset(&(my_addr.sin_zero), 0, sizeof(my_addr.sin_zero));
 
     //bind sockfd & addr
     int ret = bind(listen_fd, (struct sockaddr*)&my_addr, sizeof(struct sockaddr_in));

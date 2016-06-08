@@ -354,7 +354,7 @@ TEST_F(os, object_write_and_read_multithread) {
         EXPECT_EQ(CCEPH_OK, ret);
 
         char* oid = (char*)malloc(sizeof(char) * 256);
-        bzero(oid, 256);
+        memset(oid, 0, 256);
         sprintf(oid, "%d", i);
 
         write_read_thread_arg *arg = (write_read_thread_arg*)malloc(sizeof(write_read_thread_arg));

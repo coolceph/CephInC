@@ -1,7 +1,7 @@
 #include "option.h"
 
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 
 #include "common/assert.h"
 #include "common/types.h"
@@ -9,7 +9,7 @@
 cceph_option g_cceph_option;
 
 int cceph_option_initial() {
-    bzero(&g_cceph_option, sizeof(cceph_option));
+    memset(&g_cceph_option, 0, sizeof(g_cceph_option));
     g_cceph_option.client_msg_workthread_count = 2;
     g_cceph_option.client_debug_check_duplicate_req_when_ack = 1;
 

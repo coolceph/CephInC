@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <strings.h>
+#include <string.h>
 
 cceph_atomic64_t cceph_g_log_id = { 0 };
 
@@ -24,7 +25,7 @@ void _cceph_log(int level, int64_t log_id, const char* file, int line, const cha
     va_list args;
     va_start(args, fmt);
     char buffer[MAX_LOG_ENTRY_LENGTH];
-    bzero(buffer, MAX_LOG_ENTRY_LENGTH);
+    memset(buffer, 0, sizeof(buffer));
 
     int offset = sprintf(buffer, "[logid %ld]", log_id);
     offset += sprintf(buffer + offset, "[%s:%d]", file, line);
