@@ -2,6 +2,7 @@
 #define CCEPH_OSD_TYPES_H
 
 #include "common/types.h"
+#include "common/osdmap.h"
 
 #include "message/messenger.h"
 #include "message/server_messenger.h"

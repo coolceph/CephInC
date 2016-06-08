@@ -15,6 +15,7 @@
 #include "common/errno.h"
 #include "common/log.h"
 #include "common/option.h"
+#include "common/osdmap.h"
 
 #include "message/io.h"
 #include "message/messenger.h"
