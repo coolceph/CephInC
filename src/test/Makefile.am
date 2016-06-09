@@ -16,6 +16,11 @@ unittest_common_buffer_LDADD = $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_common_buffer_CXXFLAGS = $(UNITTEST_CXXFLAGS)
 check_PROGRAMS += unittest_common_buffer
 
+unittest_common_encode_SOURCES = test/test_common_encode.cc
+unittest_common_encode_LDADD = $(LIBCOMMON) -lm $(UNITTEST_LDADD)
+unittest_common_encode_CXXFLAGS = $(UNITTEST_CXXFLAGS)
+check_PROGRAMS += unittest_common_encode
+
 unittest_common_log_SOURCES = test/test_common_log.cc
 unittest_common_log_LDADD = $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_common_log_CXXFLAGS = $(UNITTEST_CXXFLAGS)
