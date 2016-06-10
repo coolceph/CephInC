@@ -1,5 +1,5 @@
 language: c
-script: ./make_cceph.sh
+script: ./autogen.sh && make fullcheck
 
 before_install:
     - sudo apt-get -qq update
