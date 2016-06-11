@@ -5,6 +5,7 @@
 
 #include "common/list.h"
 #include "common/types.h"
+#include "common/osdmap.h"
 
 #include "message/messenger.h"
 #include "message/msg_write_obj.h"
