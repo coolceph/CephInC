@@ -37,4 +37,10 @@ extern int cceph_buffer_append(
         int32_t       length,
         int64_t       log_id);
 
+typedef struct {
+    cceph_buffer*      buffer;
+    cceph_buffer_node* node;
+    char*              ptr;
+} cceph_buffer_reader;
+
 #endif
