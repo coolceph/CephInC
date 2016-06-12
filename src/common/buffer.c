@@ -138,3 +138,22 @@ int cceph_buffer_append(
 
     return CCEPH_OK;
 }
+
+int cceph_buffer_reader_new(
+        cceph_buffer_reader** reader,
+        cceph_buffer*         buffer,
+        int64_t               log_id) {
+    assert(log_id, reader != NULL);
+    assert(log_id, *reader == NULL);
+    assert(log_id, buffer != NULL);
+
+    *reader = (cceph_buffer_reader*)malloc(sizeof(cceph_buffer_reader));
+    if (*reader == NULL) {
+        return CCEPH_ERR_NO_ENOUGH_MEM;
+    }
+    (*reader)->buffer = buffer;
+    (*reader)->node   = buffer->head;
+    (*reader)->ptr    = buffer->head->data;
+
+    return CCEPH_OK;
+}

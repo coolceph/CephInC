@@ -43,4 +43,9 @@ typedef struct {
     char*              ptr;
 } cceph_buffer_reader;
 
+extern int cceph_buffer_reader_new(
+        cceph_buffer_reader** reader,
+        cceph_buffer*         buffer,
+        int64_t               log_id);
+
 #endif
