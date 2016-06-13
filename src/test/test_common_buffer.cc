@@ -80,3 +80,16 @@ TEST(buffer, append) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ((cceph_buffer*)NULL, buffer);
 }
+TEST(buffer_reader, new) {
+    cceph_buffer*        buffer = NULL;
+    cceph_buffer_reader* reader = NULL;
+    int64_t              log_id = 122;
+
+    int ret = cceph_buffer_new(&buffer, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_buffer_reader_new(&reader, buffer, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_EQ(buffer, reader->buffer);
+    EXPECT_EQ(buffer->head, reader->node);
+    EXPECT_EQ(buffer->head->data, reader->ptr);
+}
