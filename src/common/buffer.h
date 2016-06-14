@@ -7,11 +7,10 @@
 
 typedef struct cceph_buffer_node_ cceph_buffer_node_;
 struct cceph_buffer_node_ {
-    char*   data;
-    char*   ptr;     //Point to current write position
-    int32_t length;
-
     cceph_buffer_node_ *next;
+    char*   ptr;     //Pointer to current write position
+    int32_t length;  //Node memory length
+    char   data[CCEPH_BUFFER_NODE_LENGTH]; //Real data
 };
 typedef cceph_buffer_node_ cceph_buffer_node;
 

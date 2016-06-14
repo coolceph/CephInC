@@ -13,22 +13,15 @@ int cceph_buffer_node_new(
     assert(log_id, node_ptr  != NULL);
     assert(log_id, *node_ptr == NULL);
 
-    cceph_buffer_node* node = (cceph_buffer_node*)malloc(sizeof(cceph_buffer_node));
-    if (node == NULL) {
+    *node_ptr = (cceph_buffer_node*)malloc(sizeof(cceph_buffer_node));
+    if (*node_ptr == NULL) {
         return CCEPH_ERR_NO_ENOUGH_MEM;
     }
 
-    node->data = (char*)malloc(sizeof(char) * CCEPH_BUFFER_NODE_LENGTH);
-    if (node->data == NULL) {
-        free(node);
-        return CCEPH_ERR_NO_ENOUGH_MEM;
-    }
+    (*node_ptr)->ptr    = (*node_ptr)->data;
+    (*node_ptr)->length = CCEPH_BUFFER_NODE_LENGTH;
+    (*node_ptr)->next   = NULL;
 
-    node->ptr    = node->data;
-    node->length = CCEPH_BUFFER_NODE_LENGTH;
-    node->next   = NULL;
-
-    *node_ptr = node;
     return CCEPH_OK;
 }
 
@@ -38,7 +31,6 @@ int cceph_buffer_node_free(
     assert(log_id, node  != NULL);
     assert(log_id, *node != NULL);
 
-    free((*node)->data);
     free(*node);
     *node = NULL;
 
@@ -58,18 +50,17 @@ int cceph_buffer_new(
         return ret;
     }
 
-    cceph_buffer* buffer = (cceph_buffer*)malloc(sizeof(cceph_buffer));
-    if (buffer == NULL) {
+    *buffer_ptr = (cceph_buffer*)malloc(sizeof(cceph_buffer));
+    if (*buffer_ptr == NULL) {
         cceph_buffer_node_free(&node, log_id);
         return CCEPH_ERR_NO_ENOUGH_MEM;
     }
 
-    buffer->head    = node;
-    buffer->current = node;
-    buffer->length  = node->length;
-    buffer->offset  = 0;
+    (*buffer_ptr)->head    = node;
+    (*buffer_ptr)->current = node;
+    (*buffer_ptr)->length  = node->length;
+    (*buffer_ptr)->offset  = 0;
 
-    *buffer_ptr = buffer;
     return CCEPH_OK;
 }
 
