@@ -157,3 +157,14 @@ int cceph_buffer_reader_new(
 
     return CCEPH_OK;
 }
+int cceph_buffer_reader_free(
+        cceph_buffer_reader** reader,
+        int64_t               log_id) {
+    assert(log_id, reader != NULL);
+    assert(log_id, *reader != NULL);
+
+    free(*reader);
+    *reader = NULL;
+
+    return CCEPH_OK;
+}

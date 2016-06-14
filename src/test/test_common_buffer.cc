@@ -89,7 +89,16 @@ TEST(buffer_reader, new) {
     EXPECT_EQ(CCEPH_OK, ret);
     ret = cceph_buffer_reader_new(&reader, buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_NE((cceph_buffer_reader*)NULL, reader);
     EXPECT_EQ(buffer, reader->buffer);
     EXPECT_EQ(buffer->head, reader->node);
     EXPECT_EQ(buffer->head->data, reader->ptr);
+
+    ret = cceph_buffer_reader_free(&reader, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_EQ((cceph_buffer_reader*)NULL, reader);
+
+    ret = cceph_buffer_free(&buffer, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_EQ((cceph_buffer*)NULL, buffer);
 }
