@@ -80,7 +80,7 @@ TEST(buffer, append) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ((cceph_buffer*)NULL, buffer);
 }
-TEST(buffer_reader, new) {
+TEST(buffer_reader, new_and_free) {
     cceph_buffer*        buffer = NULL;
     cceph_buffer_reader* reader = NULL;
     int64_t              log_id = 122;

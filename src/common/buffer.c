@@ -168,3 +168,42 @@ int cceph_buffer_reader_free(
 
     return CCEPH_OK;
 }
+int cceph_buffer_reader_read(
+        cceph_buffer_reader* reader,
+        char*                data,
+        int32_t              length,
+        int64_t              log_id) {
+    assert(log_id, reader != NULL);
+    assert(log_id, data   != NULL);
+    assert(log_id, length > 0);
+
+    while (length > 0) {
+        cceph_buffer_node* node = reader->node;
+        char*              ptr  = reader->ptr;
+
+        //Find length to read
+        int32_t node_offset = ptr - node->data;
+        int32_t node_left   = node->length - node_offset;
+        int32_t read_length = MIN(length, node_left);
+
+        //Copy Data
+        assert(log_id, read_length > 0);
+        memcpy(data, ptr, read_length);
+
+        //Ptr move forward
+        reader->ptr += read_length;
+        data        += read_length;
+        length      -= read_length;
+
+        //Maybe go to next node
+        if (reader->ptr - node->data == node->length) {
+            reader->node = reader->node->next;
+            reader->ptr  = reader->node->data;
+        }
+        if (reader->node == NULL) {
+            break;
+        }
+    }
+
+    return length == 0 ? CCEPH_OK : CCEPH_ERR_BUFFER_END;
+}

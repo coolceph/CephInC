@@ -52,4 +52,12 @@ extern int cceph_buffer_reader_free(
         cceph_buffer_reader** reader,
         int64_t               log_id);
 
+//This method will advance the pointor
+//If there is no enough content, return CCEPH_ERR_BUFFER_END
+extern int cceph_buffer_reader_read(
+        cceph_buffer_reader* reader,
+        char*                data,
+        int32_t              length,
+        int64_t              log_id);
+
 #endif
