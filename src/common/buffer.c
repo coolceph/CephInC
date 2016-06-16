@@ -177,13 +177,12 @@ int cceph_buffer_reader_read(
     assert(log_id, data   != NULL);
     assert(log_id, length > 0);
 
-    while (length > 0) {
+    while (length > 0 && reader->ptr != NULL) {
         cceph_buffer_node* node = reader->node;
         char*              ptr  = reader->ptr;
 
         //Find length to read
-        int32_t node_offset = ptr - node->data;
-        int32_t node_left   = node->length - node_offset;
+        int32_t node_left   = node->ptr - ptr;
         int32_t read_length = MIN(length, node_left);
 
         //Copy Data
@@ -196,9 +195,9 @@ int cceph_buffer_reader_read(
         length      -= read_length;
 
         //Maybe go to next node
-        if (reader->ptr - node->data == node->length) {
+        if (reader->ptr == node->ptr) {
             reader->node = reader->node->next;
-            reader->ptr  = reader->node->data;
+            reader->ptr  = reader->node == NULL ? NULL : reader->node->data;
         }
         if (reader->node == NULL) {
             break;
