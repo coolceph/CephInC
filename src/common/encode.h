@@ -34,4 +34,10 @@ CCEPH_DECODE_TYPE(int16_t);
 CCEPH_DECODE_TYPE(int32_t);
 CCEPH_DECODE_TYPE(int64_t);
 
+#define cceph_encode_version(buffer, value, log_id) \
+        cceph_encode_int8_t(buffer, value, log_id)
+
+#define cceph_decode_version(reader, value, log_id) \
+        cceph_decode_int8_t(reader, value, log_id)
+
 #endif
