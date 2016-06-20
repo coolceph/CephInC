@@ -42,3 +42,23 @@ TEST(decode, type) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(value, result);
 }
+TEST(vertion_t, encode_and_decode) {
+    cceph_buffer*        buffer = NULL;
+    cceph_buffer_reader* reader = NULL;
+    cceph_version_t v = 3;
+    cceph_version_t result = 0;
+    int64_t log_id = 122;
+
+    int ret = cceph_buffer_new(&buffer, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    ret = cceph_encode_version(buffer, v, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    ret = cceph_buffer_reader_new(&reader, buffer, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    ret = cceph_decode_version(reader, &result, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_EQ(v, result);
+}
