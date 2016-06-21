@@ -113,6 +113,7 @@ int cceph_buffer_append(
             cceph_buffer_node* new_node = NULL;
             int ret = cceph_buffer_node_new(&new_node, log_id);
             if (ret != CCEPH_OK) {
+                //TODO: Fatal log here
                 return ret;
             }
 

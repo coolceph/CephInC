@@ -40,4 +40,15 @@ CCEPH_DECODE_TYPE(int64_t);
 #define cceph_decode_version(reader, value, log_id) \
         cceph_decode_int8_t(reader, value, log_id)
 
+#define CCEPH_DEFINE_ENCODE_METHOD(type) \
+extern int cceph_encode_##type(          \
+        cceph_buffer* buffer,            \
+        cceph_##type* value,             \
+        int64_t       log_id);           \
+extern int cceph_decode_##type(          \
+        cceph_buffer_reader* reader,     \
+        cceph_##type*        value,      \
+        int64_t              log_id);    \
+
+
 #endif

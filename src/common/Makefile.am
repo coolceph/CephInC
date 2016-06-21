@@ -5,6 +5,7 @@ libcommon_la_SOURCES =	\
 	common/errno.c		\
 	common/log.c		\
 	common/rbtree.c		\
-	common/option.c
+	common/option.c     \
+	common/osdmap.c
 
 noinst_LTLIBRARIES += libcommon.la
