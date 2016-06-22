@@ -21,6 +21,6 @@ typedef struct {
 
 } cceph_osdmap;
 
-CCEPH_DEFINE_ENCODE_METHOD(osd_entity)
+CCEPH_DEFINE_ENCODE_METHOD(osd_entity);
 
 #endif

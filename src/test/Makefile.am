@@ -31,6 +31,11 @@ unittest_common_option_LDADD = $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_common_option_CXXFLAGS = $(UNITTEST_CXXFLAGS)
 check_PROGRAMS += unittest_common_option
 
+unittest_common_osdmap_SOURCES = test/test_common_osdmap.cc
+unittest_common_osdmap_LDADD = $(LIBCOMMON) -lm $(UNITTEST_LDADD)
+unittest_common_osdmap_CXXFLAGS = $(UNITTEST_CXXFLAGS)
+check_PROGRAMS += unittest_common_osdmap
+
 unittest_message_io_SOURCES = test/test_message_io.cc
 unittest_message_io_LDADD = $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_message_io_CXXFLAGS = $(UNITTEST_CXXFLAGS)

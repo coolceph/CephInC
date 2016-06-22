@@ -3,6 +3,7 @@ libcommon_la_SOURCES =	\
 	common/assert.c		\
 	common/buffer.c		\
 	common/errno.c		\
+	common/encode.c		\
 	common/log.c		\
 	common/rbtree.c		\
 	common/option.c     \
