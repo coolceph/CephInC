@@ -55,4 +55,18 @@ CCEPH_DEFINE_BASIC_ENCODE_METHOD(int64_t);
 #define cceph_decode_version(reader, value, log_id) \
         cceph_decode_int8(reader, value, log_id)
 
+#define cceph_encode_epoch(buffer, value, log_id) \
+        cceph_encode_int32(buffer, value, log_id)
+#define cceph_decode_epoch(reader, value, log_id) \
+        cceph_decode_int32(reader, value, log_id)
+
+extern int cceph_encode_string(
+        cceph_buffer*        buffer,
+        char*                value,
+        int64_t              log_id);
+extern int cceph_decode_string(
+        cceph_buffer_reader* reader,
+        char**               value,
+        int64_t              log_id);
+
 #endif
