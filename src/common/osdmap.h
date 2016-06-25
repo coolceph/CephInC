@@ -14,7 +14,7 @@ typedef struct {
 typedef struct {
     cceph_epoch_t epoch;
 
-    int32_t pg_count;
+    int pg_count;
 
     int osd_count;
     cceph_osd_entity* osds;
@@ -22,5 +22,6 @@ typedef struct {
 } cceph_osdmap;
 
 CCEPH_DEFINE_ENCODE_METHOD(osd_entity);
+CCEPH_DEFINE_ENCODE_METHOD(osdmap);
 
 #endif
