@@ -26,6 +26,7 @@ typedef int (*cceph_os_list_coll_func)(
 
 typedef int (*cceph_os_exist_coll_func)(
         cceph_object_store*  os,
+        cceph_os_coll_id_t   coll_id,
         int8_t*              is_existed,
         int64_t              log_id);
 
