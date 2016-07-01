@@ -86,7 +86,35 @@ TEST_F(os, coll_list) {
         cceph_os_coll_id_t id = coll_list[i];
         EXPECT_TRUE(id == 1 || id == 2 || id == 3);
     }
+}
 
+TEST_F(os, coll_exist) {
+    int64_t             log_id = 122;
+    cceph_os_tran*      tran   = NULL;
+    cceph_object_store* os     = GetObjectStore(log_id);
+    cceph_os_funcs*     funcs  = GetObjectStoreFuncs();
+
+    int ret = funcs->mount(os, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    int8_t is_existed = -1;
+    ret = funcs->exist_coll(os, 1, &is_existed, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_EQ(0, is_existed);
+
+    //Create Collection: Success
+    ret = cceph_os_tran_new(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_coll_create(tran, 1,  log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = funcs->submit_tran(os, tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_tran_free(&tran, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    ret = funcs->exist_coll(os, 1, &is_existed, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_EQ(1, is_existed);
 }
 
 TEST_F(os, object_touch_and_remove) {

@@ -546,8 +546,8 @@ extern int cceph_mem_store_exist_coll(
     int ret = cceph_mem_store_coll_node_search(&mem_store->colls, cid, &cnode, log_id);
     pthread_mutex_unlock(&mem_store->lock);
 
-    *is_existed = ret == CCEPH_OK ? 1 : 0;
-    return ret;
+    *is_existed = cnode == NULL ? 0 : 1;
+    return CCEPH_OK;
 }
 
 extern int cceph_mem_store_read_coll_map(
