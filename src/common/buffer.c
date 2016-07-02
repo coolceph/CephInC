@@ -139,6 +139,41 @@ int cceph_buffer_append(
 
     return CCEPH_OK;
 }
+int cceph_buffer_flat(
+        cceph_buffer* buffer,
+        char**        data,
+        int32_t*      length,
+        int64_t       log_id) {
+
+    assert(log_id, buffer != NULL);
+    assert(log_id, data   != NULL);
+    assert(log_id, *data  == NULL);
+    assert(log_id, length != NULL);
+
+    if (buffer->offset == 0) {
+        *data   = NULL;
+        *length = 0;
+        return CCEPH_OK;
+    }
+
+    int data_length = buffer->offset;
+    *data = malloc(sizeof(char) * data_length);
+    if (*data == NULL) {
+        return CCEPH_ERR_NO_ENOUGH_MEM;
+    }
+
+    char* ptr = *data;
+    cceph_buffer_node* node = buffer->head;
+    while (node != NULL) {
+        int node_content_length = node->ptr - node->data;
+        memcpy(ptr, node->data, node_content_length);
+
+        ptr += node_content_length;
+        node = node->next;
+    }
+
+    return CCEPH_OK;
+}
 
 int cceph_buffer_reader_new(
         cceph_buffer_reader** reader,
