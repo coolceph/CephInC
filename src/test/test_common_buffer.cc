@@ -80,6 +80,36 @@ TEST(buffer, append) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ((cceph_buffer*)NULL, buffer);
 }
+
+TEST(buffer, flat) {
+    cceph_buffer* buffer = NULL;
+    int64_t       log_id = 122;
+    char*         result = NULL;
+    int           result_length = -1;
+    char          data[8192];
+
+    memset(data, 'a', 8192);
+
+    int ret = cceph_buffer_new(&buffer, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    ret = cceph_buffer_flat(buffer, &result, &result_length, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_EQ((char*)NULL, result);
+    EXPECT_EQ(0, result_length);
+
+    //Append 8192 bytes
+    ret = cceph_buffer_append(buffer, data, 8192, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+
+    ret = cceph_buffer_flat(buffer, &result, &result_length, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_NE((char*)NULL, result);
+    EXPECT_EQ(8192, result_length);
+    for (int i = 0; i < 8192; i++) {
+        EXPECT_EQ(data[i], result[i]);
+    }
+}
 TEST(buffer_reader, new_and_free) {
     cceph_buffer*        buffer = NULL;
     cceph_buffer_reader* reader = NULL;

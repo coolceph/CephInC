@@ -172,6 +172,7 @@ int cceph_buffer_flat(
         node = node->next;
     }
 
+    *length = data_length;
     return CCEPH_OK;
 }
 
