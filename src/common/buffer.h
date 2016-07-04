@@ -42,4 +42,21 @@ typedef struct {
     char*              ptr;
 } cceph_buffer_reader;
 
+extern int cceph_buffer_reader_new(
+        cceph_buffer_reader** reader,
+        cceph_buffer*         buffer,
+        int64_t               log_id);
+
+extern int cceph_buffer_reader_free(
+        cceph_buffer_reader** reader,
+        int64_t               log_id);
+
+//This method will advance the pointor
+//If there is no enough content, return CCEPH_ERR_BUFFER_END
+extern int cceph_buffer_reader_read(
+        cceph_buffer_reader* reader,
+        char*                data,
+        int32_t              length,
+        int64_t              log_id);
+
 #endif

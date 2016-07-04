@@ -17,6 +17,7 @@
 #define CCEPH_ERR_MAP_NODE_ALREADY_EXIST (-1012)
 #define CCEPH_ERR_MAP_NODE_NOT_EXIST     (-1013)
 #define CCEPH_ERR_UNKNOWN_OS_OP          (-1014)
+#define CCEPH_ERR_BUFFER_END             (-1015)
 
 extern const char* cceph_errno_str(int err_no);
 
