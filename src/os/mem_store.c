@@ -543,7 +543,7 @@ extern int cceph_mem_store_exist_coll(
     cceph_mem_store_coll_node* cnode     = NULL;
 
     pthread_mutex_lock(&mem_store->lock);
-    int ret = cceph_mem_store_coll_node_search(&mem_store->colls, cid, &cnode, log_id);
+    cceph_mem_store_coll_node_search(&mem_store->colls, cid, &cnode, log_id);
     pthread_mutex_unlock(&mem_store->lock);
 
     *is_existed = cnode == NULL ? 0 : 1;
