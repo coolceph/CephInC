@@ -16,10 +16,6 @@ extern int cceph_osd_initial(
         cceph_os_funcs*     os_funcs,
         int64_t             log_id);
 
-extern int cceph_osd_create(
-        cceph_osd* osd,
-        int64_t    log_id);
-
 extern int cceph_osd_start(
         cceph_osd* osd,
         int64_t    log_id);
