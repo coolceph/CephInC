@@ -113,7 +113,7 @@ int cceph_os_tran_new_op(
     return CCEPH_OK;
 }
 
-int cceph_os_coll_create(
+int cceph_os_tran_coll_create(
         cceph_os_tran*      tran,
         cceph_os_coll_id_t  cid,
         int64_t             log_id) {
@@ -133,7 +133,7 @@ int cceph_os_coll_create(
     return CCEPH_OK;
 }
 
-int cceph_os_coll_remove(
+int cceph_os_tran_coll_remove(
         cceph_os_tran*        tran,
         cceph_os_coll_id_t    cid,
         int64_t               log_id) {
@@ -153,7 +153,7 @@ int cceph_os_coll_remove(
     return CCEPH_OK;
 }
 
-int cceph_os_coll_map(
+int cceph_os_tran_coll_map(
         cceph_os_tran*      tran,
         cceph_os_coll_id_t  cid,
         cceph_rb_root*      map,
@@ -176,7 +176,7 @@ int cceph_os_coll_map(
     return CCEPH_OK;
 }
 
-int cceph_os_obj_touch(
+int cceph_os_tran_obj_touch(
         cceph_os_tran*        tran,
         cceph_os_coll_id_t    cid,
         const char*           oid,
@@ -199,7 +199,7 @@ int cceph_os_obj_touch(
     return CCEPH_OK;
 }
 
-int cceph_os_obj_write(
+int cceph_os_tran_obj_write(
         cceph_os_tran*      tran,
         cceph_os_coll_id_t  cid,
         const char*         oid,
@@ -233,7 +233,7 @@ int cceph_os_obj_write(
     return CCEPH_OK;
 }
 
-int cceph_os_obj_map(
+int cceph_os_tran_obj_map(
         cceph_os_tran*      tran,
         cceph_os_coll_id_t  cid,
         const char*         oid,
@@ -259,7 +259,7 @@ int cceph_os_obj_map(
     return CCEPH_OK;
 }
 
-int cceph_os_obj_remove(
+int cceph_os_tran_obj_remove(
         cceph_os_tran*      tran,
         cceph_os_coll_id_t  cid,
         const char*         oid,
