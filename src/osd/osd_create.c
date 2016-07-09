@@ -23,7 +23,7 @@ int cceph_osd_create_meta_coll(
     if (ret != CCEPH_OK) {
         return ret;
     }
-    ret = cceph_os_coll_create(tran, CCEPH_OS_META_COLL_ID, log_id);
+    ret = cceph_os_tran_coll_create(tran, CCEPH_OS_META_COLL_ID, log_id);
     if (ret != CCEPH_OK) {
         cceph_os_tran_free(&tran, log_id);
         return ret;
@@ -34,6 +34,7 @@ int cceph_osd_create_meta_coll(
         return ret;
     }
 
+    cceph_os_tran_free(&tran, log_id);
     return CCEPH_OK;
 }
 
@@ -62,7 +63,7 @@ int cceph_osd_create_osd_id(
     if (ret != CCEPH_OK) {
         return ret;
     }
-    ret = cceph_os_coll_map(tran, CCEPH_OS_META_COLL_ID, &map, log_id);
+    ret = cceph_os_tran_coll_map(tran, CCEPH_OS_META_COLL_ID, &map, log_id);
     if (ret != CCEPH_OK) {
         cceph_os_tran_free(&tran, log_id);
         return ret;
@@ -89,27 +90,7 @@ int cceph_osd_create(
         return ret;
     }
 
-    cceph_osd_entity osds[3];
-    osds[0].id      = 0;
-    osds[1].id      = 1;
-    osds[2].id      = 2;
-
-    cceph_osdmap osdmap;
-    osdmap.epoch     = 0;
-    osdmap.pg_count  = 256;
-    osdmap.osd_count = 3;
-    osdmap.osds      = &osds[0];
-
-    cceph_buffer* buffer = NULL;
-    ret = cceph_buffer_new(&buffer, log_id);
-    if (ret != CCEPH_OK) {
-        return ret;
-    }
-    cceph_encode_osdmap(buffer, &osdmap, log_id);
-
     return CCEPH_OK;
+
 }
-
-
-
 

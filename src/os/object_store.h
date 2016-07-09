@@ -86,4 +86,10 @@ typedef struct {
     cceph_os_read_obj_map_key_func    read_obj_map_key;
 } cceph_os_funcs;
 
+extern int cceph_os_create_coll(
+        cceph_object_store* os,
+        cceph_os_funcs*     os_funcs,
+        cceph_os_coll_id_t  cid,
+        int64_t             log_id);
+
 #endif
