@@ -6,7 +6,6 @@
 TEST_F(os, coll_create_and_remove) {
     int64_t             log_id = 122;
     cceph_os_coll_id_t  cid    = 1;
-    cceph_os_tran*      tran   = NULL;
     cceph_object_store* os     = GetObjectStore(log_id);
     cceph_os_funcs*     funcs  = GetObjectStoreFuncs();
 
@@ -14,49 +13,24 @@ TEST_F(os, coll_create_and_remove) {
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Create Collection: Success
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_coll_create(tran, cid,  log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_create_coll(os, funcs, cid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Create Collection: Already Exist
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_coll_create(tran, cid,  log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
+    ret = cceph_os_create_coll(os, funcs, cid, log_id);
     EXPECT_EQ(CCEPH_ERR_COLL_ALREADY_EXIST, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
 
     //Remove Collection: Success
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_coll_remove(tran, cid, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_remove_coll(os, funcs, cid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Remove Collection: Not Exist
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_coll_remove(tran, cid, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_ERR_COLL_NOT_EXIST, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_remove_coll(os, funcs, cid, log_id);
+    EXPECT_EQ(CCEPH_ERR_COLL_NOT_EXIST, cceph_os_remove_coll(os, funcs, cid, log_id));
 }
 
 TEST_F(os, coll_list) {
     int64_t             log_id = 122;
-    cceph_os_tran*      tran   = NULL;
     cceph_object_store* os     = GetObjectStore(log_id);
     cceph_os_funcs*     funcs  = GetObjectStoreFuncs();
 
@@ -64,17 +38,11 @@ TEST_F(os, coll_list) {
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Create Collection: Success
-    ret = cceph_os_tran_new(&tran, log_id);
+    ret = cceph_os_create_coll(os, funcs, 1, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_coll_create(tran, 1,  log_id);
+    ret = cceph_os_create_coll(os, funcs, 2, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_coll_create(tran, 2,  log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_coll_create(tran, 3,  log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_create_coll(os, funcs, 3, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     int coll_list_length = 0;
@@ -90,7 +58,6 @@ TEST_F(os, coll_list) {
 
 TEST_F(os, coll_exist) {
     int64_t             log_id = 122;
-    cceph_os_tran*      tran   = NULL;
     cceph_object_store* os     = GetObjectStore(log_id);
     cceph_os_funcs*     funcs  = GetObjectStoreFuncs();
 
@@ -103,13 +70,7 @@ TEST_F(os, coll_exist) {
     EXPECT_EQ(0, is_existed);
 
     //Create Collection: Success
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_coll_create(tran, 1,  log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_create_coll(os, funcs, 1, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     ret = funcs->exist_coll(os, 1, &is_existed, log_id);
@@ -142,13 +103,7 @@ TEST_F(os, object_touch_and_remove) {
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Create Collection
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_coll_create(tran, cid,  log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_create_coll(os, funcs, cid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Read Object
@@ -345,13 +300,7 @@ TEST_F(os, object_write_and_read) {
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Create Collection
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_coll_create(tran, cid,  log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_create_coll(os, funcs, cid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     write_read_thread_func(&arg);
@@ -360,7 +309,6 @@ TEST_F(os, object_write_and_read_multithread) {
     int64_t               log_id = 122;
     cceph_object_store*   os     = GetObjectStore(log_id);
     cceph_os_funcs*       funcs  = GetObjectStoreFuncs();
-    cceph_os_tran*        tran   = NULL;
 
     int ret = funcs->mount(os, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
@@ -372,13 +320,7 @@ TEST_F(os, object_write_and_read_multithread) {
     for (int i = 0; i < thread_count; i++) {
 
         //Create Collection
-        ret = cceph_os_tran_new(&tran, log_id);
-        EXPECT_EQ(CCEPH_OK, ret);
-        ret = cceph_os_tran_coll_create(tran, i,  log_id);
-        EXPECT_EQ(CCEPH_OK, ret);
-        ret = funcs->submit_tran(os, tran, log_id);
-        EXPECT_EQ(CCEPH_OK, ret);
-        ret = cceph_os_tran_free(&tran, log_id);
+        ret = cceph_os_create_coll(os, funcs, i, log_id);
         EXPECT_EQ(CCEPH_OK, ret);
 
         char* oid = (char*)malloc(sizeof(char) * 256);
@@ -399,24 +341,12 @@ TEST_F(os, object_write_and_read_multithread) {
     }
     for (int i = 0; i < thread_count; i++) {
         //Remove Collection: Success
-        ret = cceph_os_tran_new(&tran, log_id);
-        EXPECT_EQ(CCEPH_OK, ret);
-        ret = cceph_os_tran_coll_remove(tran, i, log_id);
-        EXPECT_EQ(CCEPH_OK, ret);
-        ret = funcs->submit_tran(os, tran, log_id);
-        EXPECT_EQ(CCEPH_OK, ret);
-        ret = cceph_os_tran_free(&tran, log_id);
+        ret = cceph_os_remove_coll(os, funcs, i, log_id);
         EXPECT_EQ(CCEPH_OK, ret);
 
         //Remove Collection: Not Exist
-        ret = cceph_os_tran_new(&tran, log_id);
-        EXPECT_EQ(CCEPH_OK, ret);
-        ret = cceph_os_tran_coll_remove(tran, i, log_id);
-        EXPECT_EQ(CCEPH_OK, ret);
-        ret = funcs->submit_tran(os, tran, log_id);
+        ret = cceph_os_remove_coll(os, funcs, i, log_id);
         EXPECT_EQ(CCEPH_ERR_COLL_NOT_EXIST, ret);
-        ret = cceph_os_tran_free(&tran, log_id);
-        EXPECT_EQ(CCEPH_OK, ret);
     }
 }
 TEST_F(os, coll_map) {
@@ -430,13 +360,7 @@ TEST_F(os, coll_map) {
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Create Collection: Success
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_coll_create(tran, cid,  log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_create_coll(os, funcs, cid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Initial Input Node and map
@@ -565,13 +489,7 @@ TEST_F(os, obj_map) {
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Create Coll: Success
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_coll_create(tran, cid, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_create_coll(os, funcs, cid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Touch Object
