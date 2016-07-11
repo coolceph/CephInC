@@ -363,14 +363,6 @@ TEST_F(os, coll_map) {
     ret = cceph_os_create_coll(os, funcs, cid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
-    //Initial Input Node and map
-    cceph_rb_root input_map = CCEPH_RB_ROOT;
-    cceph_os_map_node* node1 = NULL;
-    ret = cceph_os_map_node_new("key1", "value1", strlen("value1"), &node1, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_map_node_insert(&input_map, node1, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-
     //Map: Not Exist
     cceph_os_map_node* result_node = NULL;
     cceph_rb_root      result_map  = CCEPH_RB_ROOT;
@@ -389,13 +381,7 @@ TEST_F(os, coll_map) {
     EXPECT_EQ(0, result_length);
 
     //Map Add
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_coll_map(tran, cid, &input_map, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_set_coll_map_key(os, funcs, cid, "key1", "value1", strlen("value1"), log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Map: Exist, Value = "value1"
@@ -418,15 +404,7 @@ TEST_F(os, coll_map) {
     EXPECT_EQ(0, strncmp("value1", result_value, result_length));
 
     //Map Update
-    node1->value        = (char*)"value1_changed";
-    node1->value_length = strlen("value1_changed");
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_coll_map(tran, cid, &input_map, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_set_coll_map_key(os, funcs, cid, "key1", "value1_changed", strlen("value1_changed"), log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Map: Exist, Value = "value1_changed"
@@ -449,6 +427,13 @@ TEST_F(os, coll_map) {
     EXPECT_EQ(0, strncmp("value1_changed", result_value, result_length));
 
     //Map Remove
+    //Initial Input Node and map
+    cceph_rb_root input_map = CCEPH_RB_ROOT;
+    cceph_os_map_node* node1 = NULL;
+    ret = cceph_os_map_node_new("key1", "value1", strlen("value1"), &node1, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    ret = cceph_os_map_node_insert(&input_map, node1, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
     node1->value        = NULL;
     node1->value_length = 0;
     ret = cceph_os_tran_new(&tran, log_id);

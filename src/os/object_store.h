@@ -98,4 +98,13 @@ extern int cceph_os_remove_coll(
         cceph_os_coll_id_t  cid,
         int64_t             log_id);
 
+extern int cceph_os_set_coll_map_key(
+        cceph_object_store* os,
+        cceph_os_funcs*     os_funcs,
+        cceph_os_coll_id_t  cid,
+        const char*         key,
+        const char*         value,
+        int32_t             value_length,
+        int64_t             log_id);
+
 #endif
