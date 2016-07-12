@@ -107,4 +107,11 @@ extern int cceph_os_set_coll_map_key(
         int32_t             value_length,
         int64_t             log_id);
 
+extern int cceph_os_touch_obj(
+        cceph_object_store* os,
+        cceph_os_funcs*     os_funcs,
+        cceph_os_coll_id_t  cid,
+        const char*         oid,
+        int64_t             log_id);
+
 #endif

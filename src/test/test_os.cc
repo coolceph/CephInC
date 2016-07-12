@@ -93,14 +93,8 @@ TEST_F(os, object_touch_and_remove) {
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Collection Not Existed
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_obj_touch(tran, cid, oid, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
+    ret = cceph_os_touch_obj(os, funcs, cid, oid, log_id);
     EXPECT_EQ(CCEPH_ERR_COLL_NOT_EXIST, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
 
     //Create Collection
     ret = cceph_os_create_coll(os, funcs, cid, log_id);
@@ -112,23 +106,11 @@ TEST_F(os, object_touch_and_remove) {
     EXPECT_EQ(0, result_length);
 
     //Touch Object: Success
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_obj_touch(tran, cid, oid, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_touch_obj(os, funcs, cid, oid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Touch Object: Already Exist
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_obj_touch(tran, cid, oid, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_touch_obj(os, funcs, cid, oid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Read Object
@@ -478,13 +460,7 @@ TEST_F(os, obj_map) {
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Touch Object
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_obj_touch(tran, cid, oid, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_touch_obj(os, funcs, cid, oid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Initial Input Node and map
