@@ -181,13 +181,7 @@ void* write_read_thread_func(void* arg_ptr) {
     buffer = "cceph_buffer_content";
     length = strlen(buffer);
     offset = 0;
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_obj_write(tran, cid, oid, offset, length, buffer, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_write_obj(os, funcs, cid, oid, offset, length, buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Read Object: All Content
@@ -211,13 +205,7 @@ void* write_read_thread_func(void* arg_ptr) {
     buffer = "cceph_buffer_content";
     length = strlen(buffer);
     offset = 7;
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_obj_write(tran, cid, oid, offset, length, buffer, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_write_obj(os, funcs, cid, oid, offset, length, buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Read Object: All Content
@@ -231,13 +219,7 @@ void* write_read_thread_func(void* arg_ptr) {
     buffer = "cceph_buffer_content";
     length = 7;
     offset = 0;
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_obj_write(tran, cid, oid, offset, length, buffer, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_write_obj(os, funcs, cid, oid, offset, length, buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Read Object: All Content
@@ -252,7 +234,6 @@ void* write_read_thread_func(void* arg_ptr) {
 
 TEST_F(os, object_write_and_read) {
     int64_t             log_id = 122;
-    cceph_os_tran*      tran   = NULL;
     cceph_object_store* os     = GetObjectStore(log_id);
     cceph_os_funcs*     funcs  = GetObjectStoreFuncs();
 
@@ -272,14 +253,8 @@ TEST_F(os, object_write_and_read) {
     const char*           buffer        = "buffer_content";
     int64_t               offset        = 0;
     int64_t               length        = strlen(buffer);
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_obj_write(tran, cid, oid, offset, length, buffer, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
+    ret = cceph_os_write_obj(os, funcs, cid, oid, offset, length, buffer, log_id);
     EXPECT_EQ(CCEPH_ERR_COLL_NOT_EXIST, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
 
     //Create Collection
     ret = cceph_os_create_coll(os, funcs, cid, log_id);

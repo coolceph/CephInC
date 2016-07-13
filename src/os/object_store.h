@@ -114,4 +114,14 @@ extern int cceph_os_touch_obj(
         const char*         oid,
         int64_t             log_id);
 
+extern int cceph_os_write_obj(
+        cceph_object_store* os,
+        cceph_os_funcs*     os_funcs,
+        cceph_os_coll_id_t  cid,
+        const char*         oid,
+        int64_t             offset,
+        int64_t             length,
+        const char*         data,
+        int64_t             log_id);
+
 #endif
