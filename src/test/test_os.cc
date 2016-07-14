@@ -82,7 +82,6 @@ TEST_F(os, object_touch_and_remove) {
     int64_t             log_id        = 122;
     cceph_os_coll_id_t  cid           = 1;
     const char*         oid           = "object";
-    cceph_os_tran*      tran          = NULL;
     int64_t             result_length = 0;
     char*               result_buffer = NULL;
 
@@ -120,13 +119,7 @@ TEST_F(os, object_touch_and_remove) {
     EXPECT_EQ(0, result_length);
 
     //Remove Object: Success
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_obj_remove(tran, cid, oid, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_remove_obj(os, funcs, cid, oid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Read Object
@@ -136,14 +129,8 @@ TEST_F(os, object_touch_and_remove) {
     EXPECT_EQ(0, result_length);
 
     //Remove Object
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_obj_remove(tran, cid, oid, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
+    ret = cceph_os_remove_obj(os, funcs, cid, oid, log_id);
     EXPECT_EQ(CCEPH_ERR_OBJECT_NOT_EXIST, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
 }
 
 typedef struct {
@@ -164,7 +151,6 @@ void* write_read_thread_func(void* arg_ptr) {
     cceph_os_coll_id_t    cid    = arg->cid;
     const char*           oid    = arg->oid;
 
-    cceph_os_tran*        tran          = NULL;
     const char*           buffer        = "buffer_content";
     int64_t               offset        = 0;
     int64_t               length        = strlen(buffer);
@@ -192,13 +178,7 @@ void* write_read_thread_func(void* arg_ptr) {
     EXPECT_TRUE(strncmp(buffer, result_buffer, length) == 0);
 
     //Remove Object
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_obj_remove(tran, cid, oid, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_remove_obj(os, funcs, cid, oid, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Write Object: Offset = 7
