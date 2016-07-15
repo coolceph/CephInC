@@ -289,7 +289,6 @@ TEST_F(os, object_write_and_read_multithread) {
 TEST_F(os, coll_map) {
     int64_t             log_id = 122;
     cceph_os_coll_id_t  cid    = 1;
-    cceph_os_tran*      tran   = NULL;
     cceph_object_store* os     = GetObjectStore(log_id);
     cceph_os_funcs*     funcs  = GetObjectStoreFuncs();
 
@@ -365,21 +364,7 @@ TEST_F(os, coll_map) {
 
     //Map Remove
     //Initial Input Node and map
-    cceph_rb_root input_map = CCEPH_RB_ROOT;
-    cceph_os_map_node* node1 = NULL;
-    ret = cceph_os_map_node_new("key1", "value1", strlen("value1"), &node1, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_map_node_insert(&input_map, node1, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    node1->value        = NULL;
-    node1->value_length = 0;
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_coll_map(tran, cid, &input_map, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_set_coll_map_key(os, funcs, cid, "key1", NULL, 0, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Map: Not Exist
@@ -403,7 +388,6 @@ TEST_F(os, obj_map) {
     int64_t             log_id = 122;
     cceph_os_coll_id_t  cid    = 1;
     const char*         oid    = (const char*)"oid";
-    cceph_os_tran*      tran   = NULL;
     cceph_object_store* os     = GetObjectStore(log_id);
     cceph_os_funcs*     funcs  = GetObjectStoreFuncs();
 
@@ -416,14 +400,6 @@ TEST_F(os, obj_map) {
 
     //Touch Object
     ret = cceph_os_touch_obj(os, funcs, cid, oid, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-
-    //Initial Input Node and map
-    cceph_rb_root input_map = CCEPH_RB_ROOT;
-    cceph_os_map_node* node1 = NULL;
-    ret = cceph_os_map_node_new("key1", "value1", strlen("value1"), &node1, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_map_node_insert(&input_map, node1, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Map: Not Exist
@@ -444,13 +420,7 @@ TEST_F(os, obj_map) {
     EXPECT_EQ(0, result_length);
 
     //Map Add
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_obj_map(tran, cid, oid, &input_map, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_set_obj_map_key(os, funcs, cid, oid, "key1", "value1", strlen("value1"), log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Map: Exist, Value = "value1"
@@ -473,15 +443,7 @@ TEST_F(os, obj_map) {
     EXPECT_EQ(0, strncmp("value1", result_value, result_length));
 
     //Map Update
-    node1->value        = (char*)"value1_changed";
-    node1->value_length = strlen("value1_changed");
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_obj_map(tran, cid, oid, &input_map, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_set_obj_map_key(os, funcs, cid, oid, "key1", "value1_changed", strlen("value1_changed"), log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Map: Exist, Value = "value1_changed"
@@ -504,15 +466,7 @@ TEST_F(os, obj_map) {
     EXPECT_EQ(0, strncmp("value1_changed", result_value, result_length));
 
     //Map Remove
-    node1->value        = NULL;
-    node1->value_length = 0;
-    ret = cceph_os_tran_new(&tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_obj_map(tran, cid, oid, &input_map, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = funcs->submit_tran(os, tran, log_id);
-    EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_tran_free(&tran, log_id);
+    ret = cceph_os_set_obj_map_key(os, funcs, cid, oid, "key1", NULL, 0, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Map: Not Exist
