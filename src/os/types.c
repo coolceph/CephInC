@@ -76,6 +76,9 @@ int cceph_os_map_node_new(
         }
         memcpy((*node)->value, value, value_length);
         (*node)->value_length = value_length;
+    } else {
+        (*node)->value = NULL;
+        (*node)->value_length = 0;
     }
 
     return CCEPH_OK;
