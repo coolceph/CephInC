@@ -10,9 +10,9 @@
 
 #include "os/object_store.h"
 
-#define CCEPH_OS_META_COLL_ID               0
-#define CCEPH_OS_META_ATTR_OSD_ID           "osd_id"
-#define CCEPH_OS_META_ATTR_OSDMAP_MAX_EPOCH "osdmap_max_epoch"
+#define CCEPH_OSD_META_COLL_ID               0
+#define CCEPH_OSD_META_ATTR_OSD_ID           "osd_id"
+#define CCEPH_OSD_META_ATTR_OSDMAP_MAX_EPOCH "osdmap_max_epoch"
 
 typedef struct {
     cceph_osd_id_t          osd_id;

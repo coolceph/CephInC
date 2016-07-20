@@ -30,7 +30,7 @@ TEST(osd, create) {
     cceph_osd_id_t* result_osd_id = NULL;
     int result_osd_id_length = 0;
     ret = funcs->read_coll_map_key(os,
-            CCEPH_OS_META_COLL_ID, CCEPH_OS_META_ATTR_OSD_ID,
+            CCEPH_OSD_META_COLL_ID, CCEPH_OSD_META_ATTR_OSD_ID,
             &result_osd_id_length, (char**)&result_osd_id, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(sizeof(cceph_osd_id_t), result_osd_id_length);
@@ -39,7 +39,7 @@ TEST(osd, create) {
     cceph_epoch_t* result_max_osdmap_epoch = NULL;
     int result_max_osdmap_epoch_length = 0;
     ret = funcs->read_coll_map_key(os,
-            CCEPH_OS_META_COLL_ID, CCEPH_OS_META_ATTR_OSDMAP_MAX_EPOCH,
+            CCEPH_OSD_META_COLL_ID, CCEPH_OSD_META_ATTR_OSDMAP_MAX_EPOCH,
             &result_max_osdmap_epoch_length, (char**)&result_max_osdmap_epoch, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(sizeof(cceph_epoch_t), result_max_osdmap_epoch_length);
