@@ -14,6 +14,13 @@
 #define CCEPH_OSD_META_ATTR_OSD_ID           "osd_id"
 #define CCEPH_OSD_META_ATTR_OSDMAP_MAX_EPOCH "osdmap_max_epoch"
 
+#define CCEPH_PG_STATE_UNKNOWN    0
+#define CCEPH_PG_STATE_INITIAL    1
+#define CCEPH_PG_STATE_STARTING   2
+#define CCEPH_PG_STATE_ACTIVE     3
+#define CCEPH_PG_STATE_DISUSE     4
+#define CCEPH_PG_STATE_INCOMPLETE 5
+
 typedef struct {
     cceph_osd_id_t          osd_id;
 
