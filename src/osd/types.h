@@ -33,4 +33,9 @@ typedef struct {
     cceph_osdmap*           osdmap;
 } cceph_osd;
 
+typedef struct {
+    cceph_pg_id_t pg_id;
+    int8_t        state;
+}
+
 #endif
