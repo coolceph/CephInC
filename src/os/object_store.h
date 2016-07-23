@@ -24,6 +24,12 @@ typedef int (*cceph_os_list_coll_func)(
         cceph_os_coll_id_t** coll_id_list,
         int64_t              log_id);
 
+typedef int (*cceph_os_exist_coll_func)(
+        cceph_object_store*  os,
+        cceph_os_coll_id_t   coll_id,
+        int8_t*              is_existed,
+        int64_t              log_id);
+
 //if length <= 0 or length >= object->length, read the whole content
 typedef int (*cceph_os_read_obj_func)(
         cceph_object_store* os,
@@ -70,6 +76,7 @@ typedef struct {
     cceph_os_submit_tran_func         submit_tran;
 
     cceph_os_list_coll_func           list_coll;
+    cceph_os_exist_coll_func          exist_coll;
 
     cceph_os_read_coll_map_func       read_coll_map;
     cceph_os_read_coll_map_key_func   read_coll_map_key;
@@ -78,5 +85,11 @@ typedef struct {
     cceph_os_read_obj_map_func        read_obj_map;
     cceph_os_read_obj_map_key_func    read_obj_map_key;
 } cceph_os_funcs;
+
+extern int cceph_os_create_coll(
+        cceph_object_store* os,
+        cceph_os_funcs*     os_funcs,
+        cceph_os_coll_id_t  cid,
+        int64_t             log_id);
 
 #endif

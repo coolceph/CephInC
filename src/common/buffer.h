@@ -36,6 +36,13 @@ extern int cceph_buffer_append(
         int32_t       length,
         int64_t       log_id);
 
+//Convert buffer to char*, data should be NULL
+extern int cceph_buffer_flat(
+        cceph_buffer* buffer,
+        char**        data,
+        int32_t*      length,
+        int64_t       log_id);
+
 typedef struct {
     cceph_buffer*      buffer;
     cceph_buffer_node* node;

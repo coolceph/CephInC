@@ -10,6 +10,7 @@
 #include "common/errno.h"
 #include "common/log.h"
 #include "common/option.h"
+#include "common/osdmap.h"
 
 #include "message/msg_write_obj.h"
 

@@ -19,6 +19,7 @@ cceph_os_funcs* cceph_mem_store_get_funcs() {
     os_funcs->submit_tran       = cceph_mem_store_submit_tran;
 
     os_funcs->list_coll         = cceph_mem_store_list_coll;
+    os_funcs->exist_coll        = cceph_mem_store_exist_coll;
 
     os_funcs->read_coll_map     = cceph_mem_store_read_coll_map;
     os_funcs->read_coll_map_key = cceph_mem_store_read_coll_map_key;
@@ -525,6 +526,28 @@ extern int cceph_mem_store_list_coll(
 
     pthread_mutex_unlock(&mem_store->lock);
     return ret;
+}
+
+extern int cceph_mem_store_exist_coll(
+        cceph_object_store*  os,
+        cceph_os_coll_id_t   cid,
+        int8_t*              is_existed,
+        int64_t              log_id) {
+
+    assert(log_id, os != NULL);
+    assert(log_id, is_existed != NULL);
+
+    LOG(LL_INFO, log_id, "Execute ExistCollection op, log_id %ld.", log_id);
+
+    cceph_mem_store*           mem_store = (cceph_mem_store*)os;
+    cceph_mem_store_coll_node* cnode     = NULL;
+
+    pthread_mutex_lock(&mem_store->lock);
+    cceph_mem_store_coll_node_search(&mem_store->colls, cid, &cnode, log_id);
+    pthread_mutex_unlock(&mem_store->lock);
+
+    *is_existed = cnode == NULL ? 0 : 1;
+    return CCEPH_OK;
 }
 
 extern int cceph_mem_store_read_coll_map(
