@@ -91,6 +91,11 @@ unittest_osd_osd_LDADD = $(LIBOSD) $(LIBMESSAGE) $(LIBOS) $(LIBCOMMON) -lm $(UNI
 unittest_osd_osd_CXXFLAGS = $(UNITTEST_CXXFLAGS)
 check_PROGRAMS += unittest_osd_osd
 
+unittest_osd_osd_create_SOURCES = test/test_osd_osd_create.cc
+unittest_osd_osd_create_LDADD = $(LIBOSD) $(LIBMESSAGE) $(LIBOS) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
+unittest_osd_osd_create_CXXFLAGS = $(UNITTEST_CXXFLAGS)
+check_PROGRAMS += unittest_osd_osd_create
+
 unittest_client_client_SOURCES = test/test_client_client.cc
 unittest_client_client_LDADD = $(LIBCLIENT) $(LIBMESSAGE) $(LIBCOMMON) -lm $(UNITTEST_LDADD)
 unittest_client_client_CXXFLAGS = $(UNITTEST_CXXFLAGS)

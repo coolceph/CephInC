@@ -1,5 +1,6 @@
 libosd_la_SOURCES =        \
 	osd/types.c            \
+	osd/pg_map.c           \
 	osd/osd_msg_process.c  \
 	osd/osd_create.c       \
 	osd/osd.c

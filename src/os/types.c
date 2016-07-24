@@ -25,6 +25,8 @@ const char* cceph_os_op_to_str(int op) {
             return "CollectionCreate";
         case CCEPH_OS_OP_COLL_REMOVE:
             return "CollectionRemove";
+        case CCEPH_OS_OP_COLL_MAP:
+            return "CollectionMap";
         case CCEPH_OS_OP_OBJ_TOUCH:
             return "ObjectTouch";
         case CCEPH_OS_OP_OBJ_WRITE:
@@ -76,6 +78,9 @@ int cceph_os_map_node_new(
         }
         memcpy((*node)->value, value, value_length);
         (*node)->value_length = value_length;
+    } else {
+        (*node)->value = NULL;
+        (*node)->value_length = 0;
     }
 
     return CCEPH_OK;
