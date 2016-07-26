@@ -37,7 +37,7 @@ int cceph_pg_map_insert(
     return CCEPH_OK;
 }
 
-int cceph_pg_map_node_remove(
+int cceph_pg_map_remove(
         cceph_rb_root *root,
         cceph_pg      *node,
         int64_t       log_id) {
@@ -50,10 +50,10 @@ int cceph_pg_map_node_remove(
     return CCEPH_OK;
 }
 
-int cceph_pg_map_node_search(
-        cceph_rb_root* root,
+int cceph_pg_map_search(
+        cceph_rb_root *root,
         cceph_pg_id_t  pg_id,
-        cceph_pg**     result,
+        cceph_pg       **result,
         int64_t        log_id) {
 
     assert(log_id, root != NULL);
