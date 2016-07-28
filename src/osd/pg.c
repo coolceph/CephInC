@@ -23,8 +23,15 @@ int cceph_pg_new(
 }
 
 int cceph_pg_free(
-        cceph_pg** node,
+        cceph_pg** pg,
         int64_t    log_id) {
+
+    assert(log_id, pg != NULL);
+    assert(log_id, *pg != NULL);
+
+    free(*pg);
+
+    *pg = NULL;
 
     return CCEPH_OK;
 }
