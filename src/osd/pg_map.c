@@ -4,6 +4,7 @@
 
 #include "common/assert.h"
 #include "common/errno.h"
+#include "common/util.h"
 
 int cceph_pg_map_insert(
         cceph_rb_root *root,
@@ -18,7 +19,7 @@ int cceph_pg_map_insert(
     /* Figure out where to put new node */
     while (*new) {
         cceph_pg *this = cceph_container_of(*new, cceph_pg, node);
-        int result = node->pg_id > this->pg_id;
+        int result = intcmp(node->pg_id, this->pg_id);
 
         parent = *new;
         if (result < 0) {
@@ -65,7 +66,7 @@ int cceph_pg_map_search(
     while (node) {
         cceph_pg *data = cceph_container_of(node, cceph_pg, node);
 
-        int ret = pg_id > data->pg_id;
+        int ret = intcmp(pg_id, data->pg_id);
         if (ret < 0) {
             node = node->rb_left;
         } else if (ret > 0) {
