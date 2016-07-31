@@ -19,6 +19,8 @@ int cceph_pg_new(
     (*pg)->pg_id = pg_id;
     (*pg)->state = CCEPH_PG_STATE_UNKNOWN;
 
+    pthread_mutex_init(&((*pg)->lock), NULL);
+
     return CCEPH_OK;
 }
 

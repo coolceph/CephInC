@@ -1,6 +1,8 @@
 #ifndef CCEPH_OSD_TYPES_H
 #define CCEPH_OSD_TYPES_H
 
+#include <pthread.h>
+
 #include "common/types.h"
 #include "common/osdmap.h"
 
@@ -36,6 +38,8 @@ typedef struct {
 typedef struct {
     cceph_pg_id_t pg_id;
     int8_t        state;
+
+    pthread_mutex_t lock;
 
     cceph_rb_node node;
 } cceph_pg;
