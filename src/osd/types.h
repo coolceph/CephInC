@@ -23,25 +23,4 @@
 #define CCEPH_PG_STATE_DISUSE     4
 #define CCEPH_PG_STATE_INCOMPLETE 5
 
-typedef struct {
-    cceph_osd_id_t          osd_id;
-
-    cceph_object_store*     os;
-    cceph_os_funcs*         os_funcs;
-
-    cceph_messenger*        msger;
-    cceph_server_messenger* smsger;
-
-    cceph_osdmap*           osdmap;
-} cceph_osd;
-
-typedef struct {
-    cceph_pg_id_t pg_id;
-    int8_t        state;
-
-    pthread_mutex_t lock;
-
-    cceph_rb_node node;
-} cceph_pg;
-
 #endif

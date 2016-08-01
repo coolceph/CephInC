@@ -6,7 +6,7 @@
 
 #include "os/object_store.h"
 
-#include "osd/types.h"
+#include "osd/osd.h"
 
 extern int cceph_osd_create(
         cceph_osd* osd,

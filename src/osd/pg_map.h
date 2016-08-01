@@ -1,7 +1,7 @@
 #ifndef CCEPH_PG_MAP_H
 #define CCEPH_PG_MAP_H
 
-#include "osd/types.h"
+#include "osd/pg.h"
 
 extern int cceph_pg_map_insert(
         cceph_rb_root *root,
