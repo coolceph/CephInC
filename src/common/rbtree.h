@@ -164,4 +164,19 @@ static inline void cceph_rb_link_node(
 	*rb_link = node;
 }
 
+#define CCEPH_DEFINE_MAP(type, key_type, key_name) \
+extern int cceph_##type##_map_insert(              \
+        cceph_rb_root *root,                       \
+        cceph_##type  *node,                       \
+        int64_t       log_id);                     \
+extern int cceph_##type##_map_remove(              \
+        cceph_rb_root *root,                       \
+        cceph_##type  *node,                       \
+        int64_t       log_id);                     \
+extern int cceph_##type##_map_search(              \
+        cceph_rb_root *root,                       \
+        key_type      key_name,                    \
+        cceph_##type  **result,                    \
+        int64_t       log_id);                     \
+
 #endif

@@ -26,20 +26,6 @@ typedef struct {
 CCEPH_DEFINE_ENCODE_METHOD(osd_entity);
 CCEPH_DEFINE_ENCODE_METHOD(osdmap);
 
-extern int cceph_osdmap_map_insert(
-        cceph_rb_root *root,
-        cceph_osdmap  *node,
-        int64_t       log_id);
-
-extern int cceph_osdmap_map_remove(
-        cceph_rb_root *root,
-        cceph_osdmap  *node,
-        int64_t       log_id);
-
-extern int cceph_osdmap_map_search(
-        cceph_rb_root *root,
-        cceph_epoch_t key,
-        cceph_osdmap  **result,
-        int64_t       log_id);
+CCEPH_DEFINE_MAP(osdmap, cceph_epoch_t, epoch);
 
 #endif

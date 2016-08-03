@@ -1,6 +1,7 @@
 #ifndef CCEPH_PG_H
 #define CCEPH_PG_H
 
+#include "common/rbtree.h"
 #include "osd/types.h"
 
 typedef struct {
@@ -20,5 +21,7 @@ extern int cceph_pg_new(
 extern int cceph_pg_free(
         cceph_pg** node,
         int64_t    log_id);
+
+CCEPH_DEFINE_MAP(pg, cceph_pg_id_t, pg_id);
 
 #endif
