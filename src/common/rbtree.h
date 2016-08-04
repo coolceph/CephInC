@@ -179,4 +179,78 @@ extern int cceph_##type##_map_search(              \
         cceph_##type  **result,                    \
         int64_t       log_id);                     \
 
+#define CCEPH_IMPL_MAP(type, key_type, key_name, cmp_method)                    \
+int cceph_##type##_map_insert(                                                  \
+        cceph_rb_root *root,                                                    \
+        cceph_##type  *node,                                                    \
+        int64_t       log_id) {                                                 \
+                                                                                \
+    assert(log_id, root != NULL);                                               \
+    assert(log_id, node != NULL);                                               \
+                                                                                \
+    cceph_rb_node **new = &(root->rb_node), *parent = NULL;                     \
+                                                                                \
+    /* Figure out where to put new node */                                      \
+    while (*new) {                                                              \
+        cceph_##type *this = cceph_container_of(*new, cceph_##type, node);      \
+        int result = cmp_method(node->key_name, this->key_name);                \
+                                                                                \
+        parent = *new;                                                          \
+        if (result < 0) {                                                       \
+            new = &((*new)->rb_left);                                           \
+        } else if (result > 0) {                                                \
+            new = &((*new)->rb_right);                                          \
+        } else {                                                                \
+            return CCEPH_ERR_MAP_NODE_ALREADY_EXIST;                            \
+        }                                                                       \
+    }                                                                           \
+                                                                                \
+    /* Add new node and rebalance tree. */                                      \
+    cceph_rb_link_node(&node->node, parent, new);                               \
+    cceph_rb_insert_color(&node->node, root);                                   \
+                                                                                \
+    return CCEPH_OK;                                                            \
+}                                                                               \
+                                                                                \
+int cceph_##type##_map_remove(                                                  \
+        cceph_rb_root *root,                                                    \
+        cceph_##type  *node,                                                    \
+        int64_t       log_id) {                                                 \
+                                                                                \
+    assert(log_id, root != NULL);                                               \
+    assert(log_id, node != NULL);                                               \
+                                                                                \
+    cceph_rb_erase(&node->node, root);                                          \
+                                                                                \
+    return CCEPH_OK;                                                            \
+}                                                                               \
+                                                                                \
+int cceph_##type##_map_search(                                                  \
+        cceph_rb_root *root,                                                    \
+        key_type      key,                                                      \
+        cceph_##type  **result,                                                 \
+        int64_t       log_id) {                                                 \
+                                                                                \
+    assert(log_id, root != NULL);                                               \
+    assert(log_id, result != NULL);                                             \
+    assert(log_id, *result == NULL);                                            \
+                                                                                \
+    cceph_rb_node *node = root->rb_node;                                        \
+                                                                                \
+    while (node) {                                                              \
+        cceph_##type *data = cceph_container_of(node, cceph_##type, node);      \
+                                                                                \
+        int ret = cmp_method(key, data->key_name);                              \
+        if (ret < 0) {                                                          \
+            node = node->rb_left;                                               \
+        } else if (ret > 0) {                                                   \
+            node = node->rb_right;                                              \
+        } else {                                                                \
+            *result = data;                                                     \
+            return CCEPH_OK;                                                    \
+        }                                                                       \
+    }                                                                           \
+    return CCEPH_ERR_MAP_NODE_NOT_EXIST;                                        \
+}
+
 #endif

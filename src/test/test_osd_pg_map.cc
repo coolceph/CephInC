@@ -3,7 +3,6 @@ extern "C" {
 #include "common/rbtree.h"
 
 #include "osd/pg.h"
-#include "osd/pg_map.h"
 }
 
 #include "gtest/gtest.h"

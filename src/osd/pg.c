@@ -2,6 +2,7 @@
 
 #include "common/assert.h"
 #include "common/errno.h"
+#include "common/util.h"
 
 int cceph_pg_new(
         cceph_pg**    pg,
@@ -37,3 +38,5 @@ int cceph_pg_free(
 
     return CCEPH_OK;
 }
+
+CCEPH_IMPL_MAP(pg, cceph_pg_id_t, pg_id, intcmp);
