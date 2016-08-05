@@ -62,3 +62,30 @@ TEST(cceph_osdmap, encode_and_decode) {
         EXPECT_EQ(value.osds[i].id, result.osds[i].id);
     }
 }
+
+TEST(osdmap_map, insert_remove_search) {
+    int64_t log_id = 122;
+    cceph_rb_root root = CCEPH_RB_ROOT;
+    cceph_osdmap *node = NULL;
+
+    for (int i = 0; i < 1000; i++) {
+        node = (cceph_osdmap*)malloc(sizeof(cceph_osdmap));
+        node->epoch = i;
+        int ret = cceph_osdmap_map_insert(&root, node, log_id);
+        EXPECT_EQ(CCEPH_OK, ret);
+    }
+    for (int i = 0; i < 1000; i++) {
+        node = NULL;
+        int ret = cceph_osdmap_map_search(&root, i, &node, log_id);
+        EXPECT_EQ(CCEPH_OK, ret);
+        EXPECT_NE((cceph_osdmap*)NULL, node);
+        EXPECT_EQ(i, node->epoch);
+
+        ret = cceph_osdmap_map_remove(&root, node, log_id);
+        EXPECT_EQ(CCEPH_OK, ret);
+
+        node = NULL;
+        ret = cceph_osdmap_map_search(&root, i, &node, log_id);
+        EXPECT_EQ(CCEPH_ERR_MAP_NODE_NOT_EXIST, ret);
+    }
+}
