@@ -9,6 +9,18 @@
 
 #include "osd/types.h"
 
+typedef struct {
+    cceph_osd_id_t          osd_id;
+
+    cceph_object_store*     os;
+    cceph_os_funcs*         os_funcs;
+
+    cceph_messenger*        msger;
+    cceph_server_messenger* smsger;
+
+    cceph_osdmap*           osdmap;
+} cceph_osd;
+
 extern int cceph_osd_initial(
         cceph_osd**         osd,
         cceph_osd_id_t      osd_id,

@@ -3,6 +3,7 @@
 #include "common/assert.h"
 #include "common/errno.h"
 #include "common/encode.h"
+#include "common/util.h"
 
 int cceph_encode_osd_entity(
         cceph_buffer*     buffer,
@@ -88,3 +89,4 @@ int cceph_decode_osdmap(
     return CCEPH_OK;
 }
 
+CCEPH_IMPL_MAP(osdmap, cceph_epoch_t, epoch, intcmp);

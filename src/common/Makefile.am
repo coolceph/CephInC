@@ -7,6 +7,7 @@ libcommon_la_SOURCES =	\
 	common/log.c		\
 	common/rbtree.c		\
 	common/option.c     \
-	common/osdmap.c
+	common/osdmap.c     \
+	common/util.c
 
 noinst_LTLIBRARIES += libcommon.la
