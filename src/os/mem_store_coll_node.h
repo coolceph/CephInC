@@ -22,19 +22,6 @@ extern int cceph_mem_store_coll_node_free(
         cceph_mem_store_coll_node** node,
         int64_t                     log_id);
 
-extern int cceph_mem_store_coll_node_search(
-        cceph_rb_root*              root,
-        cceph_os_coll_id_t          cid,
-        cceph_mem_store_coll_node** result,
-        int64_t                     log_id);
+CCEPH_DEFINE_MAP(mem_store_coll_node, cceph_os_coll_id_t, cid);
 
-extern int cceph_mem_store_coll_node_insert(
-        cceph_rb_root*              root,
-        cceph_mem_store_coll_node*  node,
-        int64_t                     log_id);
-
-extern int cceph_mem_store_coll_node_remove(
-        cceph_rb_root*              root,
-        cceph_mem_store_coll_node*  node,
-        int64_t                     log_id);
 #endif

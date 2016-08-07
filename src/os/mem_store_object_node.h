@@ -26,20 +26,6 @@ extern int cceph_mem_store_object_node_free_tree(
         cceph_rb_root*                tree,
         int64_t                       log_id);
 
-extern int cceph_mem_store_object_node_insert(
-        cceph_rb_root               *root,
-        cceph_mem_store_object_node *node,
-        int64_t                      log_id);
-
-extern int cceph_mem_store_object_node_remove(
-        cceph_rb_root               *root,
-        cceph_mem_store_object_node *node,
-        int64_t                      log_id);
-
-extern int cceph_mem_store_object_node_search(
-        cceph_rb_root*                root,
-        const char*                   oid,
-        cceph_mem_store_object_node** result,
-        int64_t                       log_id);
+CCEPH_DEFINE_MAP(mem_store_object_node, const char*, oid);
 
 #endif

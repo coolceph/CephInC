@@ -73,7 +73,7 @@ int cceph_mem_store_do_op_coll_create(
     log_id = op->log_id; //We will use op's log_id from here
 
     cceph_mem_store_coll_node *cnode = NULL;
-    int ret = cceph_mem_store_coll_node_search(&os->colls, op->cid, &cnode, log_id);
+    int ret = cceph_mem_store_coll_node_map_search(&os->colls, op->cid, &cnode, log_id);
     if (ret == CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute CreateCollection op failed, cid %d already existed.", op->cid);
         return CCEPH_ERR_COLL_ALREADY_EXIST;
@@ -87,7 +87,7 @@ int cceph_mem_store_do_op_coll_create(
         return ret;
     }
 
-    ret = cceph_mem_store_coll_node_insert(&os->colls, cnode, log_id);
+    ret = cceph_mem_store_coll_node_map_insert(&os->colls, cnode, log_id);
     if (ret != CCEPH_OK) {
         cceph_mem_store_coll_node_free(&cnode, log_id);
         LOG(LL_ERROR, log_id, "Execute CreateCollection op failed, errno %d(%s).",
@@ -112,13 +112,13 @@ int cceph_mem_store_do_op_coll_remove(
     log_id = op->log_id; //We will use op's log_id from here
 
     cceph_mem_store_coll_node *cnode = NULL;
-    int ret = cceph_mem_store_coll_node_search(&os->colls, op->cid, &cnode, log_id);
+    int ret = cceph_mem_store_coll_node_map_search(&os->colls, op->cid, &cnode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute RemoveCollection op failed, cid %d not existed.", op->cid);
         return CCEPH_ERR_COLL_NOT_EXIST;
     }
 
-    ret = cceph_mem_store_coll_node_remove(&os->colls, cnode, log_id);
+    ret = cceph_mem_store_coll_node_map_remove(&os->colls, cnode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute RemoveCollection op failed, can't remove from mem_store, errno %d(%s).",
                 op->cid, ret, cceph_errno_str(ret));
@@ -150,7 +150,7 @@ int cceph_mem_store_do_op_coll_map(
     log_id = op->log_id; //We will use op's log_id from here
 
     cceph_mem_store_coll_node *cnode = NULL;
-    int ret = cceph_mem_store_coll_node_search(&os->colls, op->cid, &cnode, log_id);
+    int ret = cceph_mem_store_coll_node_map_search(&os->colls, op->cid, &cnode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute CollectionMap op failed, cid %d not existed.", op->cid);
         return ret;
@@ -188,7 +188,7 @@ int cceph_mem_store_do_op_obj_write(
     log_id = op->log_id; //We will use op's log_id from here
 
     cceph_mem_store_coll_node *cnode = NULL;
-    int ret = cceph_mem_store_coll_node_search(&os->colls, op->cid, &cnode, log_id);
+    int ret = cceph_mem_store_coll_node_map_search(&os->colls, op->cid, &cnode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute write op failed, search cid %d failed, errno %d(%s).",
                 op->cid, ret, cceph_errno_str(ret));
@@ -196,8 +196,8 @@ int cceph_mem_store_do_op_obj_write(
     }
 
     cceph_mem_store_object_node *onode = NULL;
-    ret = cceph_mem_store_object_node_search(&cnode->objects, op->oid, &onode, log_id);
-    if (ret == CCEPH_ERR_OBJECT_NOT_EXIST) {
+    ret = cceph_mem_store_object_node_map_search(&cnode->objects, op->oid, &onode, log_id);
+    if (ret == CCEPH_ERR_MAP_NODE_NOT_EXIST) {
         //if onode don't existed, create it
         ret = cceph_mem_store_object_node_new(op->oid, &onode, log_id);
         if (ret != CCEPH_OK) {
@@ -206,7 +206,7 @@ int cceph_mem_store_do_op_obj_write(
             return ret;
         }
 
-        ret = cceph_mem_store_object_node_insert(&cnode->objects, onode, log_id);
+        ret = cceph_mem_store_object_node_map_insert(&cnode->objects, onode, log_id);
         if (ret != CCEPH_OK) {
             cceph_mem_store_object_node_free(&onode, log_id);
             LOG(LL_ERROR, log_id, "Execute Write op failed, insert into coll failed, errno %d(%s).",
@@ -266,7 +266,7 @@ int cceph_mem_store_do_op_obj_remove(
     log_id = op->log_id; //We will use op's log_id from here
 
     cceph_mem_store_coll_node *cnode = NULL;
-    int ret = cceph_mem_store_coll_node_search(&os->colls, op->cid, &cnode, log_id);
+    int ret = cceph_mem_store_coll_node_map_search(&os->colls, op->cid, &cnode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute remove op failed, search cid %d failed, errno %d(%s).",
                 op->cid, ret, cceph_errno_str(ret));
@@ -274,14 +274,14 @@ int cceph_mem_store_do_op_obj_remove(
     }
 
     cceph_mem_store_object_node *onode = NULL;
-    ret = cceph_mem_store_object_node_search(&cnode->objects, op->oid, &onode, log_id);
+    ret = cceph_mem_store_object_node_map_search(&cnode->objects, op->oid, &onode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute remove op failed, search oid %d failed, errno %d(%s).",
                 op->oid, ret, cceph_errno_str(ret));
-        return ret;
+        return CCEPH_ERR_OBJECT_NOT_EXIST;
     }
 
-    cceph_mem_store_object_node_remove(&cnode->objects, onode, log_id);
+    cceph_mem_store_object_node_map_remove(&cnode->objects, onode, log_id);
     cceph_mem_store_object_node_free(&onode, log_id);
 
     return CCEPH_OK;
@@ -302,14 +302,14 @@ int cceph_mem_store_do_op_obj_map(
     log_id = op->log_id; //We will use op's log_id from here
 
     cceph_mem_store_coll_node *cnode = NULL;
-    int ret = cceph_mem_store_coll_node_search(&os->colls, op->cid, &cnode, log_id);
+    int ret = cceph_mem_store_coll_node_map_search(&os->colls, op->cid, &cnode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute ObjectMap op failed, cid %d not existed.", op->cid);
         return ret;
     }
 
     cceph_mem_store_object_node *onode = NULL;
-    ret = cceph_mem_store_object_node_search(&cnode->objects, op->oid, &onode, log_id);
+    ret = cceph_mem_store_object_node_map_search(&cnode->objects, op->oid, &onode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute ObjectMap failed, search oid %d failed, errno %d(%s).",
                 op->oid, ret, cceph_errno_str(ret));
@@ -434,7 +434,7 @@ int cceph_mem_store_read_obj(
             cid, oid, offset, length, log_id);
 
     cceph_mem_store_coll_node *cnode = NULL;
-    int ret = cceph_mem_store_coll_node_search(&mem_store->colls, cid, &cnode, log_id);
+    int ret = cceph_mem_store_coll_node_map_search(&mem_store->colls, cid, &cnode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute read op failed, search cid %d failed, errno %d(%s).",
                 cid, ret, cceph_errno_str(ret));
@@ -443,12 +443,12 @@ int cceph_mem_store_read_obj(
     }
 
     cceph_mem_store_object_node *onode = NULL;
-    ret = cceph_mem_store_object_node_search(&cnode->objects, oid, &onode, log_id);
+    ret = cceph_mem_store_object_node_map_search(&cnode->objects, oid, &onode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute read op failed, search oid %s failed, errno %d(%s).",
                 oid, ret, cceph_errno_str(ret));
         pthread_mutex_unlock(&mem_store->lock);
-        return ret;
+        return CCEPH_ERR_OBJECT_NOT_EXIST;
     }
 
     if (onode->length == 0 || onode->length <= offset) {
@@ -543,7 +543,7 @@ extern int cceph_mem_store_exist_coll(
     cceph_mem_store_coll_node* cnode     = NULL;
 
     pthread_mutex_lock(&mem_store->lock);
-    cceph_mem_store_coll_node_search(&mem_store->colls, cid, &cnode, log_id);
+    cceph_mem_store_coll_node_map_search(&mem_store->colls, cid, &cnode, log_id);
     pthread_mutex_unlock(&mem_store->lock);
 
     *is_existed = cnode == NULL ? 0 : 1;
@@ -565,7 +565,7 @@ extern int cceph_mem_store_read_coll_map(
             cid, log_id);
 
     cceph_mem_store_coll_node *cnode = NULL;
-    int ret = cceph_mem_store_coll_node_search(&mem_store->colls, cid, &cnode, log_id);
+    int ret = cceph_mem_store_coll_node_map_search(&mem_store->colls, cid, &cnode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute ReadCollectionMap failed, search cid %d failed, errno %d(%s).",
                 cid, ret, cceph_errno_str(ret));
@@ -600,7 +600,7 @@ int cceph_mem_store_read_coll_map_key(
             cid, log_id);
 
     cceph_mem_store_coll_node *cnode = NULL;
-    int ret = cceph_mem_store_coll_node_search(&mem_store->colls, cid, &cnode, log_id);
+    int ret = cceph_mem_store_coll_node_map_search(&mem_store->colls, cid, &cnode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute ReadCollectionMapKey failed, search cid %d failed, errno %d(%s).",
                 cid, ret, cceph_errno_str(ret));
@@ -651,7 +651,7 @@ extern int cceph_mem_store_read_obj_map(
             cid, oid, log_id);
 
     cceph_mem_store_coll_node *cnode = NULL;
-    int ret = cceph_mem_store_coll_node_search(&mem_store->colls, cid, &cnode, log_id);
+    int ret = cceph_mem_store_coll_node_map_search(&mem_store->colls, cid, &cnode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute ReadObjectMap failed, search cid %d failed, errno %d(%s).",
                 cid, ret, cceph_errno_str(ret));
@@ -660,7 +660,7 @@ extern int cceph_mem_store_read_obj_map(
     }
 
     cceph_mem_store_object_node *onode = NULL;
-    ret = cceph_mem_store_object_node_search(&cnode->objects, oid, &onode, log_id);
+    ret = cceph_mem_store_object_node_map_search(&cnode->objects, oid, &onode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute ReadObjectMap failed, search oid %s failed, errno %d(%s).",
                 oid, ret, cceph_errno_str(ret));
@@ -697,7 +697,7 @@ int cceph_mem_store_read_obj_map_key(
             cid, oid, log_id);
 
     cceph_mem_store_coll_node *cnode = NULL;
-    int ret = cceph_mem_store_coll_node_search(&mem_store->colls, cid, &cnode, log_id);
+    int ret = cceph_mem_store_coll_node_map_search(&mem_store->colls, cid, &cnode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute ReadObjectMapKey failed, search cid %d failed, errno %d(%s).",
                 cid, ret, cceph_errno_str(ret));
@@ -706,7 +706,7 @@ int cceph_mem_store_read_obj_map_key(
     }
 
     cceph_mem_store_object_node *onode = NULL;
-    ret = cceph_mem_store_object_node_search(&cnode->objects, oid, &onode, log_id);
+    ret = cceph_mem_store_object_node_map_search(&cnode->objects, oid, &onode, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute ReadObjectMapKey failed, search oid %s failed, errno %d(%s).",
                 oid, ret, cceph_errno_str(ret));
