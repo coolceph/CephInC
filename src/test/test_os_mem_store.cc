@@ -5,6 +5,20 @@ extern "C" {
 
 #include "gtest/gtest.h"
 
+TEST(os_mem_store, cceph_mem_store_coll_node_new) {
+    int64_t                   log_id = 122;
+    cceph_os_coll_id_t        cid    = 1;
+    cceph_mem_store_coll_node *cnode = NULL;
+    int ret = cceph_mem_store_coll_node_new(cid, &cnode, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_NE((cceph_mem_store_coll_node*)NULL, cnode);
+    EXPECT_EQ(cid, cnode->cid);
+
+    ret = cceph_mem_store_coll_node_free(&cnode, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_EQ((cceph_mem_store_coll_node*)NULL, cnode);
+}
+
 TEST(os_mem_store, cceph_mem_store_new) {
     cceph_mem_store *store = NULL;
     int ret = cceph_mem_store_new(&store, 0);
