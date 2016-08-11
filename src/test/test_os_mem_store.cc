@@ -18,6 +18,19 @@ TEST(os_mem_store, cceph_mem_store_coll_node_new) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ((cceph_mem_store_coll_node*)NULL, cnode);
 }
+TEST(os_mem_store, cceph_mem_store_object_node_new) {
+    int64_t                   log_id = 122;
+    const char*               oid    = "oid";
+    cceph_mem_store_object_node *onode = NULL;
+    int ret = cceph_mem_store_object_node_new(oid, &onode, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_NE((cceph_mem_store_object_node*)NULL, onode);
+    EXPECT_STREQ(oid, onode->oid);
+
+    ret = cceph_mem_store_object_node_free(&onode, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_EQ((cceph_mem_store_object_node*)NULL, onode);
+}
 
 TEST(os_mem_store, cceph_mem_store_new) {
     cceph_mem_store *store = NULL;
