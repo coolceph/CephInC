@@ -14,7 +14,7 @@ typedef struct {
 
     int64_t offset;
     int64_t length;
-    char* data;
+    char*   data;
 } cceph_msg_write_obj_req;
 
 extern cceph_msg_write_obj_req* cceph_msg_write_obj_req_new();

@@ -3,11 +3,11 @@
 
 #include "common/types.h"
 
-extern void __cceph_assert_fail(int64_t log_id, const char *assertion, 
+extern void __cceph_assert_fail(int64_t log_id, const char *assertion,
                                 const char *file, int line, const char *function);
-extern void __cceph_assertf_fail(int64_t log_id, const char *assertion, 
+extern void __cceph_assertf_fail(int64_t log_id, const char *assertion,
                                 const char *file, int line, const char *function, const char* msg, ...);
-extern void __cceph_assert_warn(int64_t log_id, const char *assertion, 
+extern void __cceph_assert_warn(int64_t log_id, const char *assertion,
                                 const char *file, int line, const char *function);
 
 #ifdef HAVE_STATIC_CAST
@@ -17,13 +17,13 @@ extern void __cceph_assert_warn(int64_t log_id, const char *assertion,
 #endif
 
 
-#define cceph_assert(logid, expr)							\
-  ((expr)								\
+#define cceph_assert(logid, expr)					\
+  ((expr)								            \
    ? __CCEPH_ASSERT_VOID_CAST (0)					\
    : __cceph_assert_fail (log_id, __STRING(expr), __FILE__, __LINE__, __CCEPH_ASSERT_FUNCTION))
 
 #define assert_warn(expr)							\
-  ((expr)								\
+  ((expr)								            \
    ? __CCEPH_ASSERT_VOID_CAST (0)					\
    : __cceph_assert_warn (log_id, __STRING(expr), __FILE__, __LINE__, __CCEPH_ASSERT_FUNCTION))
 
@@ -46,8 +46,8 @@ extern void __cceph_assert_warn(int64_t log_id, const char *assertion,
 #define __ASSERT_FUNCTION
 
 #define assert(log_id, expr)							\
-  ((expr)								\
-   ? __CCEPH_ASSERT_VOID_CAST (0)					\
+  ((expr)								                \
+   ? __CCEPH_ASSERT_VOID_CAST (0)					    \
    : __cceph_assert_fail (log_id, __STRING(expr), __FILE__, __LINE__, __func__))
 
 #endif

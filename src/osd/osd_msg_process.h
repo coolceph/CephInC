@@ -15,5 +15,4 @@ extern int cceph_osd_process_message(
         cceph_msg_header* message,
         void* context);
 
-
 #endif
