@@ -305,7 +305,7 @@ TEST_F(os, coll_map) {
     ret = funcs->read_coll_map(os, cid, &result_map, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_TRUE(CCEPH_RB_EMPTY_ROOT(&result_map));
-    ret = cceph_os_map_node_search(&result_map, "key1", &result_node, log_id);
+    ret = cceph_os_map_node_map_search(&result_map, "key1", &result_node, log_id);
     EXPECT_EQ(CCEPH_ERR_MAP_NODE_NOT_EXIST, ret);
 
     //MapKey: Not Exist
@@ -326,7 +326,7 @@ TEST_F(os, coll_map) {
     ret = funcs->read_coll_map(os, cid, &result_map, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_FALSE(CCEPH_RB_EMPTY_ROOT(&result_map));
-    ret = cceph_os_map_node_search(&result_map, "key1", &result_node, log_id);
+    ret = cceph_os_map_node_map_search(&result_map, "key1", &result_node, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(strlen("value1"), result_node->value_length);
     EXPECT_EQ(0, strncmp("value1", result_node->value, result_node->value_length));
@@ -349,7 +349,7 @@ TEST_F(os, coll_map) {
     ret = funcs->read_coll_map(os, cid, &result_map, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_FALSE(CCEPH_RB_EMPTY_ROOT(&result_map));
-    ret = cceph_os_map_node_search(&result_map, "key1", &result_node, log_id);
+    ret = cceph_os_map_node_map_search(&result_map, "key1", &result_node, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(strlen("value1_changed"), result_node->value_length);
     EXPECT_EQ(0, strncmp("value1_changed", result_node->value, result_node->value_length));
@@ -373,7 +373,7 @@ TEST_F(os, coll_map) {
     ret = funcs->read_coll_map(os, cid, &result_map, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_TRUE(CCEPH_RB_EMPTY_ROOT(&result_map));
-    ret = cceph_os_map_node_search(&result_map, "key1", &result_node, log_id);
+    ret = cceph_os_map_node_map_search(&result_map, "key1", &result_node, log_id);
     EXPECT_EQ(CCEPH_ERR_MAP_NODE_NOT_EXIST, ret);
 
     //MapKey: Not Exist
@@ -408,7 +408,7 @@ TEST_F(os, obj_map) {
     ret = funcs->read_obj_map(os, cid, oid, &result_map, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_TRUE(CCEPH_RB_EMPTY_ROOT(&result_map));
-    ret = cceph_os_map_node_search(&result_map, "key1", &result_node, log_id);
+    ret = cceph_os_map_node_map_search(&result_map, "key1", &result_node, log_id);
     EXPECT_EQ(CCEPH_ERR_MAP_NODE_NOT_EXIST, ret);
 
     //MapKey: Not Exist
@@ -429,7 +429,7 @@ TEST_F(os, obj_map) {
     ret = funcs->read_obj_map(os, cid, oid, &result_map, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_FALSE(CCEPH_RB_EMPTY_ROOT(&result_map));
-    ret = cceph_os_map_node_search(&result_map, "key1", &result_node, log_id);
+    ret = cceph_os_map_node_map_search(&result_map, "key1", &result_node, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(strlen("value1"), result_node->value_length);
     EXPECT_EQ(0, strncmp("value1", result_node->value, result_node->value_length));
@@ -452,7 +452,7 @@ TEST_F(os, obj_map) {
     ret = funcs->read_obj_map(os, cid, oid, &result_map, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_FALSE(CCEPH_RB_EMPTY_ROOT(&result_map));
-    ret = cceph_os_map_node_search(&result_map, "key1", &result_node, log_id);
+    ret = cceph_os_map_node_map_search(&result_map, "key1", &result_node, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(strlen("value1_changed"), result_node->value_length);
     EXPECT_EQ(0, strncmp("value1_changed", result_node->value, result_node->value_length));
@@ -475,7 +475,7 @@ TEST_F(os, obj_map) {
     ret = funcs->read_obj_map(os, cid, oid, &result_map, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_TRUE(CCEPH_RB_EMPTY_ROOT(&result_map));
-    ret = cceph_os_map_node_search(&result_map, "key1", &result_node, log_id);
+    ret = cceph_os_map_node_map_search(&result_map, "key1", &result_node, log_id);
     EXPECT_EQ(CCEPH_ERR_MAP_NODE_NOT_EXIST, ret);
 
     //MapKey: Not Exist

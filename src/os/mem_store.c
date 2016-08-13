@@ -722,7 +722,7 @@ int cceph_mem_store_read_coll_map_key(
     }
 
     cceph_os_map_node* map_node = NULL;
-    ret = cceph_os_map_node_search(&cnode->map, key, &map_node, log_id);
+    ret = cceph_os_map_node_map_search(&cnode->map, key, &map_node, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute ReadCollectionMapKey failed, key %s not found, errno %d(%s).",
                 key, ret, cceph_errno_str(ret));
@@ -828,7 +828,7 @@ int cceph_mem_store_read_obj_map_key(
     }
 
     cceph_os_map_node* map_node = NULL;
-    ret = cceph_os_map_node_search(&onode->map, key, &map_node, log_id);
+    ret = cceph_os_map_node_map_search(&onode->map, key, &map_node, log_id);
     if (ret != CCEPH_OK) {
         LOG(LL_ERROR, log_id, "Execute ReadObjectMapKey failed, key %s not found, errno %d(%s).",
                 key, ret, cceph_errno_str(ret));

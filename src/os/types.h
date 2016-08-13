@@ -44,21 +44,7 @@ extern int cceph_os_map_node_free_tree(
         cceph_rb_root*      tree,
         int64_t             log_id);
 
-extern int cceph_os_map_node_insert(
-        cceph_rb_root       *root,
-        cceph_os_map_node   *node,
-        int64_t             log_id);
-
-extern int cceph_os_map_node_remove(
-        cceph_rb_root       *root,
-        cceph_os_map_node   *node,
-        int64_t             log_id);
-
-extern int cceph_os_map_node_search(
-        cceph_rb_root*      root,
-        const char*         oid,
-        cceph_os_map_node** result,
-        int64_t             log_id);
+CCEPH_DEFINE_MAP(os_map_node, const char*, oid);
 
 //This method will use the input_tree to update the result_tree
 //The update rule is:

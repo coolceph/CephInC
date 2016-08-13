@@ -126,79 +126,8 @@ int cceph_os_map_node_free_tree(
     }
     return CCEPH_OK;
 }
-int cceph_os_map_node_insert(
-        cceph_rb_root     *root,
-        cceph_os_map_node *node,
-        int64_t           log_id) {
 
-    assert(log_id, root != NULL);
-    assert(log_id, node != NULL);
-
-    cceph_rb_node **new = &(root->rb_node), *parent = NULL;
-
-    /* Figure out where to put new node */
-    while (*new) {
-        cceph_os_map_node *this = cceph_container_of(*new, cceph_os_map_node, node);
-        int result = strcmp(node->key, this->key);
-
-        parent = *new;
-        if (result < 0) {
-            new = &((*new)->rb_left);
-        } else if (result > 0) {
-            new = &((*new)->rb_right);
-        } else {
-            return CCEPH_ERR_MAP_NODE_ALREADY_EXIST;
-        }
-    }
-
-    /* Add new node and rebalance tree. */
-    cceph_rb_link_node(&node->node, parent, new);
-    cceph_rb_insert_color(&node->node, root);
-
-    return CCEPH_OK;
-}
-
-int cceph_os_map_node_remove(
-        cceph_rb_root     *root,
-        cceph_os_map_node *node,
-        int64_t           log_id) {
-
-    assert(log_id, root != NULL);
-    assert(log_id, node != NULL);
-
-    cceph_rb_erase(&node->node, root);
-
-    return CCEPH_OK;
-}
-
-int cceph_os_map_node_search(
-        cceph_rb_root*      root,
-        const char*         key,
-        cceph_os_map_node** result,
-        int64_t             log_id) {
-
-    assert(log_id, root != NULL);
-    assert(log_id, key  != NULL);
-    assert(log_id, result != NULL);
-    assert(log_id, *result == NULL);
-
-    cceph_rb_node *node = root->rb_node;
-
-    while (node) {
-        cceph_os_map_node *data = cceph_container_of(node, cceph_os_map_node, node);
-
-        int ret = strcmp(key, data->key);
-        if (ret < 0) {
-            node = node->rb_left;
-        } else if (ret > 0) {
-            node = node->rb_right;
-        } else {
-            *result = data;
-            return CCEPH_OK;
-        }
-    }
-    return CCEPH_ERR_MAP_NODE_NOT_EXIST;
-}
+CCEPH_IMPL_MAP(os_map_node,  const char*, key, strcmp);
 
 int cceph_os_map_update(cceph_rb_root* result_tree, cceph_rb_root* input_tree, int64_t log_id) {
     assert(log_id, result_tree != NULL);
@@ -219,7 +148,7 @@ int cceph_os_map_update(cceph_rb_root* result_tree, cceph_rb_root* input_tree, i
         }
 
         cceph_os_map_node* result_node = NULL;
-        ret = cceph_os_map_node_search(result_tree, key, &result_node, log_id);
+        ret = cceph_os_map_node_map_search(result_tree, key, &result_node, log_id);
         if (result_node == NULL) {
             if (input_node->value_length > 0) {
                 //Add new node to result_tree
@@ -227,14 +156,14 @@ int cceph_os_map_update(cceph_rb_root* result_tree, cceph_rb_root* input_tree, i
                 if (ret != CCEPH_OK) {
                     goto label_ret;
                 }
-                ret = cceph_os_map_node_insert(result_tree, result_node, log_id);
+                ret = cceph_os_map_node_map_insert(result_tree, result_node, log_id);
                 if (ret != CCEPH_OK) {
                     goto label_ret;
                 }
             }
         } else {
             //Remove the old first
-            ret = cceph_os_map_node_remove(result_tree, result_node, log_id);
+            ret = cceph_os_map_node_map_remove(result_tree, result_node, log_id);
             if (ret != CCEPH_OK) {
                 goto label_ret;
             }
@@ -250,7 +179,7 @@ int cceph_os_map_update(cceph_rb_root* result_tree, cceph_rb_root* input_tree, i
                     goto label_ret;
                 }
 
-                ret = cceph_os_map_node_insert(result_tree, result_node, log_id);
+                ret = cceph_os_map_node_map_insert(result_tree, result_node, log_id);
                 if (ret != CCEPH_OK) {
                     goto label_ret;
                 }

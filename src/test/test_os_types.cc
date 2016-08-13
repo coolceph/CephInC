@@ -30,7 +30,7 @@ TEST(os_types, cceph_os_map_node) {
         EXPECT_STREQ(key, node->value);
         EXPECT_EQ(strlen(key) + 1, node->value_length);
 
-        ret = cceph_os_map_node_insert(&root, node, 0);
+        ret = cceph_os_map_node_map_insert(&root, node, 0);
         EXPECT_EQ(CCEPH_OK, ret);
     }
     for (int i = 0; i < 1000; i++) {
@@ -38,18 +38,18 @@ TEST(os_types, cceph_os_map_node) {
         sprintf(key, "%d", i);
 
         node = NULL;
-        int ret = cceph_os_map_node_search(&root, key, &node, 0);
+        int ret = cceph_os_map_node_map_search(&root, key, &node, 0);
         EXPECT_EQ(CCEPH_OK, ret);
         EXPECT_NE((cceph_os_map_node*)NULL, node);
         EXPECT_STREQ(key, node->key);
         EXPECT_STREQ(key, node->value);
         EXPECT_EQ(strlen(key) + 1, node->value_length);
 
-        ret = cceph_os_map_node_remove(&root, node, 0);
+        ret = cceph_os_map_node_map_remove(&root, node, 0);
         EXPECT_EQ(CCEPH_OK, ret);
 
         node = NULL;
-        ret = cceph_os_map_node_search(&root, key, &node, 0);
+        ret = cceph_os_map_node_map_search(&root, key, &node, 0);
         EXPECT_EQ(CCEPH_ERR_MAP_NODE_NOT_EXIST, ret);
     }
 }
@@ -60,14 +60,14 @@ TEST(os_types, cceph_os_map_update) {
     cceph_os_map_node* node = NULL;
     int ret = cceph_os_map_node_new("key1", "value1", strlen("value1"), &node, 122);
     EXPECT_EQ(CCEPH_OK, ret);
-    ret = cceph_os_map_node_insert(&input_tree, node, 122);
+    ret = cceph_os_map_node_map_insert(&input_tree, node, 122);
     EXPECT_EQ(CCEPH_OK, ret);
 
     //Add Node
     ret = cceph_os_map_update(&result_tree, &input_tree, 122);
     EXPECT_EQ(CCEPH_OK, ret);
     cceph_os_map_node* node2 = NULL;
-    ret = cceph_os_map_node_search(&result_tree, "key1", &node2, 122);
+    ret = cceph_os_map_node_map_search(&result_tree, "key1", &node2, 122);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_STREQ("key1", node2->key);
     EXPECT_STREQ("value1", node2->value);
@@ -79,7 +79,7 @@ TEST(os_types, cceph_os_map_update) {
     ret = cceph_os_map_update(&result_tree, &input_tree, 122);
     EXPECT_EQ(CCEPH_OK, ret);
     cceph_os_map_node* node3 = NULL;
-    ret = cceph_os_map_node_search(&result_tree, "key1", &node3, 122);
+    ret = cceph_os_map_node_map_search(&result_tree, "key1", &node3, 122);
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_STREQ("key1", node3->key);
     EXPECT_STREQ("value1_changed", node3->value);
@@ -91,6 +91,6 @@ TEST(os_types, cceph_os_map_update) {
     ret = cceph_os_map_update(&result_tree, &input_tree, 122);
     EXPECT_EQ(CCEPH_OK, ret);
     cceph_os_map_node* node4 = NULL;
-    ret = cceph_os_map_node_search(&result_tree, "key1", &node4, 122);
+    ret = cceph_os_map_node_map_search(&result_tree, "key1", &node4, 122);
     EXPECT_EQ(CCEPH_ERR_MAP_NODE_NOT_EXIST, ret);
 }

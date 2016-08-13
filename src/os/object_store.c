@@ -69,7 +69,7 @@ extern int cceph_os_set_coll_map_key(
     if (ret != CCEPH_OK) {
         return ret;
     }
-    ret = cceph_os_map_node_insert(&map, node, log_id);
+    ret = cceph_os_map_node_map_insert(&map, node, log_id);
     if (ret != CCEPH_OK) {
         cceph_os_map_node_free(&node, log_id);
         return ret;
@@ -199,7 +199,7 @@ extern int cceph_os_set_obj_map_key(
     if (ret != CCEPH_OK) {
         return ret;
     }
-    ret = cceph_os_map_node_insert(&map, node, log_id);
+    ret = cceph_os_map_node_map_insert(&map, node, log_id);
     if (ret != CCEPH_OK) {
         cceph_os_map_node_free(&node, log_id);
         return ret;
