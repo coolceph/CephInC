@@ -14,45 +14,20 @@ TEST(os_types, os_coll_id_cmp) {
 
 TEST(os_types, cceph_os_map_node) {
     int64_t log_id = 122;
-    cceph_rb_root root = CCEPH_RB_ROOT;
-    char key[256];
+    const char* key = "oid";
     cceph_os_map_node *node = NULL;
 
-    for (int i = 0; i < 1000; i++) {
-        memset(key, 0, 256);
-        sprintf(key, "%d", i);
+    int ret = cceph_os_map_node_new(key, key, strlen(key) + 1, &node, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_NE((cceph_os_map_node*)NULL, node);
+    EXPECT_STREQ(key, node->key);
+    EXPECT_STREQ(key, node->value);
+    EXPECT_EQ(strlen(key) + 1, node->value_length);
 
-        node = NULL;
-        int ret = cceph_os_map_node_new(key, key, strlen(key) + 1, &node, log_id);
-        EXPECT_EQ(CCEPH_OK, ret);
-        EXPECT_NE((cceph_os_map_node*)NULL, node);
-        EXPECT_STREQ(key, node->key);
-        EXPECT_STREQ(key, node->value);
-        EXPECT_EQ(strlen(key) + 1, node->value_length);
-
-        ret = cceph_os_map_node_map_insert(&root, node, 0);
-        EXPECT_EQ(CCEPH_OK, ret);
-    }
-    for (int i = 0; i < 1000; i++) {
-        memset(key, 0, 0256);
-        sprintf(key, "%d", i);
-
-        node = NULL;
-        int ret = cceph_os_map_node_map_search(&root, key, &node, 0);
-        EXPECT_EQ(CCEPH_OK, ret);
-        EXPECT_NE((cceph_os_map_node*)NULL, node);
-        EXPECT_STREQ(key, node->key);
-        EXPECT_STREQ(key, node->value);
-        EXPECT_EQ(strlen(key) + 1, node->value_length);
-
-        ret = cceph_os_map_node_map_remove(&root, node, 0);
-        EXPECT_EQ(CCEPH_OK, ret);
-
-        node = NULL;
-        ret = cceph_os_map_node_map_search(&root, key, &node, 0);
-        EXPECT_EQ(CCEPH_ERR_MAP_NODE_NOT_EXIST, ret);
-    }
+    ret = cceph_os_map_node_free(&node, log_id);
+    EXPECT_EQ((cceph_os_map_node*)NULL, node);
 }
+
 TEST(os_types, cceph_os_map_update) {
     cceph_rb_root      result_tree = CCEPH_RB_ROOT;
     cceph_rb_root      input_tree  = CCEPH_RB_ROOT;
