@@ -40,10 +40,6 @@ extern int cceph_os_map_node_free(
         cceph_os_map_node** node,
         int64_t             log_id);
 
-extern int cceph_os_map_node_free_tree(
-        cceph_rb_root*      tree,
-        int64_t             log_id);
-
 CCEPH_DEFINE_MAP(os_map_node, const char*, oid);
 
 //This method will use the input_tree to update the result_tree

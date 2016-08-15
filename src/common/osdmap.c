@@ -5,6 +5,17 @@
 #include "common/encode.h"
 #include "common/util.h"
 
+extern int cceph_osdmap_new(
+        cceph_osdmap** osdmap,
+        int64_t        log_id) {
+    return CCEPH_OK;
+}
+extern int cceph_osdmap_free(
+        cceph_osdmap** osdmap,
+        int64_t        log_id){
+    return CCEPH_OK;
+}
+
 int cceph_encode_osd_entity(
         cceph_buffer*     buffer,
         cceph_osd_entity* osd_entity,

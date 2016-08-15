@@ -178,6 +178,9 @@ extern int cceph_##type##_map_search(              \
         key_type      key_name,                    \
         cceph_##type  **result,                    \
         int64_t       log_id);                     \
+extern int cceph_##type##_map_free(                \
+        cceph_rb_root*      map,                   \
+        int64_t             log_id);               \
 
 #define CCEPH_IMPL_MAP(type, key_type, key_name, cmp_method)                    \
 int cceph_##type##_map_insert(                                                  \
@@ -251,6 +254,23 @@ int cceph_##type##_map_search(                                                  
         }                                                                       \
     }                                                                           \
     return CCEPH_ERR_MAP_NODE_NOT_EXIST;                                        \
+}                                                                               \
+int cceph_##type##_map_free(                                                    \
+        cceph_rb_root*      map,                                                \
+        int64_t             log_id) {                                           \
+    assert(log_id, map != NULL);                                                \
+                                                                                \
+    cceph_##type*      map_node = NULL;                                         \
+    cceph_rb_node*     rb_node  = cceph_rb_first(map);                          \
+    while (rb_node) {                                                           \
+        map_node = cceph_rb_entry(rb_node, cceph_##type, node);                 \
+                                                                                \
+        cceph_rb_erase(rb_node, map);                                           \
+        cceph_##type##_free(&map_node, log_id);                                 \
+                                                                                \
+        rb_node = cceph_rb_first(map);                                          \
+    }                                                                           \
+    return CCEPH_OK;                                                            \
 }
 
 #endif

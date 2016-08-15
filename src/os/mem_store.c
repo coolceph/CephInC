@@ -36,10 +36,10 @@ extern int cceph_mem_store_coll_node_free(
 
     cceph_mem_store_coll_node* cnode = *node;
 
-    int ret = cceph_mem_store_object_node_free_tree(&cnode->objects, log_id);
+    int ret = cceph_mem_store_object_node_map_free(&cnode->objects, log_id);
     assert(log_id, ret == CCEPH_OK);
 
-    ret = cceph_os_map_node_free_tree(&cnode->map, log_id);
+    ret = cceph_os_map_node_map_free(&cnode->map, log_id);
     assert(log_id, ret == CCEPH_OK);
 
     free(cnode);
@@ -96,29 +96,12 @@ int cceph_mem_store_object_node_free(
         onode->data = NULL;
     }
 
-    int ret = cceph_os_map_node_free_tree(&onode->map, log_id);
+    int ret = cceph_os_map_node_map_free(&onode->map, log_id);
     assert(log_id, ret == CCEPH_OK);
 
     free(onode);
     *node = NULL;
 
-    return CCEPH_OK;
-}
-int cceph_mem_store_object_node_free_tree(
-        cceph_rb_root*                tree,
-        int64_t                       log_id) {
-    assert(log_id, tree != NULL);
-
-    cceph_mem_store_object_node* onode   = NULL;
-    cceph_rb_node*               rb_node = cceph_rb_first(tree);
-    while (rb_node) {
-        onode = cceph_rb_entry(rb_node, cceph_mem_store_object_node, node);
-
-        cceph_rb_erase(rb_node, tree);
-        cceph_mem_store_object_node_free(&onode, log_id);
-
-        rb_node = cceph_rb_first(tree);
-    }
     return CCEPH_OK;
 }
 

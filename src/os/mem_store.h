@@ -45,10 +45,6 @@ extern int cceph_mem_store_object_node_free(
         cceph_mem_store_object_node** node,
         int64_t                       log_id);
 
-extern int cceph_mem_store_object_node_free_tree(
-        cceph_rb_root*                tree,
-        int64_t                       log_id);
-
 CCEPH_DEFINE_MAP(mem_store_object_node, const char*, oid);
 
 typedef struct {
