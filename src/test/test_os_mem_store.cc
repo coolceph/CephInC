@@ -5,7 +5,7 @@ extern "C" {
 
 #include "gtest/gtest.h"
 
-TEST(os_mem_store, cceph_mem_store_coll_node_new) {
+TEST(os_mem_store, cceph_mem_store_coll_node_new_and_free) {
     int64_t                   log_id = 122;
     cceph_os_coll_id_t        cid    = 1;
     cceph_mem_store_coll_node *cnode = NULL;
@@ -18,7 +18,7 @@ TEST(os_mem_store, cceph_mem_store_coll_node_new) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ((cceph_mem_store_coll_node*)NULL, cnode);
 }
-TEST(os_mem_store, cceph_mem_store_object_node_new) {
+TEST(os_mem_store, cceph_mem_store_object_node_new_and_free) {
     int64_t                   log_id = 122;
     const char*               oid    = "oid";
     cceph_mem_store_object_node *onode = NULL;

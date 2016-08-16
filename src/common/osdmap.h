@@ -25,10 +25,10 @@ typedef struct {
 
 extern int cceph_osdmap_new(
         cceph_osdmap** osdmap,
-        int64_t log_id);
+        int64_t        log_id);
 extern int cceph_osdmap_free(
         cceph_osdmap** osdmap,
-        int64_t log_id);
+        int64_t        log_id);
 
 CCEPH_DEFINE_ENCODE_METHOD(osd_entity);
 CCEPH_DEFINE_ENCODE_METHOD(osdmap);

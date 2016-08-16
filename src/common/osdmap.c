@@ -6,13 +6,46 @@
 #include "common/util.h"
 
 extern int cceph_osdmap_new(
-        cceph_osdmap** osdmap,
+        cceph_osdmap** osdmap_ptr,
         int64_t        log_id) {
+    assert(log_id, osdmap_ptr != NULL);
+    assert(log_id, *osdmap_ptr == NULL);
+
+    *osdmap_ptr = (cceph_osdmap*)malloc(sizeof(cceph_osdmap));
+    if (*osdmap_ptr == NULL) {
+        return CCEPH_ERR_NO_ENOUGH_MEM;
+    }
+
+    cceph_osdmap* osdmap = *osdmap_ptr;
+    osdmap->epoch     = 0;
+    osdmap->pg_count  = 0;
+    osdmap->osd_count = 0;
+    osdmap->osds      = NULL;
+
     return CCEPH_OK;
 }
 extern int cceph_osdmap_free(
-        cceph_osdmap** osdmap,
+        cceph_osdmap** osdmap_ptr,
         int64_t        log_id){
+
+    assert(log_id, osdmap_ptr != NULL);
+    assert(log_id, *osdmap_ptr != NULL);
+
+    cceph_osdmap* osdmap = *osdmap_ptr;
+    int i = 0;
+    for (i = 0; i < osdmap->osd_count; i++) {
+        cceph_osd_entity* osd_entity = &osdmap->osds[i];
+        if (osd_entity->host != NULL) {
+            free(osd_entity->host);
+        }
+        free(osd_entity);
+    }
+    if (osdmap->osds != NULL) {
+        free(osdmap->osds);
+    }
+    free(osdmap);
+    *osdmap_ptr = NULL;
+
     return CCEPH_OK;
 }
 
