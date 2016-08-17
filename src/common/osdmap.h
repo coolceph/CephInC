@@ -6,11 +6,19 @@
 #include "common/rbtree.h"
 
 typedef struct {
-    cceph_osd_id_t id;
+    cceph_osd_id_t osd_id;
 
     char* host; //This will not be persisted
     int   port; //This will not be persisted
 } cceph_osd_entity;
+
+extern int cceph_osd_entity_new(
+        cceph_osd_entity** osd_entity,
+        int64_t            log_id);
+
+extern int cceph_osd_entity_free(
+        cceph_osd_entity** osd_entity,
+        int64_t            log_id);
 
 typedef struct {
     cceph_epoch_t epoch;

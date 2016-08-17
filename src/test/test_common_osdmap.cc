@@ -15,8 +15,8 @@ TEST(cceph_osd_entity, encode_and_decode) {
     cceph_osd_entity result;
     int64_t log_id = 122;
 
-    value.id = 1;
-    result.id = 0;
+    value.osd_id = 1;
+    result.osd_id = 0;
 
     int ret = cceph_buffer_new(&buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
@@ -27,7 +27,7 @@ TEST(cceph_osd_entity, encode_and_decode) {
     EXPECT_EQ(CCEPH_OK, ret);
     ret = cceph_decode_osd_entity(reader, &result, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
-    EXPECT_EQ(value.id, result.id);
+    EXPECT_EQ(value.osd_id, result.osd_id);
 }
 TEST(cceph_osdmap, encode_and_decode) {
     cceph_buffer*        buffer = NULL;
@@ -41,9 +41,9 @@ TEST(cceph_osdmap, encode_and_decode) {
     value.pg_count  = 256;
     value.osd_count = 3;
     value.osds      = &osds[0];
-    osds[0].id      = 0;
-    osds[1].id      = 1;
-    osds[2].id      = 2;
+    osds[0].osd_id  = 0;
+    osds[1].osd_id  = 1;
+    osds[2].osd_id  = 2;
 
     int ret = cceph_buffer_new(&buffer, log_id);
     EXPECT_EQ(CCEPH_OK, ret);
@@ -59,7 +59,7 @@ TEST(cceph_osdmap, encode_and_decode) {
     EXPECT_EQ(value.pg_count, result.pg_count);
     EXPECT_EQ(value.osd_count, result.osd_count);
     for (int i = 0; i < value.osd_count; i++) {
-        EXPECT_EQ(value.osds[i].id, result.osds[i].id);
+        EXPECT_EQ(value.osds[i].osd_id, result.osds[i].osd_id);
     }
 }
 

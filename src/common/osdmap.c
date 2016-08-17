@@ -5,6 +5,41 @@
 #include "common/encode.h"
 #include "common/util.h"
 
+extern int cceph_osd_entity_new(
+        cceph_osd_entity** osd_entity_ptr,
+        int64_t            log_id) {
+    assert(log_id, osd_entity_ptr != NULL);
+    assert(log_id, *osd_entity_ptr == NULL);
+
+    *osd_entity_ptr = (cceph_osd_entity*)malloc(sizeof(osd_entity_ptr));
+    if (*osd_entity_ptr == NULL) {
+        return CCEPH_ERR_NO_ENOUGH_MEM;
+    }
+    cceph_osd_entity* osd_entity = *osd_entity_ptr;
+    osd_entity->osd_id = -1;
+    osd_entity->host   = NULL;
+    osd_entity->port   = -1;
+
+    return CCEPH_OK;
+}
+
+extern int cceph_osd_entity_free(
+        cceph_osd_entity** osd_entity_ptr,
+        int64_t            log_id) {
+    assert(log_id, osd_entity_ptr != NULL);
+    assert(log_id, *osd_entity_ptr != NULL);
+
+    cceph_osd_entity* osd_entity = *osd_entity_ptr;
+    if (osd_entity->host != NULL) {
+        free(osd_entity->host);
+    }
+
+    free(osd_entity);
+    *osd_entity_ptr = NULL;
+
+    return CCEPH_OK;
+}
+
 extern int cceph_osdmap_new(
         cceph_osdmap** osdmap_ptr,
         int64_t        log_id) {
@@ -35,14 +70,12 @@ extern int cceph_osdmap_free(
     int i = 0;
     for (i = 0; i < osdmap->osd_count; i++) {
         cceph_osd_entity* osd_entity = &osdmap->osds[i];
-        if (osd_entity->host != NULL) {
-            free(osd_entity->host);
-        }
-        free(osd_entity);
+        cceph_osd_entity_free(&osd_entity, log_id);
     }
     if (osdmap->osds != NULL) {
         free(osdmap->osds);
     }
+
     free(osdmap);
     *osdmap_ptr = NULL;
 
@@ -59,7 +92,7 @@ int cceph_encode_osd_entity(
 
     cceph_version_t v = 1;
     cceph_encode_version(buffer, v, log_id);
-    cceph_encode_int32(buffer, osd_entity->id, log_id);
+    cceph_encode_int32(buffer, osd_entity->osd_id, log_id);
 
     return CCEPH_OK;
 }
@@ -76,7 +109,7 @@ int cceph_decode_osd_entity(
     cceph_decode_version(reader, &v, log_id);
     assert(log_id, v == 1);
 
-    cceph_decode_int32(reader, &osd_entity->id, log_id);
+    cceph_decode_int32(reader, &osd_entity->osd_id, log_id);
 
     return CCEPH_OK;
 }
