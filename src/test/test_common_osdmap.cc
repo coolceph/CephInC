@@ -8,6 +8,22 @@ extern "C" {
 
 #include "gtest/gtest.h"
 
+TEST(cceph_osd_entity, new_and_free) {
+    cceph_osd_entity* osd_entity = NULL;
+    int64_t log_id = 122;
+
+    int ret = cceph_osd_entity_new(&osd_entity, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_NE((cceph_osd_entity*)NULL, osd_entity);
+    EXPECT_EQ(-1, osd_entity->osd_id);
+    EXPECT_EQ((char*)NULL, osd_entity->host);
+    EXPECT_EQ(-1, osd_entity->port);
+
+    ret = cceph_osd_entity_free(&osd_entity, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_EQ((cceph_osd_entity*)NULL, osd_entity);
+}
+
 TEST(cceph_osd_entity, encode_and_decode) {
     cceph_buffer*        buffer = NULL;
     cceph_buffer_reader* reader = NULL;
@@ -29,6 +45,7 @@ TEST(cceph_osd_entity, encode_and_decode) {
     EXPECT_EQ(CCEPH_OK, ret);
     EXPECT_EQ(value.osd_id, result.osd_id);
 }
+
 TEST(cceph_osdmap, encode_and_decode) {
     cceph_buffer*        buffer = NULL;
     cceph_buffer_reader* reader = NULL;
