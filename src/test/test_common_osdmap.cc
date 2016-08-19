@@ -46,6 +46,22 @@ TEST(cceph_osd_entity, encode_and_decode) {
     EXPECT_EQ(value.osd_id, result.osd_id);
 }
 
+TEST(cceph_osdmap, new_and_free) {
+    cceph_osdmap* osdmap = NULL;
+    int64_t log_id = 122;
+
+    int ret = cceph_osdmap_new(&osdmap, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_NE((cceph_osdmap*)NULL, osdmap);
+    EXPECT_EQ(0, osdmap->epoch);
+    EXPECT_EQ(0, osdmap->pg_count);
+    EXPECT_EQ(0, osdmap->osd_count);
+    EXPECT_EQ((cceph_osd_entity*)NULL, osdmap->osds);
+
+    ret = cceph_osdmap_free(&osdmap, log_id);
+    EXPECT_EQ(CCEPH_OK, ret);
+    EXPECT_EQ((cceph_osdmap*)NULL, osdmap);
+}
 TEST(cceph_osdmap, encode_and_decode) {
     cceph_buffer*        buffer = NULL;
     cceph_buffer_reader* reader = NULL;
