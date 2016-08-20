@@ -18,6 +18,7 @@ typedef struct {
     cceph_messenger*        msger;
     cceph_server_messenger* smsger;
 
+    cceph_epoch_t           max_osdmap_epoch;
     cceph_osdmap*           osdmap;
 } cceph_osd;
 

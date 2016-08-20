@@ -76,8 +76,34 @@ int cceph_osd_initial(
 int cceph_osd_load_metadata(
     cceph_osd* osd,
     int64_t    log_id) {
-
     assert(log_id, osd != NULL);
+
+    cceph_object_store* os       = osd->os;
+    cceph_os_funcs*     os_funcs = osd->os_funcs;
+
+    char*   osd_id_value = NULL;
+    int32_t osd_id_value_length = 0;
+    int ret = os_funcs->read_coll_map_key(os,
+            CCEPH_OSD_META_COLL_ID, CCEPH_OSD_META_ATTR_OSD_ID,
+            &osd_id_value_length, &osd_id_value,
+            log_id);
+    if (ret != CCEPH_OK) {
+        return ret;
+    }
+    assert(log_id, osd_id_value_length == sizeof(cceph_osd_id_t));
+    memcpy(&osd->osd_id, osd_id_value, osd_id_value_length);
+
+    char*   max_osdmap_epoch_value = NULL;
+    int32_t max_osdmap_epoch_value_length = 0;
+    ret = os_funcs->read_coll_map_key(os,
+            CCEPH_OSD_META_COLL_ID, CCEPH_OSD_META_ATTR_OSDMAP_MAX_EPOCH,
+            &max_osdmap_epoch_value_length, &max_osdmap_epoch_value,
+            log_id);
+    if (ret != CCEPH_OK) {
+        return ret;
+    }
+    assert(log_id, max_osdmap_epoch_value_length == sizeof(cceph_epoch_t));
+    memcpy(&osd->max_osdmap_epoch, max_osdmap_epoch_value, max_osdmap_epoch_value_length);
 
     return CCEPH_OK;
 }
